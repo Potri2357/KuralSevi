@@ -1,0 +1,31 @@
+{
+  "name": "kural-sevi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Driven Voice Assistant for Livelihood Mapping and NSQF-Aligned Skilling Recommendations for SC Communities under PM-AJAY GIA",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/web\" \"npm run dev --workspace=apps/voice-api\"",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=packages/recommendation-engine && npm run build --workspace=apps/web",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:start": "npx supabase start",
+    "db:migrate": "npx supabase db push",
+    "db:seed": "npx supabase db reset",
+    "aggregate": "tsx scripts/aggregate-planning.ts",
+    "ingest:eshram": "tsx scripts/ingest-eshram.ts",
+    "ingest:udyam": "tsx scripts/ingest-udyam.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
