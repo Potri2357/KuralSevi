@@ -12,7 +12,7 @@ from .session_manager import SessionManager
 from .llm_service import GeminiInterviewDriver, LLMExtractionResult
 from .interview_fsm import InterviewFSM, InterviewSession, InterviewState
 from .tts_service import synthesize_speech, TTSResult
-from ..config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

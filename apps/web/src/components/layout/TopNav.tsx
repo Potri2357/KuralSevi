@@ -1,36 +1,162 @@
 'use client';
+import { useState } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  ShieldCheck,
+  LayoutDashboard,
+  Inbox,
+  BarChart3,
+  UserPlus,
+  Download,
+  Settings,
+  AlertTriangle,
+  Menu,
+  X,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const breadcrumbs: Record<string, string> = {
-  '/officer': 'Overview',
-  '/officer/cases': 'Case Queue',
-  '/officer/planning': 'District Planning',
-  '/officer/export': 'Data Export',
-  '/admin': 'Admin',
-};
+const navItems = [
+  { href: '/officer', label: 'Overview', icon: LayoutDashboard, exact: true },
+  { href: '/officer/cases', label: 'Queue', icon: Inbox, badge: '23' },
+  { href: '/officer/planning', label: 'Planning', icon: BarChart3 },
+  { href: '/officer/beneficiary/new', label: 'Intake', icon: UserPlus },
+  { href: '/officer/export', label: 'Export', icon: Download },
+  { href: '/admin', label: 'Admin', icon: Settings },
+];
 
-export function TopNav({ district = 'Demo District', state = 'Tamil Nadu' }: { district?: string; state?: string }) {
+export function TopNav() {
   const pathname = usePathname();
-  const title = breadcrumbs[pathname] ?? 'Kural Sevi';
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="h-14 border-b border-white/8 glass flex items-center justify-between px-6 sticky top-0 z-20">
-      <div className="flex items-center gap-3">
-        <h2 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h2>
-        <span className="text-[var(--text-muted)] text-xs">·</span>
-        <span className="text-xs text-[var(--text-muted)]">{district}, {state}</span>
-      </div>
-      <div className="flex items-center gap-4">
-        {/* SLA alert indicator */}
-        <div className="flex items-center gap-1.5 text-xs text-amber-400">
-          <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
-          2 cases breach SLA today
+    <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.05)] transition-all">
+      {/* 3px Top Saffron National Scheme Accent Rule */}
+      <div className="h-[3px] w-full bg-[#E05A1B]" aria-hidden="true" />
+
+      {/* Main container perfectly aligned with webpage max-w-7xl */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-16 flex items-center justify-between gap-4 sm:gap-6">
+          {/* Brand Mark (Larger font, bold and dignified) */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-slate-600 hover:text-[#0B3064] hover:bg-slate-100/80 md:hidden focus:outline-none focus:ring-2 focus:ring-[#0B3064] transition-colors"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            <Link
+              href="/officer"
+              className="flex items-center gap-2.5 group transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-xs group-hover:bg-[#144282] transition-colors shrink-0">
+                <ShieldCheck className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-lg sm:text-xl font-extrabold text-[#0B3064] tracking-tight">
+                Kural Sevi
+              </span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation Tabs: Increased font size (text-sm), balanced spacing, glassmorphic highlight */}
+          <nav
+            className="hidden md:flex items-center gap-2 lg:gap-2.5 py-1"
+            aria-label="Main Navigation"
+          >
+            {navItems.map((item) => {
+              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  id={`top-nav-${item.label.toLowerCase()}`}
+                  className={cn(
+                    'flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]',
+                    active
+                      ? 'bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB] font-bold shadow-2xs'
+                      : 'text-slate-600 hover:text-[#0B3064] hover:bg-white/90 font-semibold border border-transparent'
+                  )}
+                >
+                  <Icon className={cn('w-4 h-4 shrink-0 transition-transform duration-200', active ? 'text-[#0B3064]' : 'text-slate-400')} />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-0.5 rounded-full font-bold border ml-0.5',
+                        active
+                          ? 'bg-[#0B3064] text-white border-[#0B3064]'
+                          : 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]'
+                      )}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right Actions: SLA Alert Pill + Officer Avatar (Clean & Proportional) */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            {/* SLA Alert Badge */}
+            <Link
+              href="/officer/cases?filter=sla_breached"
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2] px-3 py-1.5 rounded-xl shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
+              title="2 cases breach statutory SLA today"
+            >
+              <AlertTriangle className="w-4 h-4 text-[#E05A1B] shrink-0 animate-pulse" />
+              <span>2 SLA</span>
+            </Link>
+
+            {/* Officer Avatar Button */}
+            <button
+              type="button"
+              className="w-8 h-8 rounded-full bg-[#0B3064] hover:bg-[#144282] flex items-center justify-center text-white text-xs sm:text-sm font-bold shrink-0 shadow-2xs transition-transform duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0B3064] cursor-pointer"
+              aria-label="Officer Profile — D. Kumar, DSWO"
+              title="D. Kumar, District Social Welfare Officer"
+            >
+              DK
+            </button>
+          </div>
         </div>
-        {/* Officer avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold cursor-pointer" title="Officer Profile">
-          DK
-        </div>
       </div>
+
+      {/* Mobile Drawer Dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md px-4 py-3 space-y-1.5 shadow-lg animate-in slide-in-from-top-2">
+          {navItems.map((item) => {
+            const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  'flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-150',
+                  active
+                    ? 'bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB]'
+                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className={cn('w-4 h-4', active ? 'text-[#0B3064]' : 'text-slate-400')} />
+                  <span>{item.label}</span>
+                </div>
+                {item.badge && (
+                  <span className="text-xs bg-[#FFF4ED] text-[#C24810] border border-[#FDD8C2] px-2 py-0.5 rounded-full font-bold">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 }

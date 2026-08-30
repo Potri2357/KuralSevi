@@ -9,16 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.4",
+    "@kural-sevi/shared": "*",
     "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.4",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^13.1.1",
+    "lucide-react": "^0.511.0",
     "next": "^15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^2.15.4",
-    "date-fns": "^4.1.0",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.511.0",
-    "@kural-sevi/shared": "*"
+    "reaviz": "^16.2.2",
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.10",

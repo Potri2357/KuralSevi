@@ -31,17 +31,17 @@ export function getSlaStatus(deadline: string): 'ok' | 'warning' | 'breached' {
 
 export function confidenceColor(label: string) {
   return {
-    high: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
-    medium: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-    needs_officer_review: 'text-rose-400 bg-rose-400/10 border-rose-400/20',
-  }[label] ?? 'text-gray-400 bg-gray-400/10 border-gray-400/20';
+    high: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]',
+    medium: 'text-slate-700 bg-slate-100 border-slate-200',
+    needs_officer_review: 'text-[#C24810] bg-[#FFF4ED] border-[#FDD8C2]',
+  }[label] ?? 'text-slate-700 bg-slate-100 border-slate-200';
 }
 
 export function confidenceLabel(label: string) {
   return {
     high: 'High Confidence',
     medium: 'Medium Confidence',
-    needs_officer_review: 'Needs Review',
+    needs_officer_review: 'Review Required',
   }[label] ?? label;
 }
 
@@ -54,8 +54,7 @@ export function pathwayTypeLabel(type: string) {
 }
 
 export function nsqfLevelColor(level: number) {
-  if (level <= 2) return 'text-sky-400';
-  if (level <= 4) return 'text-indigo-400';
-  if (level <= 6) return 'text-violet-400';
-  return 'text-purple-400';
+  if (level <= 3) return 'text-slate-700 bg-slate-100 border-slate-200';
+  if (level <= 5) return 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]';
+  return 'text-[#082142] bg-[#D7E5F8] border-[#9ABBE5]';
 }

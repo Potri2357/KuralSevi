@@ -1,11 +1,21 @@
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import {
+  CheckCircle2,
+  ListChecks,
+  UserCheck,
+  Cpu,
+  Volume2,
+  Clock,
+  type LucideIcon,
+} from 'lucide-react';
 
 interface AuditEvent {
   time: string;
   event: string;
   detail: string;
-  icon: string;
-  color: string;
+  icon: LucideIcon;
+  iconBg: string;
+  iconColor: string;
 }
 
 interface Props {
@@ -15,29 +25,86 @@ interface Props {
 
 export function ProfileAuditTimeline({ caseId, district }: Props) {
   const events: AuditEvent[] = [
-    { time: '09:12', event: 'Consent captured', detail: 'DPDP-compliant consent via IVR in Tamil', icon: '✓', color: 'emerald' },
-    { time: '09:14', event: 'Field collection started', detail: '7 PS-mandated fields collected over 18 minutes', icon: '⊞', color: 'indigo' },
-    { time: '09:32', event: 'Profile confirmed', detail: 'All 7 fields confirmed by beneficiary (FR-3). Completeness: 92%', icon: '◈', color: 'indigo' },
-    { time: '09:32', event: 'Recommendation engine run', detail: 'Stage 1 (hard filters): 2 trades excluded. Stage 2 (pgvector): 15 candidates. Stage 3 (AHP/TOPSIS): top 3 ranked.', icon: '🧠', color: 'violet' },
-    { time: '09:33', event: 'Pathways read back to beneficiary', detail: 'Top 3 read in Tamil via Sarvam Bulbul V3', icon: '🎙️', color: 'sky' },
-    { time: '09:33', event: 'Officer queue entry created', detail: `Case ${caseId} added to ${district} officer queue. SLA: 3 days`, icon: '⏳', color: 'amber' },
+    {
+      time: '09:12',
+      event: 'Informed Consent Captured',
+      detail: 'DPDP Act 2023 compliant consent recorded via voice IVR in Tamil',
+      icon: CheckCircle2,
+      iconBg: 'bg-[#EDF9F1] border-[#BBE8CB]',
+      iconColor: 'text-[#0A783C]',
+    },
+    {
+      time: '09:14',
+      event: 'Voice Profiling Intake Started',
+      detail: '7 PM-AJAY mandated fields elicited and transcribed across 18-minute session',
+      icon: ListChecks,
+      iconBg: 'bg-[#EAF1FB] border-[#BACEEB]',
+      iconColor: 'text-[#0B3064]',
+    },
+    {
+      time: '09:32',
+      event: 'Profile Readback Confirmed',
+      detail: 'All 7 mandatory profile fields confirmed by beneficiary with 92% completeness score',
+      icon: UserCheck,
+      iconBg: 'bg-[#EAF1FB] border-[#BACEEB]',
+      iconColor: 'text-[#0B3064]',
+    },
+    {
+      time: '09:32',
+      event: 'NSQF Match Engine Evaluated',
+      detail: 'Stage 1: Hard filters excluded 2 ineligible trades; Stage 2: Semantic vector match shortlisted 15 QP-NOS candidates; Stage 3: Multi-criteria AHP ranked top 3',
+      icon: Cpu,
+      iconBg: 'bg-[#EAF1FB] border-[#BACEEB]',
+      iconColor: 'text-[#0B3064]',
+    },
+    {
+      time: '09:33',
+      event: 'Recommendations Spoken in Tamil',
+      detail: 'Top 3 ranked pathways read aloud to beneficiary via Sarvam Bulbul V3 Tamil TTS',
+      icon: Volume2,
+      iconBg: 'bg-[#EAF1FB] border-[#BACEEB]',
+      iconColor: 'text-[#0B3064]',
+    },
+    {
+      time: '09:33',
+      event: 'Queued for District Officer Review',
+      detail: `Case ${caseId} placed in ${district} Welfare Officer docket with 3-day SLA window`,
+      icon: Clock,
+      iconBg: 'bg-[#FFF4ED] border-[#FDD8C2]',
+      iconColor: 'text-[#C24810]',
+    },
   ];
 
   return (
-    <Card>
-      <CardContent className="space-y-3 py-4">
-        {events.map((e, i) => (
-          <div key={i} className="flex items-start gap-4">
-            <div className="text-xs text-[var(--text-muted)] font-mono w-10 pt-0.5">{e.time}</div>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 bg-${e.color}-500/10 text-${e.color}-400 border border-${e.color}-500/20`}>
-              {e.icon}
+    <Card className="bg-[var(--bg-card)] border-[var(--border)] shadow-2xs">
+      <CardHeader>
+        <h3 className="font-bold text-sm text-[#0B3064]">
+          Chronological Intake & Verification Audit Trail
+        </h3>
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">
+          Immutable event log generated during voice interaction and algorithmic scoring
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4 py-4">
+        {events.map((e, i) => {
+          const Icon = e.icon;
+          return (
+            <div key={i} className="flex items-start gap-3.5">
+              <div className="text-xs text-[var(--text-muted)] font-mono w-12 pt-1 font-bold shrink-0">
+                {e.time}
+              </div>
+              <div
+                className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 shadow-2xs ${e.iconBg}`}
+              >
+                <Icon className={`w-4 h-4 ${e.iconColor}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">{e.event}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{e.detail}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-[var(--text-primary)]">{e.event}</p>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">{e.detail}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );

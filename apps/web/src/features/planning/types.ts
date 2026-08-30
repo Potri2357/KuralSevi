@@ -25,7 +25,7 @@ export interface PlanningInsight {
   icon: string;
   title: string;
   body: string;
-  urgency: 'indigo' | 'emerald' | 'amber';
+  urgency: 'chakra' | 'green' | 'saffron' | 'indigo' | 'emerald' | 'amber';
 }
 
 export interface PlanningMetricsData {

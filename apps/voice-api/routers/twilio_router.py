@@ -8,8 +8,8 @@ from fastapi import APIRouter, Request, Response, Form, Depends
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from typing import Optional
 
-from ..services.interview_coordinator import InterviewCoordinator, CoordinatorTurnResult
-from ..config import settings
+from services.interview_coordinator import InterviewCoordinator, CoordinatorTurnResult
+from config import settings
 
 router = APIRouter(prefix="/webhooks/twilio", tags=["Twilio IVR"])
 logger = logging.getLogger(__name__)

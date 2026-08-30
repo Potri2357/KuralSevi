@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "uvicorn main:app --reload --port 8000",
-    "test": "python3 -m unittest discover tests"
+    "dev": "PYTHONPATH=. .venv/bin/uvicorn main:app --reload --port 8000",
+    "test": "PYTHONPATH=. .venv/bin/python -m unittest discover tests"
   }
 }

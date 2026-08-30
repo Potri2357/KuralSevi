@@ -5,6 +5,7 @@ export interface BeneficiaryFormData {
   gender: string;
   age_group: string;
   channel_used: string;
+  phone?: string;
 }
 
 export interface MandatedFieldsData {

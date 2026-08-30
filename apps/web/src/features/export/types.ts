@@ -4,5 +4,5 @@ export interface ExportOption {
   desc: string;
   fields: string[];
   badge: string;
-  badgeVariant: 'emerald' | 'indigo' | 'violet' | 'rose' | 'amber';
+  badgeVariant: 'chakra' | 'saffron' | 'green' | 'emerald' | 'indigo' | 'violet' | 'rose' | 'amber' | 'blue' | 'sky' | 'default';
 }

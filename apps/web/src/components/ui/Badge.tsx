@@ -2,25 +2,35 @@ import { cn } from '@/lib/utils';
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'indigo' | 'amber' | 'rose' | 'emerald' | 'sky' | 'violet';
+  variant?: 'default' | 'chakra' | 'saffron' | 'green' | 'primary' | 'secondary' | 'indigo' | 'amber' | 'rose' | 'emerald' | 'sky' | 'violet' | 'blue';
   className?: string;
 }
 
 const variants = {
-  default: 'bg-white/5 text-[var(--text-secondary)] border-white/10',
-  indigo: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20',
-  amber: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
-  rose: 'bg-rose-500/10 text-rose-300 border-rose-500/20',
-  emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
-  sky: 'bg-sky-500/10 text-sky-300 border-sky-500/20',
-  violet: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
+  // Core 3-Color Minimal Palette
+  default: 'bg-slate-100 text-slate-700 border-slate-200',
+  chakra: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+  primary: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+  blue: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+  sky: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+  indigo: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+
+  saffron: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
+  secondary: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
+  amber: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
+  rose: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
+  violet: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
+
+  green: 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]',
+  success: 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]',
+  emerald: 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]',
 };
 
 export function Badge({ children, variant = 'default', className }: BadgeProps) {
   return (
     <span className={cn(
-      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-      variants[variant], className
+      'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border leading-none tracking-wide shadow-2xs',
+      variants[variant] || variants.default, className
     )}>
       {children}
     </span>

@@ -8,9 +8,9 @@ import logging
 from fastapi import APIRouter, Request, Query, Depends
 from typing import Optional
 
-from ..services.interview_coordinator import InterviewCoordinator, CoordinatorTurnResult
-from ..services.stt_service import transcribe_audio
-from ..config import settings
+from services.interview_coordinator import InterviewCoordinator, CoordinatorTurnResult
+from services.stt_service import transcribe_audio
+from config import settings
 
 router = APIRouter(prefix="/webhooks/whatsapp", tags=["WhatsApp"])
 logger = logging.getLogger(__name__)

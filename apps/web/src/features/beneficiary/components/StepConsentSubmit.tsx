@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ShieldCheck, ArrowLeft, CheckCircle2, Lock } from 'lucide-react';
 
 interface Props {
   onBack: () => void;
@@ -12,42 +13,63 @@ export function StepConsentSubmit({ onBack, onSubmit }: Props) {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
 
   return (
-    <Card>
+    <Card className="bg-[var(--bg-card)] border-[var(--border)] shadow-2xs">
       <CardHeader>
-        <h3 className="font-semibold text-sm">Consent & Submit (FR-13)</h3>
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-[#0B3064]" />
+          <h2 className="font-bold text-sm text-[#0B3064]">
+            Step 3: DPDP Act 2023 Consent & Final Verification
+          </h2>
+        </div>
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">
+          Explicit verbal consent must be affirmed before biometric or profile data submission
+        </p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="glass rounded-xl p-4 border border-indigo-500/20">
-          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-            The beneficiary has been informed: this information will be used only for NSQF-aligned skilling recommendations
-            and district planning under PM-AJAY GIA. Data is protected under DPDP Act 2023. They can withdraw at any time.
+
+      <CardContent className="space-y-5">
+        <div className="bg-[#EAF1FB] rounded-xl p-4 border border-[#BACEEB] space-y-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#0B3064] uppercase tracking-wider">
+            <Lock className="w-3.5 h-3.5 text-[#0B3064]" />
+            <span>DPDP Act 2023 Statutory Disclosure</span>
+          </div>
+          <p className="text-xs text-slate-700 leading-relaxed font-medium">
+            The beneficiary has been verbally informed in their native language (Tamil / Telugu / Hindi):
+            This profile data is collected solely for NSQF-aligned skilling recommendations, district livelihood planning, and GIA sanction support under PM-AJAY.
+            Personal identifying information is strictly protected and not shared with unauthorized commercial third parties. The beneficiary maintains the statutory right to withdraw consent or request rectification.
           </p>
         </div>
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            id="consent-checkbox"
-            type="checkbox"
-            checked={consentConfirmed}
-            onChange={e => setConsentConfirmed(e.target.checked)}
-            className="mt-0.5 accent-indigo-500"
-          />
-          <span className="text-sm text-[var(--text-secondary)]">
-            I confirm the beneficiary has given verbal consent in their preferred language.
-          </span>
-        </label>
+
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <label htmlFor="consent-affirmation-checkbox" className="flex items-start gap-3 cursor-pointer">
+            <input
+              id="consent-affirmation-checkbox"
+              type="checkbox"
+              checked={consentConfirmed}
+              onChange={(e) => setConsentConfirmed(e.target.checked)}
+              className="mt-1 w-4 h-4 rounded text-[#0B3064] bg-white border-slate-300 focus:ring-[#0B3064] cursor-pointer"
+            />
+            <span className="text-xs sm:text-sm text-slate-800 font-bold leading-normal">
+              I certify as the designated Field Worker / Animator that I have read the statutory notice to the beneficiary in their preferred language and obtained their explicit verbal consent.
+            </span>
+          </label>
+        </div>
       </CardContent>
+
       <CardFooter>
-        <div className="flex gap-3 w-full">
-          <Button id="step3-back" variant="secondary" onClick={onBack}>
-            ← Back
+        <div className="flex items-center justify-between w-full">
+          <Button id="step3-back" variant="secondary" onClick={onBack} className="shadow-2xs">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
           </Button>
           <Button
             id="submit-enrollment"
             onClick={onSubmit}
             disabled={!consentConfirmed}
-            className="ml-auto"
+            variant="success"
+            className="ml-auto font-bold"
           >
-            Submit Enrollment
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Confirm & Submit Beneficiary Profile</span>
           </Button>
         </div>
       </CardFooter>

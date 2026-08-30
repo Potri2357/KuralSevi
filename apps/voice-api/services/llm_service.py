@@ -10,7 +10,7 @@ from typing import Optional
 import google.generativeai as genai
 
 from .interview_fsm import InterviewSession, InterviewFSM, InterviewState
-from ..prompts.interview_system_prompt import (
+from prompts.interview_system_prompt import (
     build_system_prompt, CONSENT_SCRIPTS, WRAP_UP_SCRIPTS, LANGUAGE_GREETINGS
 )
 
