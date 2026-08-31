@@ -1,58 +1,83 @@
 @import "tailwindcss";
+@source "../";
 
-@layer base {
-  :root {
-    /* Base Surfaces */
-    --bg-base: #f8fafc;
-    --bg-surface: #ffffff;
-    --bg-card: rgba(255, 255, 255, 0.88);
-    --bg-card-hover: rgba(255, 255, 255, 0.98);
-    --border: #e2e8f0;
-    --border-subtle: #f1f5f9;
-
-    /* Core Tri-Color Palette: Ashok Chakra Blue (Primary) -> Saffron (Secondary) -> Green (Tertiary) */
-    --chakra-blue: #0b3064;
-    --chakra-blue-hover: #144282;
-    --chakra-blue-subtle: #eaf1fb;
-    --chakra-blue-border: #baceeb;
-
-    --saffron: #e05a1b;
-    --saffron-hover: #c24810;
-    --saffron-subtle: #fff4ed;
-    --saffron-border: #fdd8c2;
-
-    --india-green: #0a783c;
-    --india-green-hover: #085c2e;
-    --india-green-subtle: #edf9f1;
-    --india-green-border: #bbe8cb;
-
-    /* Neutral Typography */
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
-  }
+@theme {
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-sans: var(--font-dm-sans), var(--font-tamil), var(--font-telugu), var(--font-devanagari), system-ui, sans-serif;
 }
 
-@layer base {
-  * { box-sizing: border-box; }
-  body {
-    background-color: #f8fafc;
-    background-image: 
-      radial-gradient(at 5% 5%, rgba(234, 241, 251, 0.8) 0px, transparent 45%),
-      radial-gradient(at 95% 5%, rgba(255, 244, 237, 0.6) 0px, transparent 45%),
-      radial-gradient(at 80% 90%, rgba(237, 249, 241, 0.5) 0px, transparent 50%);
-    background-attachment: fixed;
-    color: var(--text-primary);
-    font-family: var(--font-sans), 'DM Sans', var(--font-tamil), var(--font-telugu), var(--font-devanagari), system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-  }
-  ::selection { background: rgba(11, 48, 100, 0.12); color: #0b3064; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+:root {
+  /* Base Surfaces */
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card-hover: rgba(255, 255, 255, 0.98);
+  --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
+
+  /* Core Tri-Color Palette: Ashok Chakra Blue (Primary) -> Saffron (Secondary) -> Green (Tertiary) */
+  --chakra-blue: #0b3064;
+  --chakra-blue-hover: #144282;
+  --chakra-blue-subtle: #eaf1fb;
+  --chakra-blue-border: #baceeb;
+
+  --saffron: #e05a1b;
+  --saffron-hover: #c24810;
+  --saffron-subtle: #fff4ed;
+  --saffron-border: #fdd8c2;
+
+  --india-green: #0a783c;
+  --india-green-hover: #085c2e;
+  --india-green-subtle: #edf9f1;
+  --india-green-border: #bbe8cb;
+
+  /* Neutral Typography */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  /* Typography Tokens & CSS Variables */
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-dm-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-sans: var(--font-dm-sans), var(--font-tamil), var(--font-telugu), var(--font-devanagari), system-ui, sans-serif;
 }
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(at 5% 5%, rgba(234, 241, 251, 0.8) 0px, transparent 45%),
+    radial-gradient(at 95% 5%, rgba(255, 244, 237, 0.6) 0px, transparent 45%),
+    radial-gradient(at 80% 90%, rgba(237, 249, 241, 0.5) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+::selection { background: rgba(11, 48, 100, 0.12); color: #0b3064; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+
+
 
 @layer utilities {
   .glass-card {

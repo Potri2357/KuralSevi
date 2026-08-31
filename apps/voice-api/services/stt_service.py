@@ -1,11 +1,10 @@
 """
 Kural Sevi — Speech-to-Text Service
-Primary: Sarvam AI Saaras (Indian regional languages, real-time)
+Primary: Sarvam AI Saarika v2.5 / Saaras (Indian regional languages, real-time)
 Fallback: Bhashini (government-aligned, for production)
 Mock mode: returns canned transcripts for local development
 """
 import httpx
-import base64
 import logging
 from typing import Optional
 
@@ -29,10 +28,12 @@ async def transcribe_audio(
     sarvam_api_key: str,
     sarvam_stt_url: str,
     mock_mode: bool = False,
-    mock_transcript: Optional[str] = None
+    mock_transcript: Optional[str] = None,
+    filename: str = "audio.wav",
+    content_type: str = "audio/wav",
 ) -> STTResult:
     """
-    Transcribes audio using Sarvam AI Saaras.
+    Transcribes audio using Sarvam AI (saarika:v2.5 / multipart form-data).
     Returns transcript with confidence score.
     """
     if mock_mode:
@@ -43,38 +44,62 @@ async def transcribe_audio(
             confidence=0.92,
             language_code=language_code
         )
-    
-    sarvam_lang = SARVAM_LANGUAGE_CODES.get(language_code, "hi-IN")
-    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-    
-    payload = {
-        "model": "saaras:v2",
-        "language_code": sarvam_lang,
-        "audio": audio_b64,
-        "with_timestamps": False,
-        "with_disfluencies": False,
+
+    sarvam_lang = SARVAM_LANGUAGE_CODES.get(language_code, "ta-IN")
+
+    # Detect extension/mime from filename if available
+    fn = filename or "audio.wav"
+    ct = content_type or "audio/wav"
+    if fn.endswith(".webm") or "webm" in ct:
+        fn = "audio.webm"
+        ct = "audio/webm"
+    elif fn.endswith(".mp4") or "mp4" in ct:
+        fn = "audio.mp4"
+        ct = "audio/mp4"
+
+    files = {
+        "file": (fn, audio_bytes, ct)
     }
-    
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    data = {
+        "model": "saarika:v2.5",
+        "language_code": sarvam_lang,
+    }
+    headers = {
+        "api-subscription-key": sarvam_api_key,
+    }
+
+    async with httpx.AsyncClient(timeout=35.0) as client:
         response = await client.post(
             sarvam_stt_url,
-            json=payload,
-            headers={
-                "api-subscription-key": sarvam_api_key,
-                "Content-Type": "application/json",
-            }
+            files=files,
+            data=data,
+            headers=headers
         )
-        
+
         if response.status_code != 200:
             logger.error(f"Sarvam STT error: {response.status_code} {response.text}")
-            raise Exception(f"STT failed: {response.status_code}")
-        
-        data = response.json()
-        transcript = data.get("transcript", "")
-        # Sarvam returns confidence per word; compute average
-        confidences = [w.get("confidence", 0.8) for w in data.get("words", [])]
-        avg_confidence = sum(confidences) / len(confidences) if confidences else 0.75
-        
+            raise Exception(f"STT failed: {response.status_code} - {response.text}")
+
+        res_json = response.json()
+        transcript = res_json.get("transcript", "").strip()
+
+        # If transcript was empty (e.g. ambient background or silence)
+        if not transcript:
+            logger.info("Sarvam STT returned empty transcript (silence or non-speech)")
+            return STTResult(
+                transcript="",
+                confidence=0.5,
+                language_code=language_code
+            )
+
+        # Sarvam returns confidence per word or overall
+        words = res_json.get("words", [])
+        if words:
+            confidences = [w.get("confidence", 0.85) for w in words if isinstance(w, dict)]
+            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.85
+        else:
+            avg_confidence = float(res_json.get("confidence", 0.88))
+
         return STTResult(
             transcript=transcript,
             confidence=avg_confidence,

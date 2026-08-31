@@ -2,9 +2,11 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
+import { MotionGraph } from '@/components/ui/MotionGraph';
 import { ConfidenceBadge } from '@/components/ui/ConfidenceBadge';
+
 import { Badge } from '@/components/ui/Badge';
-import { formatDateShort } from '@/lib/utils';
+import { formatDateShort, cn } from '@/lib/utils';
 import {
   Inbox,
   Clock,
@@ -16,7 +18,13 @@ import {
   UserPlus,
   BarChart3,
   Download,
+  MapPin,
+  Briefcase,
+  FileText,
+  Sun,
 } from 'lucide-react';
+
+import { IndicScroll, IndicHandloom, IndicAgriSickle } from '@/components/icons/indic';
 
 export const metadata: Metadata = {
   title: 'Officer Operations Dashboard — Kural Sevi',
@@ -39,6 +47,8 @@ const DEMO_RECENT_CASES = [
     trade: 'Self-Employed Tailor',
     confidence: 'high' as const,
     days_pending: 1,
+    tradeIcon: IndicHandloom,
+    tradeIconColor: 'text-[#E05A1B] bg-[#FFF4ED] border-[#FDD8C2]',
   },
   {
     id: '2',
@@ -47,6 +57,8 @@ const DEMO_RECENT_CASES = [
     trade: 'Solar Panel Installer',
     confidence: 'high' as const,
     days_pending: 2,
+    tradeIcon: Sun,
+    tradeIconColor: 'text-amber-600 bg-amber-50 border-amber-200',
   },
   {
     id: '3',
@@ -55,6 +67,8 @@ const DEMO_RECENT_CASES = [
     trade: 'Food Processing Tech',
     confidence: 'medium' as const,
     days_pending: 3,
+    tradeIcon: IndicAgriSickle,
+    tradeIconColor: 'text-[#0A783C] bg-[#EDF9F1] border-[#BBE8CB]',
   },
   {
     id: '4',
@@ -63,8 +77,11 @@ const DEMO_RECENT_CASES = [
     trade: 'Poultry Farm Worker',
     confidence: 'high' as const,
     days_pending: 1,
+    tradeIcon: IndicAgriSickle,
+    tradeIconColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
   },
 ];
+
 
 export default function OfficerOverviewPage() {
   return (
@@ -88,7 +105,7 @@ export default function OfficerOverviewPage() {
         </div>
       </div>
 
-      {/* Stats grid: Glassmorphic interactive StatCards with hover transitions */}
+      {/* Stats grid: Glassmorphic interactive StatCards with motion telemetry graphs */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           id="stat-total"
@@ -96,6 +113,15 @@ export default function OfficerOverviewPage() {
           value={DEMO_STATS.totalCases}
           accent="chakra"
           icon={<Inbox className="w-5 h-5 text-[#0B3064]" />}
+          sparkline={[
+            { label: 'Mon', value: 118 },
+            { label: 'Tue', value: 124 },
+            { label: 'Wed', value: 129 },
+            { label: 'Thu', value: 133 },
+            { label: 'Fri', value: 137 },
+            { label: 'Sat', value: 140 },
+            { label: 'Today', value: 142 },
+          ]}
         />
         <StatCard
           id="stat-pending"
@@ -104,6 +130,15 @@ export default function OfficerOverviewPage() {
           accent="saffron"
           icon={<Clock className="w-5 h-5 text-[#E05A1B]" />}
           trend={{ value: -12, label: 'vs yesterday' }}
+          sparkline={[
+            { label: 'Mon', value: 34 },
+            { label: 'Tue', value: 31 },
+            { label: 'Wed', value: 35 },
+            { label: 'Thu', value: 29 },
+            { label: 'Fri', value: 27 },
+            { label: 'Sat', value: 25 },
+            { label: 'Today', value: 23 },
+          ]}
         />
         <StatCard
           id="stat-sla"
@@ -111,6 +146,15 @@ export default function OfficerOverviewPage() {
           value={DEMO_STATS.slaBreached}
           accent="rose"
           icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+          sparkline={[
+            { label: 'Mon', value: 9 },
+            { label: 'Tue', value: 8 },
+            { label: 'Wed', value: 7 },
+            { label: 'Thu', value: 6 },
+            { label: 'Fri', value: 5 },
+            { label: 'Sat', value: 5 },
+            { label: 'Today', value: 4 },
+          ]}
         />
         <StatCard
           id="stat-done"
@@ -118,6 +162,15 @@ export default function OfficerOverviewPage() {
           value={DEMO_STATS.completedToday}
           accent="green"
           icon={<CheckCircle2 className="w-5 h-5 text-[#0A783C]" />}
+          sparkline={[
+            { label: '09:00', value: 3 },
+            { label: '11:00', value: 7 },
+            { label: '13:00', value: 10 },
+            { label: '14:30', value: 13 },
+            { label: '16:00', value: 16 },
+            { label: '17:00', value: 17 },
+            { label: 'Now', value: 18 },
+          ]}
         />
         <StatCard
           id="stat-confidence"
@@ -125,6 +178,16 @@ export default function OfficerOverviewPage() {
           value={`${DEMO_STATS.highConfidence}%`}
           accent="chakra"
           icon={<Sparkles className="w-5 h-5 text-[#0B3064]" />}
+          unit="%"
+          sparkline={[
+            { label: 'Mon', value: 74 },
+            { label: 'Tue', value: 77 },
+            { label: 'Wed', value: 79 },
+            { label: 'Thu', value: 81 },
+            { label: 'Fri', value: 82 },
+            { label: 'Sat', value: 83 },
+            { label: 'Today', value: 84 },
+          ]}
         />
         <StatCard
           id="stat-consultant"
@@ -132,8 +195,18 @@ export default function OfficerOverviewPage() {
           value={DEMO_STATS.consultantRequired}
           accent="saffron"
           icon={<Star className="w-5 h-5 text-[#E05A1B]" />}
+          sparkline={[
+            { label: 'Mon', value: 18 },
+            { label: 'Tue', value: 17 },
+            { label: 'Wed', value: 16 },
+            { label: 'Thu', value: 15 },
+            { label: 'Fri', value: 14 },
+            { label: 'Sat', value: 13 },
+            { label: 'Today', value: 12 },
+          ]}
         />
       </div>
+
 
       {/* Main Grid: Recent cases & SLA urgency panel (No horizontal scroll inside cards) */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -142,13 +215,21 @@ export default function OfficerOverviewPage() {
           <div>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-bold text-base text-[#0B3064]">
-                    Incoming Cases Awaiting Action
-                  </h2>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                    Latest voice-intake cases requiring DSWO sanction review
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center text-[#0B3064] shadow-2xs shrink-0">
+                    <Inbox className="w-5 h-5 text-[#0B3064]" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-base font-display text-[#0B3064] flex items-center gap-2">
+                      <span>Incoming Cases Awaiting Action</span>
+                      <span className="text-[11px] font-sans font-bold bg-[#EAF1FB] text-[#0B3064] px-2 py-0.5 rounded-full border border-[#BACEEB]">
+                        {DEMO_RECENT_CASES.length} New
+                      </span>
+                    </h2>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5 font-sans">
+                      Latest voice-intake cases requiring DSWO sanction review
+                    </p>
+                  </div>
                 </div>
                 <Link
                   href="/officer/cases"
@@ -161,54 +242,80 @@ export default function OfficerOverviewPage() {
             </CardHeader>
 
             <CardContent className="p-0">
-              {/* Header row */}
+              {/* Header row with contextual icons */}
               <div className="hidden sm:grid sm:grid-cols-12 gap-3 px-6 py-3 border-b border-slate-100 bg-slate-50/70 text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider">
-                <div className="col-span-3">Case ID</div>
-                <div className="col-span-2">District</div>
-                <div className="col-span-3">Top Recommended Trade</div>
-                <div className="col-span-2">Confidence</div>
-                <div className="col-span-2 text-right">Status</div>
+                <div className="col-span-3 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Case ID</span>
+                </div>
+                <div className="col-span-2 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  <span>District</span>
+                </div>
+                <div className="col-span-3 flex items-center gap-1.5">
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Recommended Trade</span>
+                </div>
+                <div className="col-span-2 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Confidence</span>
+                </div>
+                <div className="col-span-2 text-right flex items-center justify-end gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Status</span>
+                </div>
               </div>
 
-              {/* Interactive Case Rows without horizontal scroll */}
+              {/* Interactive Case Rows with rich icons */}
               <div className="divide-y divide-slate-100">
-                {DEMO_RECENT_CASES.map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/officer/cases/${c.id}`}
-                    className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-3 px-6 py-3.5 items-start sm:items-center hover:bg-[#EAF1FB]/40 transition-all duration-150 group cursor-pointer"
-                  >
-                    <div className="col-span-3 font-mono text-xs font-bold text-[#0B3064] group-hover:text-[#144282] group-hover:underline underline-offset-4 flex items-center gap-1.5">
-                      <span>{c.case_id}</span>
-                      <ArrowRight className="w-3 h-3 text-[#0B3064] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all hidden sm:inline" />
-                    </div>
-                    <div className="col-span-2 text-xs text-[var(--text-secondary)] font-medium">
-                      {c.district}
-                    </div>
-                    <div className="col-span-3 text-xs text-slate-800 font-semibold truncate w-full">
-                      {c.trade}
-                    </div>
-                    <div className="col-span-2">
-                      <ConfidenceBadge label={c.confidence} size="sm" />
-                    </div>
-                    <div className="col-span-2 sm:flex sm:justify-end w-full">
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-2xs leading-none whitespace-nowrap ${
-                          c.days_pending > 2
-                            ? 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]'
-                            : c.days_pending > 1
-                            ? 'bg-slate-100 text-slate-700 border-slate-200'
-                            : 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]'
-                        }`}
-                      >
-                        <Clock className="w-3 h-3 shrink-0" />
-                        <span>{c.days_pending}d pending</span>
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                {DEMO_RECENT_CASES.map((c) => {
+                  const TradeIcon = c.tradeIcon;
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/officer/cases/${c.id}`}
+                      className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-3 px-6 py-3.5 items-start sm:items-center hover:bg-[#EAF1FB]/40 transition-all duration-150 group cursor-pointer"
+                    >
+                      <div className="col-span-3 font-mono text-xs font-bold text-[#0B3064] group-hover:text-[#144282] group-hover:underline underline-offset-4 flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-md bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center text-[#0B3064] shrink-0 shadow-2xs">
+                          <IndicScroll className="w-3.5 h-3.5 text-[#0B3064]" />
+                        </div>
+                        <span>{c.case_id}</span>
+                        <ArrowRight className="w-3 h-3 text-[#0B3064] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all hidden sm:inline" />
+                      </div>
+                      <div className="col-span-2 text-xs text-[var(--text-secondary)] font-medium flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{c.district}</span>
+                      </div>
+                      <div className="col-span-3 text-xs text-slate-800 font-semibold truncate w-full flex items-center gap-2">
+                        <div className={cn('w-6 h-6 rounded-md border flex items-center justify-center shrink-0 shadow-2xs', c.tradeIconColor)}>
+                          <TradeIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="truncate">{c.trade}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <ConfidenceBadge label={c.confidence} size="sm" />
+                      </div>
+                      <div className="col-span-2 sm:flex sm:justify-end w-full">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-2xs leading-none whitespace-nowrap ${
+                            c.days_pending > 2
+                              ? 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]'
+                              : c.days_pending > 1
+                              ? 'bg-slate-100 text-slate-700 border-slate-200'
+                              : 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]'
+                          }`}
+                        >
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span>{c.days_pending}d pending</span>
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </CardContent>
+
           </div>
         </Card>
 
@@ -250,16 +357,37 @@ export default function OfficerOverviewPage() {
               </div>
             </CardHeader>
             <CardContent className="py-3">
-              <p className="text-2xl font-extrabold text-[#0B3064] tracking-tight font-mono">
-                {DEMO_STATS.consultantRequired} Cases
-              </p>
-              <p className="text-xs text-[var(--text-secondary)] mt-1.5 leading-relaxed font-medium">
+              <div className="flex items-baseline justify-between mb-1">
+                <p className="text-2xl font-extrabold text-[#0B3064] tracking-tight font-mono">
+                  {DEMO_STATS.consultantRequired} Cases
+                </p>
+                <span className="text-[11px] font-bold text-[#C24810] bg-[#FFF4ED] px-2 py-0.5 rounded-full border border-[#FDD8C2]">
+                  -33% backlog
+                </span>
+              </div>
+              <p className="text-xs text-[var(--text-secondary)] mb-3 leading-relaxed font-medium">
                 Self-employment & micro-enterprise pathways awaiting district financial consultant or SHG credit linkage assignment.
               </p>
+              <div className="pt-2 border-t border-[#FDD8C2]/60 -mx-1">
+                <MotionGraph
+                  data={[
+                    { label: 'Wk 1', value: 24 },
+                    { label: 'Wk 2', value: 21 },
+                    { label: 'Wk 3', value: 19 },
+                    { label: 'Wk 4', value: 16 },
+                    { label: 'Wk 5', value: 14 },
+                    { label: 'This Wk', value: 12 },
+                  ]}
+                  accent="saffron"
+                  height={56}
+                  unit=" cases"
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
 
       {/* Quick Navigation Action Grid: Interactive glass cards with hover lift */}
       <Card className="shadow-2xs">

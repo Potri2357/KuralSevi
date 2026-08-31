@@ -35,6 +35,14 @@ class Settings(BaseSettings):
     officer_sla_days: int = 3
     consent_hmac_secret: str
     
+    # Groq Fallback
+    groq_api_key: Optional[str] = None
+    groq_model: str = "llama-3.3-70b-versatile"
+    
+    # OpenRouter Fallback
+    openrouter_api_key: Optional[str] = None
+    openrouter_model: str = "meta-llama/llama-3.3-70b-instruct"
+    
     # Feature flags
     enable_mock_stt: bool = False
     enable_mock_tts: bool = False

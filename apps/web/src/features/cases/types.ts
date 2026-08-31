@@ -1,7 +1,8 @@
 import type { ConfidenceLabel, PathwayType } from '@kural-sevi/shared';
 
-export type FilterStatus = 'all' | 'pending' | 'needs_review' | 'sla_breached' | 'approved';
+export type FilterStatus = 'all' | 'pending' | 'needs_review' | 'sla_breached' | 'approved' | 'specialist';
 export type SortOption = 'sla' | 'confidence' | 'date';
+
 
 export interface CaseListItem {
   id: string;

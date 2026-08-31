@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/Badge';
 import { StepBeneficiaryInfo } from './StepBeneficiaryInfo';
 import { StepMandatedFields } from './StepMandatedFields';
 import { StepConsentSubmit } from './StepConsentSubmit';
-import { User, FileText, ShieldCheck, CheckCircle2, ChevronRight } from 'lucide-react';
+import { CheckCircle2, ChevronRight } from 'lucide-react';
+
+import { IndicNamaste, IndicScroll, IndicCertificate } from '@/components/icons/indic';
 import type { BeneficiaryFormData, MandatedFieldsData } from '../types';
 
 export function AssistedEnrollmentWizard() {
@@ -53,10 +55,11 @@ export function AssistedEnrollmentWizard() {
   };
 
   const steps = [
-    { num: 1, label: 'Beneficiary Info', icon: User },
-    { num: 2, label: '7 Mandated Dimensions', icon: FileText },
-    { num: 3, label: 'DPDP Consent & Submit', icon: ShieldCheck },
+    { num: 1, label: 'Beneficiary Info', icon: IndicNamaste },
+    { num: 2, label: '7 Mandated Dimensions', icon: IndicScroll },
+    { num: 3, label: 'DPDP Consent & Submit', icon: IndicCertificate },
   ];
+
 
   if (submittedCaseId) {
     return (

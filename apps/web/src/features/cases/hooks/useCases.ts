@@ -7,6 +7,7 @@ export function useCases(initialCases: CaseListItem[]) {
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [sort, setSort] = useState<SortOption>('sla');
   const [search, setSearch] = useState('');
+  const [district, setDistrict] = useState<string>('all');
 
   const filteredCases = useMemo(() => {
     return initialCases.filter(c => {
@@ -17,10 +18,14 @@ export function useCases(initialCases: CaseListItem[]) {
         const matchesTrade = c.top_trade.toLowerCase().includes(query);
         if (!matchesId && !matchesDistrict && !matchesTrade) return false;
       }
+      if (district !== 'all' && c.district.toLowerCase() !== district.toLowerCase()) {
+        return false;
+      }
       if (filter === 'pending') return c.officer_action === 'pending';
       if (filter === 'needs_review') return c.confidence === 'needs_officer_review';
       if (filter === 'sla_breached') return getSlaStatus(c.sla_deadline) === 'breached';
       if (filter === 'approved') return c.officer_action !== 'pending';
+      if (filter === 'specialist') return c.consultant_required;
       return true;
     }).sort((a, b) => {
       if (sort === 'sla') {
@@ -32,7 +37,8 @@ export function useCases(initialCases: CaseListItem[]) {
       }
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [initialCases, search, filter, sort]);
+  }, [initialCases, search, filter, sort, district]);
+
 
   const pendingCount = useMemo(() => {
     return initialCases.filter(c => c.officer_action === 'pending').length;
@@ -46,6 +52,9 @@ export function useCases(initialCases: CaseListItem[]) {
     setSort,
     search,
     setSearch,
+    district,
+    setDistrict,
     pendingCount,
   };
 }
+

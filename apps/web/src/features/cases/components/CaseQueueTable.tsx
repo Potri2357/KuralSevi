@@ -10,7 +10,22 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
+  FileText,
+  MapPin,
+  Briefcase,
+  Sparkles,
+  Flag,
+  UserCheck,
+  Award,
+  Sun,
+  User,
 } from 'lucide-react';
+import {
+  IndicScroll,
+  IndicHandloom,
+  IndicAgriSickle,
+  IndicToolTrowel,
+} from '@/components/icons/indic';
 import { cn, getDaysRemaining, getSlaStatus } from '@/lib/utils';
 import type { CaseListItem } from '../types';
 
@@ -19,6 +34,72 @@ interface Props {
   selectedIds?: string[];
   onToggleSelect?: (id: string) => void;
   onSelectAll?: () => void;
+}
+
+function getTradeIcon(trade: string) {
+  const t = (trade || '').toLowerCase();
+  if (
+    t.includes('tailor') ||
+    t.includes('weav') ||
+    t.includes('handloom') ||
+    t.includes('textile') ||
+    t.includes('handicraft')
+  ) {
+    return {
+      icon: IndicHandloom,
+      color: 'text-[#E05A1B] bg-[#FFF4ED] border-[#FDD8C2]',
+    };
+  }
+  if (
+    t.includes('food') ||
+    t.includes('agri') ||
+    t.includes('farm') ||
+    t.includes('poultry') ||
+    t.includes('crop')
+  ) {
+    return {
+      icon: IndicAgriSickle,
+      color: 'text-[#0A783C] bg-[#EDF9F1] border-[#BBE8CB]',
+    };
+  }
+  if (
+    t.includes('solar') ||
+    t.includes('electr') ||
+    t.includes('power') ||
+    t.includes('energy')
+  ) {
+    return {
+      icon: Sun,
+      color: 'text-amber-600 bg-amber-50 border-amber-200',
+    };
+  }
+  if (
+    t.includes('beauty') ||
+    t.includes('therapy') ||
+    t.includes('wellness') ||
+    t.includes('care')
+  ) {
+    return {
+      icon: Sparkles,
+      color: 'text-violet-600 bg-violet-50 border-violet-200',
+    };
+  }
+  if (
+    t.includes('mason') ||
+    t.includes('construct') ||
+    t.includes('plumb') ||
+    t.includes('weld') ||
+    t.includes('trowel')
+  ) {
+    return {
+      icon: IndicToolTrowel,
+      color: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]',
+    };
+  }
+  return {
+    icon: Briefcase,
+    color: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]',
+  };
 }
 
 export function CaseQueueTable({
@@ -49,36 +130,62 @@ export function CaseQueueTable({
                 </th>
               )}
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider whitespace-nowrap">
-                Case Identifier
+                <div className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Case Identifier</span>
+                </div>
               </th>
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider whitespace-nowrap">
-                District / State
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>District / State</span>
+                </div>
               </th>
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider whitespace-nowrap">
-                Top NSQF Recommendation
+                <div className="flex items-center gap-1.5">
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Top NSQF Recommendation</span>
+                </div>
               </th>
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider whitespace-nowrap">
-                Mode
+                <div className="flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Mode</span>
+                </div>
               </th>
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider whitespace-nowrap">
-                Confidence
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Confidence</span>
+                </div>
               </th>
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider whitespace-nowrap">
-                SLA Status
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>SLA Status</span>
+                </div>
               </th>
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider whitespace-nowrap">
-                Flags
+                <div className="flex items-center gap-1.5">
+                  <Flag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Flags</span>
+                </div>
               </th>
               <th scope="col" className="px-5 py-3.5 text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider text-right whitespace-nowrap">
-                Action
+                <div className="flex items-center justify-end gap-1.5">
+                  <span>Action</span>
+                </div>
               </th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-[var(--border-subtle)]">
             {cases.map((c) => {
               const slaStatus = getSlaStatus(c.sla_deadline);
               const daysLeft = getDaysRemaining(c.sla_deadline);
               const isSelected = selectedIds.includes(c.id);
+              const tradeMeta = getTradeIcon(c.top_trade);
+              const TradeIcon = tradeMeta.icon;
 
               return (
                 <tr
@@ -105,22 +212,34 @@ export function CaseQueueTable({
                     <Link
                       href={`/officer/cases/${c.id}`}
                       id={`case-link-${c.id}`}
-                      className="text-[#0B3064] hover:text-[#144282] transition-colors underline-offset-4 hover:underline"
+                      className="text-[#0B3064] hover:text-[#144282] transition-colors underline-offset-4 hover:underline flex items-center gap-2 group"
                     >
-                      {c.case_id}
+                      <div className="w-6 h-6 rounded-md bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center text-[#0B3064] shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                        <IndicScroll className="w-3.5 h-3.5 text-[#0B3064]" />
+                      </div>
+                      <span>{c.case_id}</span>
                     </Link>
                   </td>
                   <td className="px-5 py-4 text-xs font-medium text-[var(--text-secondary)] whitespace-nowrap">
-                    {c.district}, {c.state}
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{c.district}, {c.state}</span>
+                    </div>
                   </td>
                   <td className="px-5 py-4">
-                    <div className="space-y-0.5">
-                      <p className="text-xs text-[var(--text-primary)] font-semibold">{c.top_trade}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-[var(--text-muted)] font-mono">{c.qp_code}</span>
-                        <span className="text-[10px] text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-bold">
-                          L{c.nsqf_level}
-                        </span>
+                    <div className="flex items-start gap-2.5">
+                      <div className={cn('w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 shadow-2xs mt-0.5', tradeMeta.color)}>
+                        <TradeIcon className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-0.5 min-w-0">
+                        <p className="text-xs text-[var(--text-primary)] font-semibold truncate">{c.top_trade}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-[var(--text-muted)] font-mono">{c.qp_code}</span>
+                          <span className="text-[10px] text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-bold flex items-center gap-0.5">
+                            <Award className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                            <span>L{c.nsqf_level}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -133,12 +252,24 @@ export function CaseQueueTable({
                           ? 'chakra'
                           : 'default'
                       }
+                      className="gap-1 inline-flex items-center"
                     >
-                      {c.employment_pref === 'self'
-                        ? 'Self-Emp'
-                        : c.employment_pref === 'wage'
-                        ? 'Wage'
-                        : 'Either'}
+                      {c.employment_pref === 'self' ? (
+                        <>
+                          <User className="w-3 h-3 text-[#C24810]" />
+                          <span>Self-Emp</span>
+                        </>
+                      ) : c.employment_pref === 'wage' ? (
+                        <>
+                          <Briefcase className="w-3 h-3 text-[#0B3064]" />
+                          <span>Wage</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 text-slate-600" />
+                          <span>Either</span>
+                        </>
+                      )}
                     </Badge>
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap">
@@ -195,7 +326,7 @@ export function CaseQueueTable({
                         </Button>
                       </Link>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-2.5 py-1 rounded">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-2.5 py-1 rounded shadow-2xs">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Actioned
                       </span>
@@ -205,6 +336,7 @@ export function CaseQueueTable({
               );
             })}
           </tbody>
+
         </table>
       </div>
 

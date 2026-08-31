@@ -3,7 +3,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ShieldCheck,
   LayoutDashboard,
   Inbox,
   BarChart3,
@@ -14,6 +13,8 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+
+import { IndicEar } from '@/components/icons/indic';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -37,7 +38,7 @@ export function TopNav() {
       {/* Main container perfectly aligned with webpage max-w-7xl */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between gap-4 sm:gap-6">
-          {/* Brand Mark (Larger font, bold and dignified) */}
+          {/* Brand Mark (Cormorant Garamond display font + IndicEar icon) */}
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
@@ -52,14 +53,15 @@ export function TopNav() {
               href="/officer"
               className="flex items-center gap-2.5 group transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <div className="w-8 h-8 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-xs group-hover:bg-[#144282] transition-colors shrink-0">
-                <ShieldCheck className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-xs group-hover:bg-[#144282] transition-colors shrink-0">
+                <IndicEar className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
-              <span className="text-lg sm:text-xl font-extrabold text-[#0B3064] tracking-tight">
+              <span className="text-xl sm:text-2xl font-bold font-display text-[#0B3064] tracking-tight">
                 Kural Sevi
               </span>
             </Link>
           </div>
+
 
           {/* Desktop Navigation Tabs: Increased font size (text-sm), balanced spacing, glassmorphic highlight */}
           <nav

@@ -1,11 +1,18 @@
 import type { Metadata } from 'next';
-import { DM_Sans, Noto_Sans_Tamil, Noto_Sans_Telugu, Noto_Sans_Devanagari } from 'next/font/google';
+import { Cormorant_Garamond, DM_Sans, Noto_Sans_Tamil, Noto_Sans_Telugu, Noto_Sans_Devanagari } from 'next/font/google';
 import './globals.css';
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ['latin'],
+  variable: '--font-cormorant',
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
-  variable: '--font-sans',
-  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-dm-sans',
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -41,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${notoTamil.variable} ${notoTelugu.variable} ${notoDevanagari.variable}`}
+      className={`${cormorantGaramond.variable} ${dmSans.variable} ${notoTamil.variable} ${notoTelugu.variable} ${notoDevanagari.variable}`}
     >
       <body className="font-sans antialiased bg-[var(--bg-base)] text-[var(--text-primary)] min-h-screen">
         {children}
@@ -49,3 +56,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+

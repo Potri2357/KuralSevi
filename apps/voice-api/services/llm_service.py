@@ -7,8 +7,10 @@ import re
 import json
 import logging
 from typing import Optional
+import httpx
 import google.generativeai as genai
 
+from config import settings
 from .interview_fsm import InterviewSession, InterviewFSM, InterviewState
 from prompts.interview_system_prompt import (
     build_system_prompt, CONSENT_SCRIPTS, WRAP_UP_SCRIPTS, LANGUAGE_GREETINGS
@@ -40,12 +42,12 @@ class GeminiInterviewDriver:
     Maintains conversation history for context.
     """
 
-    def __init__(self, api_key: str, model: str = "gemini-2.5-flash", mock_mode: bool = False):
+    def __init__(self, api_key: str, model: str = "gemini-3.5-flash", mock_mode: bool = False):
         self.mock_mode = mock_mode
+        self.candidate_models = list(dict.fromkeys([model, "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash"]))
         if not mock_mode:
             genai.configure(api_key=api_key)
             self.model = genai.GenerativeModel(model)
-        self.conversation_history: list[dict] = []
 
     async def process_turn(
         self,
@@ -94,72 +96,187 @@ class GeminiInterviewDriver:
         else:
             user_msg = user_speech or "Continue the interview."
 
-        # Add to history
-        if user_speech:
-            self.conversation_history.append({"role": "user", "parts": [user_speech]})
+        # Call Gemini with system prompt and beneficiary utterance
+        prompt = (
+            f"{system_prompt}\n\n"
+            f"Beneficiary Spoke: \"{user_msg}\"\n\n"
+            "Instructions: If the beneficiary answered or mentioned relevant information (e.g. education, work, skills), "
+            "IMMEDIATELY extract it using EXTRACT::, warmly acknowledge what they said in Tamil, and ask the next uncollected question. "
+            "Never repeat or re-ask what they already told you!"
+        )
 
-        # Call Gemini
-        try:
-            chat = self.model.start_chat(history=self.conversation_history)
-            response = await chat.send_message_async(
-                f"{system_prompt}\n\nUser said: {user_msg}",
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.3,
-                    max_output_tokens=300,
+        raw_text = None
+        last_err = None
+        for m_name in self.candidate_models:
+            try:
+                mod = genai.GenerativeModel(m_name)
+                response = await mod.generate_content_async(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.2,
+                        max_output_tokens=1024,
+                    )
                 )
-            )
-            raw_text = response.text
-        except Exception as e:
-            logger.error(f"Gemini API error: {e}")
+                raw_text = response.text
+                if raw_text:
+                    break
+            except Exception as e:
+                last_err = e
+                logger.warning(f"Gemini model {m_name} hit error ({e}). Trying fallback model...")
+
+        # 2. Fallback to Groq if Gemini models failed or hit quota
+        if not raw_text and settings.groq_api_key:
+            logger.info("Falling back to Groq...")
+            raw_text = await self._call_groq(system_prompt, user_msg)
+
+        # 3. Fallback to OpenRouter if both Gemini and Groq failed or are unconfigured
+        if not raw_text and settings.openrouter_api_key:
+            logger.info("Falling back to OpenRouter...")
+            raw_text = await self._call_openrouter(system_prompt, user_msg)
+
+        if not raw_text:
+            logger.error(f"All LLM providers (Gemini, Groq, OpenRouter) exhausted. Last error: {last_err}")
             return LLMExtractionResult(
-                spoken_response="Sorry, please repeat that.",
+                spoken_response="மன்னிக்கவும், நீங்கள் கூறியதை மீண்டும் ஒருமுறை கூற முடியுமா?",
                 action="ask_field",
                 field_name=context.get("field_name"),
             )
 
-        # Add model response to history
-        self.conversation_history.append({"role": "model", "parts": [raw_text]})
-
+        logger.info(f"LLM RAW TEXT:\n{raw_text}")
         return self._parse_llm_response(raw_text, context)
 
+    async def _call_groq(self, system_prompt: str, user_msg: str) -> Optional[str]:
+        """Groq API fallback using OpenAI-compatible chat completions."""
+        if not settings.groq_api_key:
+            return None
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {settings.groq_api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": settings.groq_model or "llama-3.3-70b-versatile",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Beneficiary Spoke: \"{user_msg}\""},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 1024,
+        }
+        try:
+            async with httpx.AsyncClient(http1=True, http2=False, timeout=15.0) as client:
+                resp = await client.post(url, headers=headers, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    logger.info(f"Groq fallback succeeded using model {settings.groq_model}")
+                    return content
+                else:
+                    logger.warning(f"Groq API error ({resp.status_code}): {resp.text}")
+        except Exception as e:
+            logger.warning(f"Groq request failed: {e}")
+        return None
+
+    async def _call_openrouter(self, system_prompt: str, user_msg: str) -> Optional[str]:
+        """OpenRouter API fallback using universal endpoint."""
+        if not settings.openrouter_api_key:
+            return None
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {settings.openrouter_api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://kuralsevi.gov.in",
+            "X-Title": "Kural Sevi Voice Assistant",
+        }
+        payload = {
+            "model": settings.openrouter_model or "meta-llama/llama-3.3-70b-instruct",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Beneficiary Spoke: \"{user_msg}\""},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 1024,
+        }
+        try:
+            async with httpx.AsyncClient(http1=True, http2=False, timeout=15.0) as client:
+                resp = await client.post(url, headers=headers, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    logger.info(f"OpenRouter fallback succeeded using model {settings.openrouter_model}")
+                    return content
+                else:
+                    logger.warning(f"OpenRouter API error ({resp.status_code}): {resp.text}")
+        except Exception as e:
+            logger.warning(f"OpenRouter request failed: {e}")
+        return None
+
     def _parse_llm_response(self, raw_text: str, context: dict) -> LLMExtractionResult:
-        """Parse structured EXTRACT::, UNKNOWN::, CONFIRM:: tokens from LLM output."""
-        spoken_lines = []
+        """Parse structured EXTRACT::, UNKNOWN::, CONFIRM:: tokens from LLM output (handles multiline JSON)."""
         result_action = "ask_field"
         field_name = context.get("field_name")
         field_value = None
         confidence = 0.7
         readback_text = None
 
-        for line in raw_text.split("\n"):
-            line = line.strip()
+        # 1. Match EXTRACT: {...} or EXTRACT::{...}
+        extract_match = re.search(r"EXTRACT:?\s*:?\s*(\{.*?\})", raw_text, re.DOTALL)
+        if extract_match:
+            try:
+                data = json.loads(extract_match.group(1))
+                field_name = data.get("field", field_name)
+                field_value = data.get("value")
+                confidence = float(data.get("confidence", 0.85))
+                readback_text = data.get("readback", "")
+                result_action = "extract"
+            except Exception as e:
+                logger.warning(f"Failed to parse EXTRACT JSON: {e}")
 
-            if line.startswith("EXTRACT::"):
-                try:
-                    data = json.loads(line[len("EXTRACT::"):])
-                    field_name = data.get("field", field_name)
-                    field_value = data.get("value")
-                    confidence = float(data.get("confidence", 0.7))
-                    readback_text = data.get("readback", "")
-                    result_action = "extract"
-                except json.JSONDecodeError:
-                    logger.warning(f"Failed to parse EXTRACT JSON: {line}")
-
-            elif line.startswith("UNKNOWN::"):
+        # 2. Match UNKNOWN::{...}
+        unknown_match = re.search(r"UNKNOWN:?\s*:?\s*(\{.*?\})", raw_text, re.DOTALL)
+        if unknown_match:
+            try:
+                data = json.loads(unknown_match.group(1))
+                field_name = data.get("field", field_name)
+                result_action = "unknown"
+            except Exception:
                 result_action = "unknown"
 
-            elif line.startswith("CONFIRM::"):
-                try:
-                    data = json.loads(line[len("CONFIRM::"):])
-                    readback_text = data.get("question", "")
-                    result_action = "confirm"
-                except json.JSONDecodeError:
-                    pass
-            else:
-                if line:
-                    spoken_lines.append(line)
+        # 3. Match CONFIRM::{...}
+        confirm_match = re.search(r"CONFIRM:?\s*:?\s*(\{.*?\})", raw_text, re.DOTALL)
+        if confirm_match:
+            try:
+                data = json.loads(confirm_match.group(1))
+                readback_text = data.get("question", "")
+                result_action = "confirm"
+            except Exception:
+                pass
 
-        spoken_response = " ".join(spoken_lines).strip() or "Please continue."
+        # 4. Try extracting from SPOKEN: section first
+        spoken_response = ""
+        spoken_match = re.search(r"SPOKEN:\s*(.*?)(?=(?:EXTRACT|UNKNOWN|CONFIRM|$))", raw_text, re.DOTALL | re.IGNORECASE)
+        if spoken_match:
+            spoken_response = spoken_match.group(1).strip()
+
+        # Fallback to cleaning raw_text if SPOKEN: prefix was not matched
+        if not spoken_response:
+            spoken_response = raw_text
+
+        # Purge any residual tokens or JSON braces from spoken_response
+        cleaned_lines = []
+        for line in spoken_response.split("\n"):
+            line = line.strip()
+            if any(k in line.upper() for k in ["EXTRACT", "UNKNOWN", "CONFIRM", "{", "}"]):
+                continue
+            if line.startswith("```") or line.startswith("`") or line.startswith("-") or line.startswith("*"):
+                continue
+            if line:
+                cleaned_lines.append(line)
+        spoken_response = " ".join(cleaned_lines).strip()
+
+        if not spoken_response:
+            spoken_response = "சரிங்க, அடுத்த தகவலைப் பற்றி பேசுவோம்."
+
         return LLMExtractionResult(
             spoken_response=spoken_response,
             action=result_action,

@@ -11,9 +11,9 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 SARVAM_TTS_SPEAKERS = {
-    "ta": "anushka",    # Tamil female speaker
-    "hi": "amol",       # Hindi male speaker — neutral, trusted
-    "te": "pavithra",   # Telugu female speaker
+    "ta": "kavitha",    # Tamil speaker (bulbul:v3 compatible)
+    "hi": "priya",      # Hindi speaker (bulbul:v3 compatible)
+    "te": "kavitha",    # Telugu speaker (bulbul:v3 compatible)
 }
 
 class TTSResult:
