@@ -81,8 +81,12 @@ def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
         method="POST",
         language="ta-IN",
         speech_timeout="auto",
+        timeout=10,           # Wait up to 10s for caller to start speaking
+        action_on_empty_result=True,  # Still POST even if no speech (prevents hangup)
     )
     response.append(gather)
+    # Safety redirect: if Gather still gets nothing, re-prompt
+    response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-turn", method="POST")
     return response
 
 
@@ -176,23 +180,10 @@ async def process_turn(
         coordinator=coordinator,
     ))
 
-    # Load pre-rendered "please wait" Tamil audio
-    hold_audio_bytes = None
-    for p in ("static_audio/hold_ta.wav", "apps/voice-api/static_audio/hold_ta.wav"):
-        import os
-        if os.path.exists(p):
-            with open(p, "rb") as f:
-                hold_audio_bytes = f.read()
-            break
-
+    # Use a short silent pause instead of hold audio — avoids repetitive phrase
+    # Twilio will immediately redirect to interview-result which polls for the real answer
     response = VoiceResponse()
-    if hold_audio_bytes:
-        hold_id = _cache_audio(hold_audio_bytes)
-        response.play(f"{settings.voice_api_url}/webhooks/twilio/audio/{hold_id}.wav")
-    else:
-        response.say("ஒரு கணம் பொறுங்கள்.", language="en-IN")
-
-    # Redirect Twilio to poll for the real result
+    response.pause(length=1)  # 1s silence, then redirect to poll
     response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-result/{turn_id}")
     return Response(content=str(response), media_type="application/xml")
 
@@ -235,30 +226,24 @@ async def _process_turn_background(
 @router.api_route("/interview-result/{turn_id}", methods=["GET", "POST"])
 async def get_interview_result(turn_id: str):
     """
-    Polling endpoint: Twilio hits this after the hold audio finishes.
-    Waits up to 12 seconds for the background LLM task to complete, then returns TwiML.
+    Polling endpoint: Twilio hits this after the 1s pause.
+    Polls up to 14s (100ms × 140) for background LLM+TTS, then returns TwiML.
+    If still not ready, plays a short wait phrase once and redirects back to poll again.
     """
-    # Poll for up to 12 seconds (150ms intervals = ~80 polls)
-    for _ in range(80):
+    # Poll for up to 14 seconds (100ms intervals)
+    for _ in range(140):
         result = _pending_results.get(turn_id)
         if result is not None:
             del _pending_results[turn_id]  # Clean up
             response = _build_gather_response(result)
             return Response(content=str(response), media_type="application/xml")
-        await asyncio.sleep(0.15)
+        await asyncio.sleep(0.1)
 
-    # Timeout: result still not ready (LLM took >12s), ask user to repeat
-    logger.warning(f"Turn {turn_id} timed out waiting for LLM result")
+    # Timeout: LLM took >14s — play ONE wait phrase and try once more
+    logger.warning(f"Turn {turn_id} timed out (14s). Playing wait phrase.")
     response = VoiceResponse()
-    response.say("மன்னிக்கவும், மீண்டும் சொல்லுங்கள்.", language="en-IN")
-    gather = Gather(
-        input="speech",
-        action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn",
-        method="POST",
-        language="ta-IN",
-        speech_timeout="auto",
-    )
-    response.append(gather)
+    response.say("கொஞ்சம் நேரம் பொறுங்கள்.", language="en-IN")
+    response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-result/{turn_id}")
     return Response(content=str(response), media_type="application/xml")
 
 
