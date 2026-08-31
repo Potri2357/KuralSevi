@@ -110,20 +110,29 @@ async def handle_incoming_call(
     )
 
 
-@router.post("/interview-start")
+@router.api_route("/interview-start", methods=["GET", "POST"])
 async def start_interview(
     request: Request,
-    CallSid: str = Form(...),
-    From: str = Form(...),
-    language: str = Form(default="ta"),
-    district: str = Form(default="Namakkal"),
-    state: str = Form(default="Tamil Nadu"),
     coordinator: InterviewCoordinator = Depends(get_coordinator),
 ):
     """
-    Initiates an IVR interview turn.
+    Initiates an IVR interview turn. Accepts both GET and POST.
     Uses static pre-rendered Tamil consent audio for zero-latency first greeting.
     """
+    form_data = {}
+    if request.method == "POST":
+        try:
+            form = await request.form()
+            form_data = dict(form)
+        except Exception:
+            pass
+    query_data = dict(request.query_params)
+    data = {**query_data, **form_data}
+
+    CallSid = data.get("CallSid") or str(uuid.uuid4())
+    From = data.get("From") or data.get("Caller") or "+910000000000"
+    language = data.get("language") or "ta"
+
     turn_result: CoordinatorTurnResult = await coordinator.process_turn(
         phone=From,
         channel="ivr",
@@ -141,31 +150,40 @@ async def start_interview(
         method="POST",
         language="ta-IN",
         speech_timeout="auto",
+        timeout=10,
+        action_on_empty_result=True,
     )
     response.append(gather)
-    # Redirect fallback if no speech detected within timeout
-    response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-turn?CallSid={CallSid}&timeout=true")
+    # Redirect fallback if no speech detected within timeout — explicit POST
+    response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-turn?CallSid={CallSid}&timeout=true", method="POST")
 
     return Response(content=str(response), media_type="application/xml")
 
 
-@router.post("/interview-turn")
+@router.api_route("/interview-turn", methods=["GET", "POST"])
 async def process_turn(
     request: Request,
-    CallSid: str = Form(...),
-    From: Optional[str] = Form(default=None),
-    SpeechResult: Optional[str] = Form(default=None),
-    Confidence: Optional[float] = Form(default=0.7),
     coordinator: InterviewCoordinator = Depends(get_coordinator),
 ):
     """
     Async deferred processing to beat Twilio's 15s webhook timeout.
-
-    Pattern:
-    1. Immediately respond with brief hold phrase + <Redirect> to /interview-result/{turn_id}
-    2. Start background Task for LLM + TTS (takes 5-30s)
-    3. Twilio hits /interview-result which polls until ready (max 12s) then returns real TwiML
+    Accepts both GET and POST (via query params or form data).
     """
+    form_data = {}
+    if request.method == "POST":
+        try:
+            form = await request.form()
+            form_data = dict(form)
+        except Exception:
+            pass
+    query_data = dict(request.query_params)
+    data = {**query_data, **form_data}
+
+    CallSid = data.get("CallSid") or str(uuid.uuid4())
+    From = data.get("From") or data.get("Caller") or CallSid
+    SpeechResult = data.get("SpeechResult") or ""
+    Confidence = float(data.get("Confidence") or 0.7)
+
     phone = From or CallSid
     turn_id = str(uuid.uuid4())
     _pending_results[turn_id] = None  # Mark as "processing"
@@ -176,7 +194,7 @@ async def process_turn(
         phone=phone,
         call_sid=CallSid,
         speech_result=SpeechResult or "",
-        confidence=float(Confidence or 0.7),
+        confidence=Confidence,
         coordinator=coordinator,
     ))
 
@@ -184,7 +202,7 @@ async def process_turn(
     # Twilio will immediately redirect to interview-result which polls for the real answer
     response = VoiceResponse()
     response.pause(length=1)  # 1s silence, then redirect to poll
-    response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-result/{turn_id}")
+    response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-result/{turn_id}", method="POST")
     return Response(content=str(response), media_type="application/xml")
 
 

@@ -16,8 +16,32 @@ from services.stt_service import transcribe_audio
 from services.tts_service import synthesize_speech
 from config import settings
 
+import collections
+from fastapi.responses import HTMLResponse
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+# Ring buffer for live call logging (last 300 entries)
+_live_logs = collections.deque(maxlen=300)
+
+class RingBufferHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            _live_logs.append({
+                "time": record.asctime if hasattr(record, "asctime") else "",
+                "level": record.levelname,
+                "name": record.name,
+                "message": record.getMessage(),
+                "formatted": msg,
+            })
+        except Exception:
+            pass
+
+_rb_handler = RingBufferHandler()
+_rb_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+logging.getLogger().addHandler(_rb_handler)
 
 # Shared interview coordinator
 _shared_coordinator = InterviewCoordinator()
@@ -44,6 +68,65 @@ app.include_router(meta_whatsapp_router)
 # Support exact URL: /webhook/whatsapp and /webhooks/whatsapp mapping to Twilio WhatsApp
 app.add_api_route("/webhook/whatsapp", handle_twilio_whatsapp, methods=["POST"], tags=["Twilio WhatsApp Alias"])
 app.add_api_route("/webhooks/whatsapp/twilio", handle_twilio_whatsapp, methods=["POST"], tags=["Twilio WhatsApp Alias"])
+
+
+# ── Live Call Monitoring Dashboard & API ────────────────────────────────────────
+
+@app.get("/api/logs")
+async def get_raw_logs(limit: int = 100):
+    """Returns the last N log entries as JSON for programmatic inspection."""
+    logs_list = list(_live_logs)
+    return {"count": len(logs_list), "logs": logs_list[-limit:]}
+
+
+@app.get("/logs", response_class=HTMLResponse)
+async def view_logs_dashboard():
+    """Real-time browser dashboard displaying live telephony call processing logs."""
+    logs_list = list(_live_logs)[-150:]
+    logs_list.reverse()
+    
+    rows = []
+    for l in logs_list:
+        color = "#10b981" if l["level"] == "INFO" else "#f59e0b" if l["level"] == "WARNING" else "#ef4444"
+        rows.append(f"""
+        <div style="padding: 6px 12px; border-bottom: 1px solid #1e293b; font-family: ui-monospace, monospace; font-size: 12.5px; line-height: 1.5;">
+            <span style="color: #64748b;">{l['time']}</span>
+            <span style="color: {color}; font-weight: 600; margin: 0 8px;">[{l['level']}]</span>
+            <span style="color: #38bdf8; margin-right: 8px;">{l['name']}:</span>
+            <span style="color: #e2e8f0;">{l['message']}</span>
+        </div>
+        """)
+    rows_html = "".join(rows)
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Kural Sevi — Live Call Processing Logs</title>
+    <meta http-equiv="refresh" content="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {{ background: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; margin: 0; padding: 20px; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 16px; }}
+        .badge {{ background: #047857; color: #ecfdf5; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }}
+        .badge::before {{ content: ''; width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1.5s infinite; }}
+        @keyframes pulse {{ 0% {{ opacity: 1; }} 50% {{ opacity: 0.3; }} 100% {{ opacity: 1; }} }}
+        .log-box {{ background: #020617; border: 1px solid #1e293b; border-radius: 8px; overflow-x: auto; max-height: 80vh; overflow-y: auto; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h2 style="margin: 0; font-size: 20px; color: #38bdf8;">Kural Sevi — Live Call Telephony Logs</h2>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Auto-refreshing every 2s | Inspecting Groq LLM turns, Sarvam TTS/STT, and Twilio webhooks</p>
+        </div>
+        <div class="badge">Live Monitoring Active</div>
+    </div>
+    <div class="log-box">
+        {rows_html if rows_html else '<div style="padding: 24px; color: #64748b;">No call events logged yet. Trigger a call to see live data.</div>'}
+    </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
 
 
 # ── Stage 1: Interactive Browser Voice Test Endpoint ────────────────────────────
