@@ -202,18 +202,23 @@ class InterviewCoordinator:
                     confidence=llm_result.confidence,
                     readback_text=llm_result.readback_text or llm_result.field_value,
                 )
-                # Fire-and-forget parallel Supabase saves (non-blocking)
-                asyncio.create_task(asyncio.gather(
-                    self.sm.save_field_extraction(
-                        session_id=session.session_id,
-                        field_name=llm_result.field_name,
-                        field_value=llm_result.field_value,
-                        raw_transcript=user_speech,
-                        confidence=llm_result.confidence,
-                        readback_text=llm_result.readback_text or "",
-                    ),
-                    self.sm.confirm_field(session.session_id, llm_result.field_name),
-                    return_exceptions=True,
+                # Fire-and-forget parallel Supabase saves — must wrap gather() in a coroutine
+                async def _save_async(sid, fn, fv, raw, conf, rb):
+                    await asyncio.gather(
+                        self.sm.save_field_extraction(
+                            session_id=sid, field_name=fn, field_value=fv,
+                            raw_transcript=raw, confidence=conf, readback_text=rb,
+                        ),
+                        self.sm.confirm_field(sid, fn),
+                        return_exceptions=True,
+                    )
+                asyncio.create_task(_save_async(
+                    session.session_id,
+                    llm_result.field_name,
+                    llm_result.field_value,
+                    user_speech,
+                    llm_result.confidence,
+                    llm_result.readback_text or "",
                 ))
                 # Auto-confirm in FSM immediately (in-memory, no await needed)
                 fsm.transition("field_confirmed", field_name=llm_result.field_name)

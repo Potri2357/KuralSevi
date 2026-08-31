@@ -143,11 +143,21 @@ def _sanitize_for_tts(text: str, language_code: str) -> str:
         "te": "క్షమించండి, మళ్ళీ చెప్పండి.",
     }
 
-    # Strip JSON/EXTRACT artifacts
+    # Strip JSON/EXTRACT artifacts (including partial tokens like 'EXT', 'EXTRAC')
     import re
-    text = re.sub(r'EXTRACT\s*:.*', '', text, flags=re.DOTALL | re.IGNORECASE).strip()
-    text = re.sub(r'SPOKEN\s*:\s*', '', text, flags=re.IGNORECASE).strip()
-    text = re.sub(r'\{.*?\}', '', text, flags=re.DOTALL).strip()
+    # Remove EXTRACT/SPOKEN markers and everything after them on that line
+    text = re.sub(r'(?:EXTRACT|SPOKEN|EXT|EXTRAC)\s*:?.*', '', text, flags=re.DOTALL | re.IGNORECASE).strip()
+    # Remove JSON blocks
+    text = re.sub(r'\{[^}]*\}', '', text, flags=re.DOTALL).strip()
+    # Remove trailing English parentheticals: " (Information about ...)"
+    text = re.sub(r'\s*\([^)]*[a-zA-Z]{3,}[^)]*\)', '', text).strip()
+    # Remove lines that are mostly ASCII (English annotations mixed in)
+    lines = []
+    for line in text.splitlines():
+        ascii_ratio = sum(1 for c in line if ord(c) < 128 and c.isalpha()) / max(len(line), 1)
+        if ascii_ratio < 0.5:  # keep lines that are at least 50% non-ASCII
+            lines.append(line)
+    text = ' '.join(lines).strip()
 
     # Check for at least 3 Indic characters
     indic_count = sum(1 for c in text if lo <= ord(c) <= hi)
