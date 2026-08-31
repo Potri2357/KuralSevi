@@ -54,6 +54,7 @@ async def process_browser_speech(
     text: Optional[str] = Form(default=None),
     language: str = Form(default="ta"),
     speaker: Optional[str] = Form(default=None),
+    mime_type: Optional[str] = Form(default=None),
     phone: str = Form(default="+919876543210"),
     session_key: str = Form(default="web_test_session"),
 ):
@@ -78,8 +79,8 @@ async def process_browser_speech(
                 sarvam_api_key=settings.sarvam_api_key,
                 sarvam_stt_url=settings.sarvam_stt_url,
                 mock_mode=settings.enable_mock_stt,
-                filename=audio.filename or "audio.wav",
-                content_type=audio.content_type or "audio/wav",
+                filename=audio.filename or "audio.webm",
+                content_type=mime_type or audio.content_type or "audio/webm",
             )
             user_speech = stt_res.transcript
             stt_confidence = stt_res.confidence

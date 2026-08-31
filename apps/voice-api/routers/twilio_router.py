@@ -2,8 +2,15 @@
 Kural Sevi — Twilio IVR & Twilio WhatsApp Transport Adapter (FR-4a, FR-4b)
 Pure protocol translation layer:
 HTTP / TwiML Forms <───> InterviewCoordinator
+
+Async Pattern for Twilio 15s Webhook Timeout:
+  1. /interview-turn: Immediately returns <Play> hold audio + <Redirect> to /interview-result
+  2. Background asyncio.Task runs LLM + TTS in parallel
+  3. /interview-result: Polls until result is ready, then returns real TwiML
 """
 import logging
+import uuid
+import asyncio
 import httpx
 from fastapi import APIRouter, Request, Response, Form, Depends
 from twilio.twiml.voice_response import VoiceResponse, Gather
@@ -20,8 +27,63 @@ logger = logging.getLogger(__name__)
 # Shared application coordinator instance
 _coordinator = InterviewCoordinator()
 
+# Audio cache: audio_id -> WAV bytes
+_audio_cache: dict[str, bytes] = {}
+
+# Pending result cache: turn_id -> CoordinatorTurnResult | None (None = still processing)
+_pending_results: dict[str, Optional[CoordinatorTurnResult]] = {}
+
 def get_coordinator() -> InterviewCoordinator:
     return _coordinator
+
+
+# ── Audio Streaming Endpoint for Twilio <Play> ──────────────────────────────────
+
+@router.api_route("/audio/{audio_id}.wav", methods=["GET", "HEAD"])
+async def get_audio_wav(audio_id: str):
+    """Streams synthesized Sarvam AI Tamil audio WAV directly to Twilio."""
+    audio_bytes = _audio_cache.get(audio_id)
+    if not audio_bytes:
+        logger.warning(f"Audio ID {audio_id} not found in cache")
+        return Response(status_code=404)
+    return Response(content=audio_bytes, media_type="audio/wav")
+
+
+def _cache_audio(audio_bytes: bytes) -> str:
+    """Stores audio bytes and returns the playable URL path segment."""
+    audio_id = str(uuid.uuid4())
+    _audio_cache[audio_id] = audio_bytes
+    return audio_id
+
+
+def _play_or_say(response: VoiceResponse, turn_result: CoordinatorTurnResult, log_label: str = ""):
+    """Appends <Play> or <Say> depending on whether audio was synthesized."""
+    if turn_result.audio_bytes:
+        audio_id = _cache_audio(turn_result.audio_bytes)
+        audio_url = f"{settings.voice_api_url}/webhooks/twilio/audio/{audio_id}.wav"
+        logger.info(f"Serving Sarvam TTS {log_label} via <Play>: {audio_url}")
+        response.play(audio_url)
+    else:
+        logger.warning(f"No Sarvam audio {log_label}, falling back to <Say>")
+        response.say(turn_result.spoken_response[:300], language="en-IN")
+
+
+def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
+    """Builds a final TwiML response with <Play> + <Gather> for the next speech turn."""
+    response = VoiceResponse()
+    _play_or_say(response, turn_result, log_label="(turn)")
+    if turn_result.is_completed:
+        response.hangup()
+        return response
+    gather = Gather(
+        input="speech",
+        action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn",
+        method="POST",
+        language="ta-IN",
+        speech_timeout="auto",
+    )
+    response.append(gather)
+    return response
 
 
 # ── Twilio IVR Telephony ────────────────────────────────────────────────────────
@@ -32,16 +94,16 @@ async def handle_incoming_call(
     CallSid: str = Form(...),
     From: str = Form(...),
     To: str = Form(...),
+    coordinator: InterviewCoordinator = Depends(get_coordinator),
 ):
-    """Handles missed call callback acknowledgment."""
-    logger.info(f"Incoming call {CallSid} from {From}")
-    response = VoiceResponse()
-    response.say(
-        "குரல் சேவிக்கு அழைத்ததற்கு நன்றி. உங்கள் PM-AJAY வாழ்வாதார நேர்காணலுக்காக விரைவில் உங்களைத் திரும்ப அழைப்போம். நன்றி, வணக்கம்.",
-        language="ta-IN",
+    """Initiates live Tamil IVR interview directly on incoming call."""
+    return await start_interview(
+        request=request,
+        CallSid=CallSid,
+        From=From,
+        language="ta",
+        coordinator=coordinator,
     )
-    response.hangup()
-    return Response(content=str(response), media_type="application/xml")
 
 
 @router.post("/interview-start")
@@ -54,7 +116,10 @@ async def start_interview(
     state: str = Form(default="Tamil Nadu"),
     coordinator: InterviewCoordinator = Depends(get_coordinator),
 ):
-    """Initiates or resumes an IVR interview turn."""
+    """
+    Initiates an IVR interview turn.
+    Uses static pre-rendered Tamil consent audio for zero-latency first greeting.
+    """
     turn_result: CoordinatorTurnResult = await coordinator.process_turn(
         phone=From,
         channel="ivr",
@@ -64,16 +129,17 @@ async def start_interview(
     )
 
     response = VoiceResponse()
-    response.say(turn_result.spoken_response[:400], language=f"{language}-IN")
+    _play_or_say(response, turn_result, log_label="(start)")
 
     gather = Gather(
         input="speech",
         action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn",
         method="POST",
-        language=f"{language}-IN",
+        language="ta-IN",
         speech_timeout="auto",
     )
     response.append(gather)
+    # Redirect fallback if no speech detected within timeout
     response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-turn?CallSid={CallSid}&timeout=true")
 
     return Response(content=str(response), media_type="application/xml")
@@ -88,24 +154,103 @@ async def process_turn(
     Confidence: Optional[float] = Form(default=0.7),
     coordinator: InterviewCoordinator = Depends(get_coordinator),
 ):
-    """Processes spoken input and produces next TwiML step."""
-    phone = From or CallSid
+    """
+    Async deferred processing to beat Twilio's 15s webhook timeout.
 
-    turn_result: CoordinatorTurnResult = await coordinator.process_turn(
+    Pattern:
+    1. Immediately respond with brief hold phrase + <Redirect> to /interview-result/{turn_id}
+    2. Start background Task for LLM + TTS (takes 5-30s)
+    3. Twilio hits /interview-result which polls until ready (max 12s) then returns real TwiML
+    """
+    phone = From or CallSid
+    turn_id = str(uuid.uuid4())
+    _pending_results[turn_id] = None  # Mark as "processing"
+
+    # Fire LLM + TTS in background (non-blocking)
+    asyncio.create_task(_process_turn_background(
+        turn_id=turn_id,
         phone=phone,
-        channel="ivr",
-        user_speech=SpeechResult or "",
-        stt_confidence=float(Confidence or 0.7),
-        session_key=CallSid,
-    )
+        call_sid=CallSid,
+        speech_result=SpeechResult or "",
+        confidence=float(Confidence or 0.7),
+        coordinator=coordinator,
+    ))
+
+    # Load pre-rendered "please wait" Tamil audio
+    hold_audio_bytes = None
+    for p in ("static_audio/hold_ta.wav", "apps/voice-api/static_audio/hold_ta.wav"):
+        import os
+        if os.path.exists(p):
+            with open(p, "rb") as f:
+                hold_audio_bytes = f.read()
+            break
 
     response = VoiceResponse()
-    response.say(turn_result.spoken_response[:400], language="ta-IN")
+    if hold_audio_bytes:
+        hold_id = _cache_audio(hold_audio_bytes)
+        response.play(f"{settings.voice_api_url}/webhooks/twilio/audio/{hold_id}.wav")
+    else:
+        response.say("ஒரு கணம் பொறுங்கள்.", language="en-IN")
 
-    if turn_result.is_completed:
-        response.hangup()
-        return Response(content=str(response), media_type="application/xml")
+    # Redirect Twilio to poll for the real result
+    response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-result/{turn_id}")
+    return Response(content=str(response), media_type="application/xml")
 
+
+async def _process_turn_background(
+    turn_id: str,
+    phone: str,
+    call_sid: str,
+    speech_result: str,
+    confidence: float,
+    coordinator: InterviewCoordinator,
+):
+    """Background task: runs LLM + TTS and stores result in _pending_results."""
+    try:
+        turn_result = await coordinator.process_turn(
+            phone=phone,
+            channel="ivr",
+            user_speech=speech_result,
+            stt_confidence=confidence,
+            session_key=call_sid,
+        )
+        _pending_results[turn_id] = turn_result
+        logger.info(f"Background turn {turn_id} completed. Spoken: {turn_result.spoken_response[:60]}")
+    except Exception as e:
+        logger.error(f"Background turn {turn_id} failed: {e}", exc_info=True)
+        # Store a safe fallback result so Twilio doesn't hang indefinitely
+        from services.interview_coordinator import CoordinatorTurnResult
+        from services.interview_fsm import InterviewState
+        _pending_results[turn_id] = CoordinatorTurnResult(
+            session_id=call_sid,
+            spoken_response="மன்னிக்கவும், சிறிது நிறுத்தம் ஏற்பட்டது. மீண்டும் சொல்லுங்கள்.",
+            audio_bytes=None,
+            state=InterviewState.FIELD_COLLECTION,
+            is_completed=False,
+            case_id=None,
+            current_field=None,
+        )
+
+
+@router.api_route("/interview-result/{turn_id}", methods=["GET", "POST"])
+async def get_interview_result(turn_id: str):
+    """
+    Polling endpoint: Twilio hits this after the hold audio finishes.
+    Waits up to 12 seconds for the background LLM task to complete, then returns TwiML.
+    """
+    # Poll for up to 12 seconds (150ms intervals = ~80 polls)
+    for _ in range(80):
+        result = _pending_results.get(turn_id)
+        if result is not None:
+            del _pending_results[turn_id]  # Clean up
+            response = _build_gather_response(result)
+            return Response(content=str(response), media_type="application/xml")
+        await asyncio.sleep(0.15)
+
+    # Timeout: result still not ready (LLM took >12s), ask user to repeat
+    logger.warning(f"Turn {turn_id} timed out waiting for LLM result")
+    response = VoiceResponse()
+    response.say("மன்னிக்கவும், மீண்டும் சொல்லுங்கள்.", language="en-IN")
     gather = Gather(
         input="speech",
         action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn",

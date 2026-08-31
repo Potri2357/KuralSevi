@@ -3,6 +3,7 @@ Kural Sevi — Text-to-Speech Service
 Primary: Sarvam AI Bulbul V3 (natural Indian regional language TTS)
 Returns: WAV/MP3 audio bytes for streaming
 """
+import asyncio
 import httpx
 import base64
 import logging
@@ -44,45 +45,64 @@ async def synthesize_speech(
         ])
         return TTSResult(audio_bytes=wav_header, audio_format="wav")
     
-    speaker = speaker_override or SARVAM_TTS_SPEAKERS.get(language_code, "anushka")
-    
+    speaker = speaker_override or SARVAM_TTS_SPEAKERS.get(language_code, "kavitha")
+
+    # Sanitize text: strip artifacts, validate Indic chars, use safe fallback if needed
+    text = _sanitize_for_tts(text, language_code)
+    logger.info(f"TTS synthesizing ({language_code}): {text[:80]}")
+
     # Sarvam limits TTS to 500 chars per call; split if longer
     chunks = _split_text(text, max_chars=490)
     all_audio = b""
+
     
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        for chunk in chunks:
-            payload = {
-                "inputs": [chunk],
-                "target_language_code": _sarvam_lang(language_code),
-                "speaker": speaker,
-                "model": "bulbul:v3",
-                "enable_preprocessing": True,
-                "speech_sample_rate": 8000,  # 8kHz for telephony
-            }
-            
-            response = await client.post(
-                sarvam_tts_url,
-                json=payload,
-                headers={
-                    "api-subscription-key": sarvam_api_key,
-                    "Content-Type": "application/json",
-                }
-            )
-            
-            if response.status_code != 200:
-                logger.error(f"Sarvam TTS error: {response.status_code} {response.text}")
-                raise Exception(f"TTS failed: {response.status_code}")
-            
-            data = response.json()
-            audio_b64 = data.get("audios", [""])[0]
-            if audio_b64:
-                all_audio += base64.b64decode(audio_b64)
+    for chunk in chunks:
+        payload = {
+            "inputs": [chunk],
+            "target_language_code": _sarvam_lang(language_code),
+            "speaker": speaker,
+            "model": "bulbul:v3",
+            "enable_preprocessing": True,
+            "speech_sample_rate": 8000,  # 8kHz for telephony
+        }
+        
+        chunk_audio = None
+        for attempt in range(4):
+            try:
+                async with httpx.AsyncClient(http1=True, http2=False, timeout=20.0) as client:
+                    response = await client.post(
+                        sarvam_tts_url,
+                        json=payload,
+                        headers={
+                            "api-subscription-key": sarvam_api_key,
+                            "Content-Type": "application/json",
+                        }
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        audio_b64 = data.get("audios", [""])[0]
+                        if audio_b64:
+                            chunk_audio = base64.b64decode(audio_b64)
+                            break
+                    else:
+                        logger.warning(f"Sarvam TTS attempt {attempt+1} error: {response.status_code} {response.text}")
+            except Exception as e:
+                logger.warning(f"Sarvam TTS attempt {attempt+1} connection issue ({e}). Retrying...")
+                await asyncio.sleep(0.5)
+
+        if chunk_audio:
+            all_audio += chunk_audio
+        else:
+            logger.error("Failed to synthesize chunk from Sarvam TTS after retries")
+
+    if not all_audio:
+        raise Exception("All Sarvam TTS synthesis attempts failed")
     
     return TTSResult(audio_bytes=all_audio, audio_format="wav")
 
 def _sarvam_lang(code: str) -> str:
     return {"ta": "ta-IN", "hi": "hi-IN", "te": "te-IN"}.get(code, "hi-IN")
+
 
 def _split_text(text: str, max_chars: int = 490) -> list[str]:
     if len(text) <= max_chars:
@@ -99,3 +119,42 @@ def _split_text(text: str, max_chars: int = 490) -> list[str]:
         chunks.append(text[:cut + 1].strip())
         text = text[cut + 1:].strip()
     return chunks
+
+
+def _sanitize_for_tts(text: str, language_code: str) -> str:
+    """
+    Ensures the text contains Indic characters valid for Sarvam TTS.
+    Strips leading/trailing whitespace and JSON/token artifacts.
+    Falls back to a safe neutral Tamil/Hindi phrase if no Indic chars remain.
+    """
+    import unicodedata
+
+    # Indic Unicode block ranges Sarvam accepts
+    INDIC_RANGES = {
+        "ta": (0x0B80, 0x0BFF),   # Tamil block
+        "hi": (0x0900, 0x097F),   # Devanagari
+        "te": (0x0C00, 0x0C7F),   # Telugu
+    }
+    lo, hi = INDIC_RANGES.get(language_code, (0x0900, 0x0BFF))
+
+    SAFE_FALLBACKS = {
+        "ta": "மன்னிக்கவும், மீண்டும் சொல்லுங்கள்.",
+        "hi": "माफ़ कीजिए, कृपया दोबारा बोलें।",
+        "te": "క్షమించండి, మళ్ళీ చెప్పండి.",
+    }
+
+    # Strip JSON/EXTRACT artifacts
+    import re
+    text = re.sub(r'EXTRACT\s*:.*', '', text, flags=re.DOTALL | re.IGNORECASE).strip()
+    text = re.sub(r'SPOKEN\s*:\s*', '', text, flags=re.IGNORECASE).strip()
+    text = re.sub(r'\{.*?\}', '', text, flags=re.DOTALL).strip()
+
+    # Check for at least 3 Indic characters
+    indic_count = sum(1 for c in text if lo <= ord(c) <= hi)
+    if indic_count < 3:
+        fallback = SAFE_FALLBACKS.get(language_code, SAFE_FALLBACKS["ta"])
+        logger.warning(f"TTS text has insufficient Indic chars ({indic_count}). Using fallback. Original: {text[:60]!r}")
+        return fallback
+
+    return text.strip()
+

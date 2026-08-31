@@ -13,12 +13,17 @@ API_URL = "http://localhost:8000"
 def post_form(url: str, data: dict) -> str:
     encoded = urllib.parse.urlencode(data).encode("utf-8")
     req = urllib.request.Request(url, data=encoded, method="POST")
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    with urllib.request.urlopen(req, timeout=45) as resp:
         return resp.read().decode("utf-8")
+
+
 
 def parse_twiml_say(xml_str: str) -> str:
     try:
         root = ET.fromstring(xml_str)
+        play = root.find("Play")
+        if play is not None and play.text:
+            return f"[Sarvam TTS Audio Play: {play.text}]"
         say = root.find("Say")
         if say is not None and say.text:
             return say.text

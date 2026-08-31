@@ -68,7 +68,7 @@ async def transcribe_audio(
         "api-subscription-key": sarvam_api_key,
     }
 
-    async with httpx.AsyncClient(timeout=35.0) as client:
+    async with httpx.AsyncClient(http1=True, http2=False, timeout=35.0) as client:
         response = await client.post(
             sarvam_stt_url,
             files=files,

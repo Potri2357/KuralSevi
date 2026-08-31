@@ -42,12 +42,13 @@ class GeminiInterviewDriver:
     Maintains conversation history for context.
     """
 
-    def __init__(self, api_key: str, model: str = "gemini-3.5-flash", mock_mode: bool = False):
+    def __init__(self, api_key: str, model: str = "gemini-2.5-flash-8b", mock_mode: bool = False):
         self.mock_mode = mock_mode
-        self.candidate_models = list(dict.fromkeys([model, "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash"]))
+        self.candidate_models = list(dict.fromkeys([model, "gemini-2.5-flash-8b", "gemini-2.5-flash"]))
         if not mock_mode:
             genai.configure(api_key=api_key)
             self.model = genai.GenerativeModel(model)
+
 
     async def process_turn(
         self,

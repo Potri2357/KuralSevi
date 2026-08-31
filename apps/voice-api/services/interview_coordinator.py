@@ -5,9 +5,11 @@ Coordinates the conversational interview workflow across all channels (IVR, What
 Routers are thin protocol adapters; this service handles the business orchestration.
 All responses are natively voiced in regional languages (Tamil, Hindi, Telugu).
 """
+import os
 import logging
 from dataclasses import dataclass
 from typing import Optional
+
 
 from .session_manager import SessionManager
 from .llm_service import GeminiInterviewDriver, LLMExtractionResult
@@ -252,9 +254,17 @@ class InterviewCoordinator:
         )
 
     async def _synthesize_safe(self, text: str, language_code: str, speaker: Optional[str] = None) -> Optional[bytes]:
-        """Safely generates TTS audio without throwing unhandled exceptions."""
+        """Safely generates TTS audio with static cache and network retries."""
         if settings.enable_mock_tts or not text:
             return None
+
+        # Fast path: Pre-rendered static prompt for instant zero-latency playback
+        if "இந்த தகவல்கள் உங்கள் கல்வி" in text:
+            for p in ("static_audio/consent_ta.wav", "apps/voice-api/static_audio/consent_ta.wav"):
+                if os.path.exists(p):
+                    with open(p, "rb") as f:
+                        return f.read()
+
         try:
             tts_res: TTSResult = await synthesize_speech(
                 text=text,
@@ -266,8 +276,9 @@ class InterviewCoordinator:
             )
             return tts_res.audio_bytes
         except Exception as e:
-            logger.error(f"TTS synthesis error: {e}")
+            logger.error(f"TTS synthesis error: {repr(e)}", exc_info=True)
             return None
+
 
     async def handle_disconnect(self, phone: str, channel: str, session_key: Optional[str] = None):
         key = session_key or f"{channel}_{phone}"
