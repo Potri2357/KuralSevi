@@ -110,14 +110,32 @@ class GeminiInterviewDriver:
         raw_text = None
         last_err = None
 
-        # 1. PRIMARY: Groq (fastest ~1-2s) — skip if previously unreachable
-        if settings.groq_api_key and not getattr(self, '_groq_dead', False):
-            raw_text = await self._call_groq(system_prompt, user_msg)
-            if raw_text is None:
-                self._groq_dead = True  # Mark dead for this server process lifetime
-                logger.warning("Groq marked unavailable for this session. Using Gemini.")
+        # 1. PRIMARY: Groq (ultra-fast ~1-2s inference)
+        if settings.groq_api_key:
+            groq_candidates = list(dict.fromkeys([
+                settings.groq_model or "groq/compound-mini",
+                "groq/compound-mini",
+                "qwen/qwen3.8-27b",
+                "openai/gpt-oss-20b",
+            ]))
+            for g_model in groq_candidates:
+                try:
+                    raw_text = await self._call_groq(system_prompt, user_msg, model=g_model)
+                    if raw_text:
+                        logger.info(f"Groq primary succeeded with {g_model}")
+                        break
+                except Exception as ge:
+                    logger.warning(f"Groq candidate {g_model} failed: {ge}")
 
-        # 2. PRIMARY/FALLBACK: Gemini 2.5-flash
+        # 2. SECONDARY: OpenRouter fast fallback
+        if not raw_text and settings.openrouter_api_key:
+            try:
+                logger.info("Trying OpenRouter fallback...")
+                raw_text = await self._call_openrouter(system_prompt, user_msg)
+            except Exception as oe:
+                logger.warning(f"OpenRouter fallback failed: {oe}")
+
+        # 3. TERTIARY: Gemini fallback
         if not raw_text:
             for m_name in self.candidate_models:
                 try:
@@ -131,16 +149,11 @@ class GeminiInterviewDriver:
                     )
                     raw_text = response.text
                     if raw_text:
-                        logger.info(f"Gemini succeeded with {m_name}")
+                        logger.info(f"Gemini fallback succeeded with {m_name}")
                         break
                 except Exception as e:
                     last_err = e
-                    logger.warning(f"Gemini model {m_name} hit error ({e}). Trying fallback...")
-
-        # 3. LAST RESORT: OpenRouter
-        if not raw_text and settings.openrouter_api_key:
-            logger.info("Falling back to OpenRouter...")
-            raw_text = await self._call_openrouter(system_prompt, user_msg)
+                    logger.warning(f"Gemini model {m_name} hit error ({e}).")
 
         if not raw_text:
             logger.error(f"All LLM providers exhausted. Last error: {last_err}")
@@ -153,8 +166,8 @@ class GeminiInterviewDriver:
         logger.info(f"LLM RAW TEXT:\n{raw_text}")
         return self._parse_llm_response(raw_text, context)
 
-    async def _call_groq(self, system_prompt: str, user_msg: str) -> Optional[str]:
-        """Groq API PRIMARY: fastest LLM (~1-2s). Hard 5s timeout to fail fast to Gemini."""
+    async def _call_groq(self, system_prompt: str, user_msg: str, model: Optional[str] = None) -> Optional[str]:
+        """Groq API: fastest LLM (~1-2s). Uses httpx with User-Agent header and quick timeout."""
         if not settings.groq_api_key:
             return None
         import asyncio
@@ -162,36 +175,31 @@ class GeminiInterviewDriver:
         headers = {
             "Authorization": f"Bearer {settings.groq_api_key}",
             "Content-Type": "application/json",
+            "User-Agent": "KuralSevi/1.0",
         }
+        chosen_model = model or settings.groq_model or "groq/compound-mini"
         payload = {
-            "model": settings.groq_model or "llama-3.3-70b-versatile",
+            "model": chosen_model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Beneficiary Spoke: \"{user_msg}\""},
             ],
-            "temperature": 0.2,
-            "max_tokens": 512,
+            "temperature": 0.1,
+            "max_tokens": 400,
         }
-        for attempt in range(2):
-            try:
-                async with httpx.AsyncClient(http1=True, http2=False, timeout=5.0) as client:
-                    resp = await asyncio.wait_for(
-                        client.post(url, headers=headers, json=payload),
-                        timeout=5.0
-                    )
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        content = data["choices"][0]["message"]["content"]
-                        logger.info(f"Groq succeeded (attempt {attempt+1}) model={settings.groq_model}")
-                        return content
-                    else:
-                        logger.warning(f"Groq API error ({resp.status_code}): {resp.text[:200]}")
-                        return None
-            except (asyncio.TimeoutError, Exception) as e:
-                logger.warning(f"Groq attempt {attempt+1} failed ({type(e).__name__}). {'Retrying...' if attempt < 1 else 'Falling back.'}")
-                if attempt < 1:
-                    await asyncio.sleep(0.2)
-        return None
+        try:
+            async with httpx.AsyncClient(http1=True, http2=False, timeout=6.0) as client:
+                resp = await client.post(url, headers=headers, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    return content
+                else:
+                    logger.warning(f"Groq model {chosen_model} error ({resp.status_code}): {resp.text[:160]}")
+                    return None
+        except Exception as e:
+            logger.warning(f"Groq request to {chosen_model} failed: {e}")
+            return None
 
 
     async def _call_openrouter(self, system_prompt: str, user_msg: str) -> Optional[str]:
@@ -245,7 +253,14 @@ class GeminiInterviewDriver:
                 field_value = data.get("value")
                 confidence = float(data.get("confidence", 0.85))
                 readback_text = data.get("readback", "")
-                result_action = "extract"
+                # Only treat as true extraction if value is meaningful (not 'none' / 'null' / placeholder)
+                invalid_values = ("none", "null", "unknown", "n/a", "nil", "")
+                if field_value and str(field_value).strip().lower() not in invalid_values and confidence >= 0.5:
+                    result_action = "extract"
+                else:
+                    # Beneficiary hasn't provided the value yet or answered something else
+                    result_action = "ask_field"
+                    field_value = None
             except Exception as e:
                 logger.warning(f"Failed to parse EXTRACT JSON: {e}")
 

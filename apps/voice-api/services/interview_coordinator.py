@@ -272,7 +272,7 @@ class InterviewCoordinator:
             return None
 
         # Fast path: Pre-rendered static prompt for instant zero-latency playback
-        if "இந்த தகவல்கள் உங்கள் கல்வி" in text:
+        if "நான் குரல் செவி" in text or "இந்த தகவல்கள் உங்கள் கல்வி" in text:
             for p in ("static_audio/consent_ta.wav", "apps/voice-api/static_audio/consent_ta.wav"):
                 if os.path.exists(p):
                     with open(p, "rb") as f:
