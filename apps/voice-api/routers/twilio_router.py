@@ -80,8 +80,8 @@ def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
         action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn",
         method="POST",
         language="ta-IN",
-        speech_timeout="auto",
-        timeout=10,           # Wait up to 10s for caller to start speaking
+        speech_timeout="1",           # 1s pause detection (cuts 1.5s delay after caller stops speaking)
+        timeout=10,                   # Wait up to 10s for caller to start speaking
         action_on_empty_result=True,  # Still POST even if no speech (prevents hangup)
     )
     response.append(gather)
@@ -149,7 +149,7 @@ async def start_interview(
         action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn",
         method="POST",
         language="ta-IN",
-        speech_timeout="auto",
+        speech_timeout="1",           # 1s pause detection (cuts 1.5s dead silence)
         timeout=10,
         action_on_empty_result=True,
     )

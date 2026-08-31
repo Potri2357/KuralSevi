@@ -56,8 +56,15 @@ class SessionManager:
             return False  # Circuit open — skip DB
         return True
 
-    def _cb_record_failure(self):
+    def _cb_record_failure(self, err: Optional[Exception] = None):
         self._cb_failures += 1
+        err_str = str(err or "")
+        if "PGRST205" in err_str or "Could not find the table" in err_str:
+            # Tables do not exist in Supabase yet. Permanently switch to in-memory mode for this run.
+            self._cb_open_until = datetime.now(timezone.utc) + timedelta(days=365)
+            logger.info("Supabase tables not initialized (PGRST205). Operating in high-speed in-memory mode.")
+            return
+
         if self._cb_failures >= self._CB_THRESHOLD:
             self._cb_open_until = datetime.now(timezone.utc) + timedelta(seconds=self._CB_RESET_SECONDS)
             logger.warning(f"Supabase circuit breaker OPENED for {self._CB_RESET_SECONDS}s after {self._cb_failures} failures")
@@ -106,7 +113,7 @@ class SessionManager:
                     self._cb_record_success()
                     return created.data[0]
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase beneficiary query failed ({e}). Using in-memory fallback.")
 
         # In-memory fallback
@@ -157,7 +164,7 @@ class SessionManager:
                     self._cb_record_success()
                     session_id = result.data[0]["id"]
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase session creation failed ({e}). Using in-memory session.")
 
         interview_session = InterviewSession(
@@ -236,7 +243,7 @@ class SessionManager:
                     logger.info(f"Resumed session {session_id} from field: {interview_session.last_confirmed_field}")
                     return interview_session
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase resume query failed ({e}). Checking in-memory sessions.")
 
         # In-memory check
@@ -272,7 +279,7 @@ class SessionManager:
                     "readback_text": readback_text,
                 }, on_conflict="session_id,field_name").execute()
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase save_field_extraction failed ({e}).")
 
     async def confirm_field(self, session_id: str, field_name: str):
@@ -288,7 +295,7 @@ class SessionManager:
                     "last_confirmed_field": field_name,
                 }).eq("id", session_id).execute()
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase confirm_field failed ({e}).")
 
     async def mark_field_unknown(self, session_id: str, field_name: str):
@@ -300,7 +307,7 @@ class SessionManager:
                     "status": "unknown",
                 }, on_conflict="session_id,field_name").execute()
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase mark_field_unknown failed ({e}).")
 
     async def mark_session_dropped(self, session_id: str):
@@ -313,7 +320,7 @@ class SessionManager:
                     "dropped_at": datetime.now(timezone.utc).isoformat(),
                 }).eq("id", session_id).execute()
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase mark_session_dropped failed ({e}).")
 
     async def mark_session_completed(self, session_id: str):
@@ -326,7 +333,7 @@ class SessionManager:
                     "completed_at": datetime.now(timezone.utc).isoformat(),
                 }).eq("id", session_id).execute()
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase mark_session_completed failed ({e}).")
 
     # ── Consent ────────────────────────────────────────────────────────────────
@@ -353,7 +360,7 @@ class SessionManager:
                     "purpose": "Livelihood profiling and NSQF-aligned skilling recommendations under PM-AJAY GIA",
                 }).execute()
             except Exception as e:
-                self._cb_record_failure()
+                self._cb_record_failure(e)
                 logger.warning(f"Supabase save_consent failed ({e}).")
 
     # ── Profile creation ───────────────────────────────────────────────────────

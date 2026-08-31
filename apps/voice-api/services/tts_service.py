@@ -22,6 +22,20 @@ class TTSResult:
         self.audio_bytes = audio_bytes
         self.audio_format = audio_format
 
+# Global persistent keep-alive client pool for Sarvam (eliminates 3.8s TLS handshake on every turn)
+_tts_http_client: Optional[httpx.AsyncClient] = None
+
+def _get_http_client() -> httpx.AsyncClient:
+    global _tts_http_client
+    if _tts_http_client is None or _tts_http_client.is_closed:
+        _tts_http_client = httpx.AsyncClient(
+            http1=True,
+            http2=False,
+            timeout=10.0,
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=60.0),
+        )
+    return _tts_http_client
+
 async def synthesize_speech(
     text: str,
     language_code: str,
@@ -52,48 +66,46 @@ async def synthesize_speech(
     logger.info(f"TTS synthesizing ({language_code}): {text[:80]}")
 
     # Sarvam limits TTS to 500 chars per call; split if longer
-    chunks = _split_text(text, max_chars=490)
-    all_audio = b""
+    chunks = _split_text(text, max_chars=450)
+    client = _get_http_client()
 
-    
-    for chunk in chunks:
+    async def _synthesize_chunk(chunk: str) -> bytes:
         payload = {
             "inputs": [chunk],
             "target_language_code": _sarvam_lang(language_code),
             "speaker": speaker,
             "model": "bulbul:v3",
-            "enable_preprocessing": True,
-            "speech_sample_rate": 8000,  # 8kHz for telephony
+            "enable_preprocessing": False,  # False saves ~1.2s; LLM already outputs clean Tamil
+            "speech_sample_rate": 8000,     # 8kHz telephony standard
         }
-        
-        chunk_audio = None
-        for attempt in range(4):
+        for attempt in range(3):
             try:
-                async with httpx.AsyncClient(http1=True, http2=False, timeout=20.0) as client:
-                    response = await client.post(
-                        sarvam_tts_url,
-                        json=payload,
-                        headers={
-                            "api-subscription-key": sarvam_api_key,
-                            "Content-Type": "application/json",
-                        }
-                    )
-                    if response.status_code == 200:
-                        data = response.json()
-                        audio_b64 = data.get("audios", [""])[0]
-                        if audio_b64:
-                            chunk_audio = base64.b64decode(audio_b64)
-                            break
-                    else:
-                        logger.warning(f"Sarvam TTS attempt {attempt+1} error: {response.status_code} {response.text}")
+                response = await client.post(
+                    sarvam_tts_url,
+                    json=payload,
+                    headers={
+                        "api-subscription-key": sarvam_api_key,
+                        "Content-Type": "application/json",
+                    }
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    audio_b64 = data.get("audios", [""])[0]
+                    if audio_b64:
+                        return base64.b64decode(audio_b64)
+                else:
+                    logger.warning(f"Sarvam TTS error ({response.status_code}): {response.text[:120]}")
             except Exception as e:
                 logger.warning(f"Sarvam TTS attempt {attempt+1} connection issue ({e}). Retrying...")
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.15)
+        return b""
 
-        if chunk_audio:
-            all_audio += chunk_audio
-        else:
-            logger.error("Failed to synthesize chunk from Sarvam TTS after retries")
+    # Synthesize chunks in parallel if multiple
+    if len(chunks) == 1:
+        all_audio = await _synthesize_chunk(chunks[0])
+    else:
+        results = await asyncio.gather(*[_synthesize_chunk(c) for c in chunks])
+        all_audio = b"".join(results)
 
     if not all_audio:
         raise Exception("All Sarvam TTS synthesis attempts failed")

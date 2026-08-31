@@ -18,6 +18,20 @@ from prompts.interview_system_prompt import (
 
 logger = logging.getLogger(__name__)
 
+# Global persistent keep-alive client pool for Groq (eliminates 5s TLS handshake on every turn)
+_groq_http_client: Optional[httpx.AsyncClient] = None
+
+def _get_groq_client() -> httpx.AsyncClient:
+    global _groq_http_client
+    if _groq_http_client is None or _groq_http_client.is_closed:
+        _groq_http_client = httpx.AsyncClient(
+            http1=True,
+            http2=False,
+            timeout=6.0,
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=60.0),
+        )
+    return _groq_http_client
+
 class LLMExtractionResult:
     def __init__(
         self,
@@ -188,15 +202,15 @@ class GeminiInterviewDriver:
             "max_tokens": 400,
         }
         try:
-            async with httpx.AsyncClient(http1=True, http2=False, timeout=6.0) as client:
-                resp = await client.post(url, headers=headers, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    content = data["choices"][0]["message"]["content"]
-                    return content
-                else:
-                    logger.warning(f"Groq model {chosen_model} error ({resp.status_code}): {resp.text[:160]}")
-                    return None
+            client = _get_groq_client()
+            resp = await client.post(url, headers=headers, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                return content
+            else:
+                logger.warning(f"Groq model {chosen_model} error ({resp.status_code}): {resp.text[:160]}")
+                return None
         except Exception as e:
             logger.warning(f"Groq request to {chosen_model} failed: {e}")
             return None
