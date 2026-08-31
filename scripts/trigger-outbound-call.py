@@ -13,6 +13,24 @@ import base64
 import urllib.request
 import urllib.parse
 import urllib.error
+from pathlib import Path
+
+# Auto-load .env from project root (walk up to find it)
+def _load_dotenv():
+    search = Path(__file__).resolve().parent
+    for _ in range(5):
+        env_path = search / ".env"
+        if env_path.exists():
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, _, v = line.partition("=")
+                        os.environ.setdefault(k.strip(), v.strip())
+            return
+        search = search.parent
+
+_load_dotenv()
 
 def main():
     if len(sys.argv) < 2:
