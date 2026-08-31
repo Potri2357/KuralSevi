@@ -42,9 +42,10 @@ class GeminiInterviewDriver:
     Maintains conversation history for context.
     """
 
-    def __init__(self, api_key: str, model: str = "gemini-2.5-flash-8b", mock_mode: bool = False):
+    def __init__(self, api_key: str, model: str = "gemini-2.5-flash", mock_mode: bool = False):
         self.mock_mode = mock_mode
-        self.candidate_models = list(dict.fromkeys([model, "gemini-2.5-flash-8b", "gemini-2.5-flash"]))
+        # gemini-2.5-flash is currently the fastest valid model on v1beta
+        self.candidate_models = list(dict.fromkeys([model, "gemini-2.5-flash"]))
         if not mock_mode:
             genai.configure(api_key=api_key)
             self.model = genai.GenerativeModel(model)
@@ -108,35 +109,41 @@ class GeminiInterviewDriver:
 
         raw_text = None
         last_err = None
-        for m_name in self.candidate_models:
-            try:
-                mod = genai.GenerativeModel(m_name)
-                response = await mod.generate_content_async(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=0.2,
-                        max_output_tokens=1024,
-                    )
-                )
-                raw_text = response.text
-                if raw_text:
-                    break
-            except Exception as e:
-                last_err = e
-                logger.warning(f"Gemini model {m_name} hit error ({e}). Trying fallback model...")
 
-        # 2. Fallback to Groq if Gemini models failed or hit quota
-        if not raw_text and settings.groq_api_key:
-            logger.info("Falling back to Groq...")
+        # 1. PRIMARY: Groq (fastest ~1-2s) — skip if previously unreachable
+        if settings.groq_api_key and not getattr(self, '_groq_dead', False):
             raw_text = await self._call_groq(system_prompt, user_msg)
+            if raw_text is None:
+                self._groq_dead = True  # Mark dead for this server process lifetime
+                logger.warning("Groq marked unavailable for this session. Using Gemini.")
 
-        # 3. Fallback to OpenRouter if both Gemini and Groq failed or are unconfigured
+        # 2. PRIMARY/FALLBACK: Gemini 2.5-flash
+        if not raw_text:
+            for m_name in self.candidate_models:
+                try:
+                    mod = genai.GenerativeModel(m_name)
+                    response = await mod.generate_content_async(
+                        prompt,
+                        generation_config=genai.types.GenerationConfig(
+                            temperature=0.2,
+                            max_output_tokens=512,
+                        )
+                    )
+                    raw_text = response.text
+                    if raw_text:
+                        logger.info(f"Gemini succeeded with {m_name}")
+                        break
+                except Exception as e:
+                    last_err = e
+                    logger.warning(f"Gemini model {m_name} hit error ({e}). Trying fallback...")
+
+        # 3. LAST RESORT: OpenRouter
         if not raw_text and settings.openrouter_api_key:
             logger.info("Falling back to OpenRouter...")
             raw_text = await self._call_openrouter(system_prompt, user_msg)
 
         if not raw_text:
-            logger.error(f"All LLM providers (Gemini, Groq, OpenRouter) exhausted. Last error: {last_err}")
+            logger.error(f"All LLM providers exhausted. Last error: {last_err}")
             return LLMExtractionResult(
                 spoken_response="மன்னிக்கவும், நீங்கள் கூறியதை மீண்டும் ஒருமுறை கூற முடியுமா?",
                 action="ask_field",
@@ -147,9 +154,10 @@ class GeminiInterviewDriver:
         return self._parse_llm_response(raw_text, context)
 
     async def _call_groq(self, system_prompt: str, user_msg: str) -> Optional[str]:
-        """Groq API fallback using OpenAI-compatible chat completions."""
+        """Groq API PRIMARY: fastest LLM (~1-2s). Hard 5s timeout to fail fast to Gemini."""
         if not settings.groq_api_key:
             return None
+        import asyncio
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {settings.groq_api_key}",
@@ -162,21 +170,29 @@ class GeminiInterviewDriver:
                 {"role": "user", "content": f"Beneficiary Spoke: \"{user_msg}\""},
             ],
             "temperature": 0.2,
-            "max_tokens": 1024,
+            "max_tokens": 512,
         }
-        try:
-            async with httpx.AsyncClient(http1=True, http2=False, timeout=15.0) as client:
-                resp = await client.post(url, headers=headers, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    content = data["choices"][0]["message"]["content"]
-                    logger.info(f"Groq fallback succeeded using model {settings.groq_model}")
-                    return content
-                else:
-                    logger.warning(f"Groq API error ({resp.status_code}): {resp.text}")
-        except Exception as e:
-            logger.warning(f"Groq request failed: {e}")
+        for attempt in range(2):
+            try:
+                async with httpx.AsyncClient(http1=True, http2=False, timeout=5.0) as client:
+                    resp = await asyncio.wait_for(
+                        client.post(url, headers=headers, json=payload),
+                        timeout=5.0
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        content = data["choices"][0]["message"]["content"]
+                        logger.info(f"Groq succeeded (attempt {attempt+1}) model={settings.groq_model}")
+                        return content
+                    else:
+                        logger.warning(f"Groq API error ({resp.status_code}): {resp.text[:200]}")
+                        return None
+            except (asyncio.TimeoutError, Exception) as e:
+                logger.warning(f"Groq attempt {attempt+1} failed ({type(e).__name__}). {'Retrying...' if attempt < 1 else 'Falling back.'}")
+                if attempt < 1:
+                    await asyncio.sleep(0.2)
         return None
+
 
     async def _call_openrouter(self, system_prompt: str, user_msg: str) -> Optional[str]:
         """OpenRouter API fallback using universal endpoint."""

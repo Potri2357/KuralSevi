@@ -27,6 +27,10 @@ def hash_aadhaar(aadhaar: str, secret: str) -> str:
 
 
 class SessionManager:
+    # Circuit breaker: skip Supabase after N consecutive failures (opens for 5 min)
+    _CB_THRESHOLD = 1   # Open immediately on first failure (tables don't exist yet)
+    _CB_RESET_SECONDS = 300
+
     def __init__(self, supabase_url: str, service_role_key: str, hmac_secret: str):
         try:
             self.db: Optional[Client] = create_client(supabase_url, service_role_key)
@@ -40,6 +44,28 @@ class SessionManager:
         self._mem_sessions: Dict[str, InterviewSession] = {}
         self._mem_session_records: Dict[str, dict] = {}
 
+        # Circuit breaker state
+        self._cb_failures = 0
+        self._cb_open_until: Optional[datetime] = None
+
+    def _db_ok(self) -> bool:
+        """Returns True if Supabase calls should be attempted (circuit closed)."""
+        if not self.db:
+            return False
+        if self._cb_open_until and datetime.now(timezone.utc) < self._cb_open_until:
+            return False  # Circuit open — skip DB
+        return True
+
+    def _cb_record_failure(self):
+        self._cb_failures += 1
+        if self._cb_failures >= self._CB_THRESHOLD:
+            self._cb_open_until = datetime.now(timezone.utc) + timedelta(seconds=self._CB_RESET_SECONDS)
+            logger.warning(f"Supabase circuit breaker OPENED for {self._CB_RESET_SECONDS}s after {self._cb_failures} failures")
+
+    def _cb_record_success(self):
+        self._cb_failures = 0
+        self._cb_open_until = None
+
     # ── Beneficiary lookup / creation ──────────────────────────────────────────
 
     async def find_or_create_beneficiary(
@@ -51,11 +77,12 @@ class SessionManager:
     ) -> dict:
         phone_hash = hash_phone(phone, self.hmac_secret)
 
-        if self.db:
+        if self._db_ok():
             try:
                 # Look up existing beneficiary by phone hash
                 result = self.db.table("beneficiaries").select("*").eq("phone_hash", phone_hash).limit(1).execute()
                 if result.data:
+                    self._cb_record_success()
                     return result.data[0]
 
                 # Generate a new case ID
@@ -76,8 +103,10 @@ class SessionManager:
                 }
                 created = self.db.table("beneficiaries").insert(new_beneficiary).execute()
                 if created.data:
+                    self._cb_record_success()
                     return created.data[0]
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase beneficiary query failed ({e}). Using in-memory fallback.")
 
         # In-memory fallback
@@ -111,7 +140,7 @@ class SessionManager:
         token_expiry = (datetime.now(timezone.utc) + timedelta(minutes=SESSION_TOKEN_TTL_MINUTES)).isoformat()
         session_id = str(uuid.uuid4())
 
-        if self.db:
+        if self._db_ok():
             try:
                 db_session = {
                     "beneficiary_id": beneficiary_id,
@@ -125,8 +154,10 @@ class SessionManager:
                 }
                 result = self.db.table("sessions").insert(db_session).execute()
                 if result.data:
+                    self._cb_record_success()
                     session_id = result.data[0]["id"]
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase session creation failed ({e}). Using in-memory session.")
 
         interview_session = InterviewSession(
@@ -148,7 +179,7 @@ class SessionManager:
         phone_hash = hash_phone(phone, self.hmac_secret)
         now = datetime.now(timezone.utc).isoformat()
 
-        if self.db:
+        if self._db_ok():
             try:
                 result = (
                     self.db.table("sessions")
@@ -200,10 +231,12 @@ class SessionManager:
                         "resumed_count": (db_session.get("resumed_count", 0) + 1),
                         "call_sid": call_sid,
                     }).eq("id", session_id).execute()
+                    self._cb_record_success()
 
                     logger.info(f"Resumed session {session_id} from field: {interview_session.last_confirmed_field}")
                     return interview_session
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase resume query failed ({e}). Checking in-memory sessions.")
 
         # In-memory check
@@ -227,7 +260,7 @@ class SessionManager:
         confidence: float,
         readback_text: str,
     ):
-        if self.db:
+        if self._db_ok():
             try:
                 self.db.table("session_fields").upsert({
                     "session_id": session_id,
@@ -239,10 +272,11 @@ class SessionManager:
                     "readback_text": readback_text,
                 }, on_conflict="session_id,field_name").execute()
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase save_field_extraction failed ({e}).")
 
     async def confirm_field(self, session_id: str, field_name: str):
-        if self.db:
+        if self._db_ok():
             try:
                 now_str = datetime.now(timezone.utc).isoformat()
                 self.db.table("session_fields").update({
@@ -254,10 +288,11 @@ class SessionManager:
                     "last_confirmed_field": field_name,
                 }).eq("id", session_id).execute()
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase confirm_field failed ({e}).")
 
     async def mark_field_unknown(self, session_id: str, field_name: str):
-        if self.db:
+        if self._db_ok():
             try:
                 self.db.table("session_fields").upsert({
                     "session_id": session_id,
@@ -265,30 +300,33 @@ class SessionManager:
                     "status": "unknown",
                 }, on_conflict="session_id,field_name").execute()
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase mark_field_unknown failed ({e}).")
 
     async def mark_session_dropped(self, session_id: str):
         if session_id in self._mem_session_records:
             self._mem_session_records[session_id]["state"] = "dropped"
-        if self.db:
+        if self._db_ok():
             try:
                 self.db.table("sessions").update({
                     "state": "dropped",
                     "dropped_at": datetime.now(timezone.utc).isoformat(),
                 }).eq("id", session_id).execute()
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase mark_session_dropped failed ({e}).")
 
     async def mark_session_completed(self, session_id: str):
         if session_id in self._mem_session_records:
             self._mem_session_records[session_id]["state"] = "completed"
-        if self.db:
+        if self._db_ok():
             try:
                 self.db.table("sessions").update({
                     "state": "completed",
                     "completed_at": datetime.now(timezone.utc).isoformat(),
                 }).eq("id", session_id).execute()
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase mark_session_completed failed ({e}).")
 
     # ── Consent ────────────────────────────────────────────────────────────────
@@ -302,7 +340,7 @@ class SessionManager:
         consent_text: str,
         consent_given: bool,
     ):
-        if self.db:
+        if self._db_ok():
             try:
                 consent_hash = hashlib.sha256(consent_text.encode()).hexdigest()
                 self.db.table("consent_records").insert({
@@ -315,6 +353,7 @@ class SessionManager:
                     "purpose": "Livelihood profiling and NSQF-aligned skilling recommendations under PM-AJAY GIA",
                 }).execute()
             except Exception as e:
+                self._cb_record_failure()
                 logger.warning(f"Supabase save_consent failed ({e}).")
 
     # ── Profile creation ───────────────────────────────────────────────────────
@@ -331,7 +370,7 @@ class SessionManager:
             return f.value if f and f.status in ("confirmed",) else None
 
         profile_id = str(uuid.uuid4())
-        if self.db:
+        if self._db_ok():
             try:
                 profile_data = {
                     "beneficiary_id": session.beneficiary_id,

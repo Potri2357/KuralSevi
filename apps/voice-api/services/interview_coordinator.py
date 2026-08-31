@@ -6,6 +6,8 @@ Routers are thin protocol adapters; this service handles the business orchestrat
 All responses are natively voiced in regional languages (Tamil, Hindi, Telugu).
 """
 import os
+import time
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Optional
@@ -200,17 +202,21 @@ class InterviewCoordinator:
                     confidence=llm_result.confidence,
                     readback_text=llm_result.readback_text or llm_result.field_value,
                 )
-                await self.sm.save_field_extraction(
-                    session_id=session.session_id,
-                    field_name=llm_result.field_name,
-                    field_value=llm_result.field_value,
-                    raw_transcript=user_speech,
-                    confidence=llm_result.confidence,
-                    readback_text=llm_result.readback_text or "",
-                )
-                # Auto-confirm in conversational flow so interview advances smoothly
+                # Fire-and-forget parallel Supabase saves (non-blocking)
+                asyncio.create_task(asyncio.gather(
+                    self.sm.save_field_extraction(
+                        session_id=session.session_id,
+                        field_name=llm_result.field_name,
+                        field_value=llm_result.field_value,
+                        raw_transcript=user_speech,
+                        confidence=llm_result.confidence,
+                        readback_text=llm_result.readback_text or "",
+                    ),
+                    self.sm.confirm_field(session.session_id, llm_result.field_name),
+                    return_exceptions=True,
+                ))
+                # Auto-confirm in FSM immediately (in-memory, no await needed)
                 fsm.transition("field_confirmed", field_name=llm_result.field_name)
-                await self.sm.confirm_field(session.session_id, llm_result.field_name)
 
             elif llm_result.action == "unknown" and llm_result.field_name:
                 fsm.transition("field_unknown", field_name=llm_result.field_name)
@@ -241,7 +247,9 @@ class InterviewCoordinator:
             spoken_text = next_turn.spoken_response
 
         # ── Turn 6: Synthesize TTS Audio via Sarvam AI ──────────────────────────
+        t0 = time.perf_counter()
         audio_bytes = await self._synthesize_safe(spoken_text, session.language_code, speaker=speaker)
+        logger.info(f"TTS done in {time.perf_counter()-t0:.2f}s for: {spoken_text[:60]!r}")
 
         return CoordinatorTurnResult(
             session_id=session.session_id,
