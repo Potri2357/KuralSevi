@@ -5,6 +5,10 @@ All settings loaded from environment variables.
 from pydantic_settings import BaseSettings
 from typing import Optional
 
+from pathlib import Path
+
+_ROOT_ENV = str(Path(__file__).resolve().parent.parent.parent / ".env")
+
 class Settings(BaseSettings):
     # Supabase
     supabase_url: str
@@ -37,7 +41,7 @@ class Settings(BaseSettings):
     
     # Groq Fallback
     groq_api_key: Optional[str] = None
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "llama-3.1-8b-instant"
     
     # OpenRouter Fallback
     openrouter_api_key: Optional[str] = None
@@ -49,7 +53,7 @@ class Settings(BaseSettings):
     enable_mock_llm: bool = False
     
     class Config:
-        env_file = "../../.env"
+        env_file = _ROOT_ENV
         case_sensitive = False
         extra = "ignore"
 

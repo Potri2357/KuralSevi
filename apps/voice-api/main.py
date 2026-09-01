@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers.twilio_router import router as twilio_router, handle_twilio_whatsapp
 from routers.whatsapp_router import router as meta_whatsapp_router
-from services.interview_coordinator import InterviewCoordinator
+from services.interview_coordinator import InterviewCoordinator, get_completed_calls_records
 from services.stt_service import transcribe_audio
 from services.tts_service import synthesize_speech
 from config import settings
@@ -79,7 +79,7 @@ async def get_raw_logs(limit: int = 100):
     return {"count": len(logs_list), "logs": logs_list[-limit:]}
 
 
-@app.get("/logs", response_class=HTMLResponse)
+@app.api_route("/logs", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def view_logs_dashboard():
     """Real-time browser dashboard displaying live telephony call processing logs."""
     logs_list = list(_live_logs)[-150:]
@@ -123,6 +123,102 @@ async def view_logs_dashboard():
     </div>
     <div class="log-box">
         {rows_html if rows_html else '<div style="padding: 24px; color: #64748b;">No call events logged yet. Trigger a call to see live data.</div>'}
+    </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
+
+
+@app.api_route("/api/completed-calls", methods=["GET", "HEAD"])
+async def get_completed_calls():
+    """Returns the list of all completed call interview records and extracted fields."""
+    records = get_completed_calls_records()
+    return {"count": len(records), "records": records}
+
+
+@app.api_route("/call-records", methods=["GET", "HEAD"], response_class=HTMLResponse)
+async def view_call_records_dashboard():
+    """Visual dashboard displaying structured completed call records, fields, and transcripts."""
+    records = get_completed_calls_records()
+
+    cards = []
+    for r in records:
+        fields_html = ""
+        for fn, fv in r.get("confirmed_fields", {}).items():
+            nice_name = fn.replace("_", " ").title()
+            fields_html += f"""
+            <div style="background: #1e293b; padding: 8px 12px; border-radius: 6px; border: 1px solid #334155;">
+                <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">{nice_name}</div>
+                <div style="font-size: 13.5px; color: #f8fafc; margin-top: 2px; font-weight: 500;">{fv}</div>
+            </div>
+            """
+        if not fields_html:
+            fields_html = '<div style="color: #64748b; font-size: 13px;">No fields confirmed yet</div>'
+
+        turns_html = ""
+        for t in r.get("transcript", []):
+            u_speech = t.get("user", "")
+            a_speech = t.get("assistant", "")
+            time_str = t.get("timestamp", "")
+            turns_html += f"""
+            <div style="margin-bottom: 10px; font-size: 13px; line-height: 1.4;">
+                <div style="color: #38bdf8; font-weight: 600;">👤 Beneficiary ({time_str}): <span style="color: #e2e8f0; font-weight: 400;">"{u_speech}"</span></div>
+                <div style="color: #34d399; font-weight: 600; margin-top: 2px;">🤖 Kural Sevi: <span style="color: #cbd5e1; font-weight: 400;">"{a_speech}"</span></div>
+            </div>
+            """
+
+        cards.append(f"""
+        <div style="background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 14px;">
+                <div>
+                    <span style="font-size: 16px; font-weight: 700; color: #38bdf8;">📞 {r.get('phone', 'Unknown')}</span>
+                    <span style="background: #065f46; color: #34d399; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px;">{r.get('status', 'COMPLETED')}</span>
+                    <span style="color: #94a3b8; font-size: 12px; margin-left: 10px;">Case ID: <b>{r.get('case_id', 'N/A')}</b></span>
+                </div>
+                <div style="font-size: 12px; color: #64748b;">{r.get('completed_at', '')}</div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <div style="font-size: 12px; color: #94a3b8; font-weight: 600; margin-bottom: 8px;">PM-AJAY 7 EXTRACTED LIVELIHOOD FIELDS:</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px;">
+                    {fields_html}
+                </div>
+            </div>
+            <details style="margin-top: 12px; background: #020617; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 14px;">
+                <summary style="cursor: pointer; color: #94a3b8; font-size: 12.5px; font-weight: 600;">View Turn-by-Turn Call Transcript ({r.get('turns_count', 0)} turns)</summary>
+                <div style="margin-top: 12px;">
+                    {turns_html if turns_html else '<div style="color: #64748b; font-size: 12px;">No transcript available</div>'}
+                </div>
+            </details>
+        </div>
+        """)
+
+    cards_html = "".join(cards) if cards else '<div style="padding: 40px; text-align: center; color: #64748b;">No completed call records yet. Complete a phone interview to view records here.</div>'
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Kural Sevi — Completed Call Records</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {{ background: #020617; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 24px; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 18px; margin-bottom: 24px; }}
+        .btn {{ background: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 6px 14px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: 500; }}
+        .btn:hover {{ background: #334155; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1 style="margin: 0; font-size: 22px; color: #38bdf8; font-weight: 700;">Kural Sevi — Completed Call Records</h1>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Structured PM-AJAY Beneficiary Profiles & Verified Turn Transcripts</p>
+        </div>
+        <div>
+            <a href="/logs" class="btn" style="margin-right: 8px;">View Telephony Logs</a>
+            <a href="/api/completed-calls" class="btn">Raw JSON</a>
+        </div>
+    </div>
+    <div style="max-width: 1000px; margin: 0 auto;">
+        {cards_html}
     </div>
 </body>
 </html>"""

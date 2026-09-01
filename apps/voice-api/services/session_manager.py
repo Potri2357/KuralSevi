@@ -3,6 +3,7 @@ Kural Sevi — Session Manager
 Persists interview sessions to Supabase with in-memory fallback for local development.
 Handles FR-13a resume/continuity on call drop.
 """
+import asyncio
 import hashlib
 import hmac
 import secrets
@@ -59,10 +60,10 @@ class SessionManager:
     def _cb_record_failure(self, err: Optional[Exception] = None):
         self._cb_failures += 1
         err_str = str(err or "")
-        if "PGRST205" in err_str or "Could not find the table" in err_str:
-            # Tables do not exist in Supabase yet. Permanently switch to in-memory mode for this run.
+        if any(k in err_str for k in ["PGRST205", "Could not find the table", "Connection reset", "ConnectError", "Errno 54"]):
+            # Tables do not exist or Supabase connection reset. Permanently switch to in-memory mode for this run.
             self._cb_open_until = datetime.now(timezone.utc) + timedelta(days=365)
-            logger.info("Supabase tables not initialized (PGRST205). Operating in high-speed in-memory mode.")
+            logger.info("Supabase unavailable or not initialized. Operating in zero-latency in-memory mode.")
             return
 
         if self._cb_failures >= self._CB_THRESHOLD:
@@ -268,73 +269,83 @@ class SessionManager:
         readback_text: str,
     ):
         if self._db_ok():
-            try:
-                self.db.table("session_fields").upsert({
-                    "session_id": session_id,
-                    "field_name": field_name,
-                    "field_value": field_value,
-                    "raw_transcript_excerpt": raw_transcript[:500],
-                    "extraction_confidence": confidence,
-                    "status": "extracted",
-                    "readback_text": readback_text,
-                }, on_conflict="session_id,field_name").execute()
-            except Exception as e:
-                self._cb_record_failure(e)
-                logger.warning(f"Supabase save_field_extraction failed ({e}).")
+            def _sync():
+                try:
+                    self.db.table("session_fields").upsert({
+                        "session_id": session_id,
+                        "field_name": field_name,
+                        "field_value": field_value,
+                        "raw_transcript_excerpt": raw_transcript[:500],
+                        "extraction_confidence": confidence,
+                        "status": "extracted",
+                        "readback_text": readback_text,
+                    }, on_conflict="session_id,field_name").execute()
+                except Exception as e:
+                    self._cb_record_failure(e)
+                    logger.warning(f"Supabase save_field_extraction failed ({e}).")
+            await asyncio.to_thread(_sync)
 
     async def confirm_field(self, session_id: str, field_name: str):
         if self._db_ok():
-            try:
-                now_str = datetime.now(timezone.utc).isoformat()
-                self.db.table("session_fields").update({
-                    "status": "confirmed",
-                    "confirmed_at": now_str,
-                }).eq("session_id", session_id).eq("field_name", field_name).execute()
+            def _sync():
+                try:
+                    now_str = datetime.now(timezone.utc).isoformat()
+                    self.db.table("session_fields").update({
+                        "status": "confirmed",
+                        "confirmed_at": now_str,
+                    }).eq("session_id", session_id).eq("field_name", field_name).execute()
 
-                self.db.table("sessions").update({
-                    "last_confirmed_field": field_name,
-                }).eq("id", session_id).execute()
-            except Exception as e:
-                self._cb_record_failure(e)
-                logger.warning(f"Supabase confirm_field failed ({e}).")
+                    self.db.table("sessions").update({
+                        "last_confirmed_field": field_name,
+                    }).eq("id", session_id).execute()
+                except Exception as e:
+                    self._cb_record_failure(e)
+                    logger.warning(f"Supabase confirm_field failed ({e}).")
+            await asyncio.to_thread(_sync)
 
     async def mark_field_unknown(self, session_id: str, field_name: str):
         if self._db_ok():
-            try:
-                self.db.table("session_fields").upsert({
-                    "session_id": session_id,
-                    "field_name": field_name,
-                    "status": "unknown",
-                }, on_conflict="session_id,field_name").execute()
-            except Exception as e:
-                self._cb_record_failure(e)
-                logger.warning(f"Supabase mark_field_unknown failed ({e}).")
+            def _sync():
+                try:
+                    self.db.table("session_fields").upsert({
+                        "session_id": session_id,
+                        "field_name": field_name,
+                        "status": "unknown",
+                    }, on_conflict="session_id,field_name").execute()
+                except Exception as e:
+                    self._cb_record_failure(e)
+                    logger.warning(f"Supabase mark_field_unknown failed ({e}).")
+            await asyncio.to_thread(_sync)
 
     async def mark_session_dropped(self, session_id: str):
         if session_id in self._mem_session_records:
             self._mem_session_records[session_id]["state"] = "dropped"
         if self._db_ok():
-            try:
-                self.db.table("sessions").update({
-                    "state": "dropped",
-                    "dropped_at": datetime.now(timezone.utc).isoformat(),
-                }).eq("id", session_id).execute()
-            except Exception as e:
-                self._cb_record_failure(e)
-                logger.warning(f"Supabase mark_session_dropped failed ({e}).")
+            def _sync():
+                try:
+                    self.db.table("sessions").update({
+                        "state": "dropped",
+                        "dropped_at": datetime.now(timezone.utc).isoformat(),
+                    }).eq("id", session_id).execute()
+                except Exception as e:
+                    self._cb_record_failure(e)
+                    logger.warning(f"Supabase mark_session_dropped failed ({e}).")
+            await asyncio.to_thread(_sync)
 
     async def mark_session_completed(self, session_id: str):
         if session_id in self._mem_session_records:
             self._mem_session_records[session_id]["state"] = "completed"
         if self._db_ok():
-            try:
-                self.db.table("sessions").update({
-                    "state": "completed",
-                    "completed_at": datetime.now(timezone.utc).isoformat(),
-                }).eq("id", session_id).execute()
-            except Exception as e:
-                self._cb_record_failure(e)
-                logger.warning(f"Supabase mark_session_completed failed ({e}).")
+            def _sync():
+                try:
+                    self.db.table("sessions").update({
+                        "state": "completed",
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                    }).eq("id", session_id).execute()
+                except Exception as e:
+                    self._cb_record_failure(e)
+                    logger.warning(f"Supabase mark_session_completed failed ({e}).")
+            await asyncio.to_thread(_sync)
 
     # ── Consent ────────────────────────────────────────────────────────────────
 
@@ -348,20 +359,22 @@ class SessionManager:
         consent_given: bool,
     ):
         if self._db_ok():
-            try:
-                consent_hash = hashlib.sha256(consent_text.encode()).hexdigest()
-                self.db.table("consent_records").insert({
-                    "beneficiary_id": beneficiary_id,
-                    "session_id": session_id,
-                    "channel": channel,
-                    "language_code": language_code,
-                    "consent_text_hash": consent_hash,
-                    "consent_given": consent_given,
-                    "purpose": "Livelihood profiling and NSQF-aligned skilling recommendations under PM-AJAY GIA",
-                }).execute()
-            except Exception as e:
-                self._cb_record_failure(e)
-                logger.warning(f"Supabase save_consent failed ({e}).")
+            def _sync():
+                try:
+                    consent_hash = hashlib.sha256(consent_text.encode()).hexdigest()
+                    self.db.table("consent_records").insert({
+                        "beneficiary_id": beneficiary_id,
+                        "session_id": session_id,
+                        "channel": channel,
+                        "language_code": language_code,
+                        "consent_text_hash": consent_hash,
+                        "consent_given": consent_given,
+                        "purpose": "Livelihood profiling and NSQF-aligned skilling recommendations under PM-AJAY GIA",
+                    }).execute()
+                except Exception as e:
+                    self._cb_record_failure(e)
+                    logger.warning(f"Supabase save_consent failed ({e}).")
+            await asyncio.to_thread(_sync)
 
     # ── Profile creation ───────────────────────────────────────────────────────
 

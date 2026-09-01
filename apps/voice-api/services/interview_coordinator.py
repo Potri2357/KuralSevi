@@ -20,7 +20,15 @@ from .tts_service import synthesize_speech, TTSResult
 from prompts.interview_system_prompt import CONSENT_SCRIPTS, WRAP_UP_SCRIPTS, REFUSAL_SCRIPTS
 from config import settings
 
+from datetime import datetime, timezone
+
 logger = logging.getLogger(__name__)
+
+# Registry of completed and active call records for dashboard/telephony logs
+_completed_calls_records: list[dict] = []
+
+def get_completed_calls_records() -> list[dict]:
+    return list(_completed_calls_records)
 
 @dataclass
 class CoordinatorTurnResult:
@@ -194,35 +202,45 @@ class InterviewCoordinator:
             llm_result: LLMExtractionResult = await self.llm.process_turn(session, fsm, user_speech=user_speech)
             spoken_text = llm_result.spoken_response
 
-            if llm_result.action == "extract" and llm_result.field_name and llm_result.field_value:
-                fsm.transition(
-                    "field_extracted",
-                    field_name=llm_result.field_name,
-                    field_value=llm_result.field_value,
-                    confidence=llm_result.confidence,
-                    readback_text=llm_result.readback_text or llm_result.field_value,
-                )
-                # Fire-and-forget parallel Supabase saves — must wrap gather() in a coroutine
-                async def _save_async(sid, fn, fv, raw, conf, rb):
-                    await asyncio.gather(
-                        self.sm.save_field_extraction(
-                            session_id=sid, field_name=fn, field_value=fv,
-                            raw_transcript=raw, confidence=conf, readback_text=rb,
-                        ),
-                        self.sm.confirm_field(sid, fn),
-                        return_exceptions=True,
-                    )
-                asyncio.create_task(_save_async(
-                    session.session_id,
-                    llm_result.field_name,
-                    llm_result.field_value,
-                    user_speech,
-                    llm_result.confidence,
-                    llm_result.readback_text or "",
-                ))
-                # Auto-confirm in FSM immediately (in-memory, no await needed)
-                fsm.transition("field_confirmed", field_name=llm_result.field_name)
+            # Append turn to session transcript for dashboard & telemetry
+            if not hasattr(session, "transcript_turns"):
+                session.transcript_turns = []
+            session.transcript_turns.append({
+                "user": user_speech,
+                "assistant": spoken_text,
+                "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
+            })
 
+            # Process all extracted fields (multi-field intelligence)
+            fields_to_save = dict(llm_result.extracted_fields or {})
+            if llm_result.field_name and llm_result.field_value:
+                fields_to_save[llm_result.field_name] = llm_result.field_value
+
+            if fields_to_save:
+                for fn, fv in fields_to_save.items():
+                    logger.info(f"Extracting & confirming field: {fn} = '{fv}'")
+                    fsm.transition(
+                        "field_extracted",
+                        field_name=fn,
+                        field_value=fv,
+                        confidence=llm_result.confidence,
+                        readback_text=fv,
+                    )
+                    fsm.transition("field_confirmed", field_name=fn)
+
+                    # Background persistence
+                    async def _save_async(sid, field_name, field_value, raw, conf):
+                        await asyncio.gather(
+                            self.sm.save_field_extraction(
+                                session_id=sid, field_name=field_name, field_value=field_value,
+                                raw_transcript=raw, confidence=conf, readback_text=field_value,
+                            ),
+                            self.sm.confirm_field(sid, field_name),
+                            return_exceptions=True,
+                        )
+                    asyncio.create_task(_save_async(
+                        session.session_id, fn, fv, user_speech, llm_result.confidence
+                    ))
             elif llm_result.action == "unknown" and llm_result.field_name:
                 fsm.transition("field_unknown", field_name=llm_result.field_name)
                 await self.sm.mark_field_unknown(session.session_id, llm_result.field_name)
@@ -232,7 +250,28 @@ class InterviewCoordinator:
             await self.sm.mark_session_completed(session.session_id)
             profile_id = await self.sm.create_profile_from_session(session)
             case_id = session.session_id[:12].upper()
-            spoken = WRAP_UP_SCRIPTS.get(session.language_code, WRAP_UP_SCRIPTS["ta"]).format(case_id=case_id)
+
+            # Record in completed call registry for dashboard
+            confirmed_dict = {
+                k: f.value for k, f in session.fields.items() if f.status == "confirmed"
+            }
+            record = {
+                "session_id": session.session_id,
+                "case_id": case_id,
+                "phone": phone,
+                "channel": channel,
+                "language": session.language_code,
+                "status": "COMPLETED",
+                "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "confirmed_fields": confirmed_dict,
+                "turns_count": len(getattr(session, "transcript_turns", [])),
+                "transcript": getattr(session, "transcript_turns", []),
+            }
+            _completed_calls_records.insert(0, record)
+            if len(_completed_calls_records) > 100:
+                _completed_calls_records.pop()
+
+            spoken = WRAP_UP_SCRIPTS.get(session.language_code, WRAP_UP_SCRIPTS["ta"])
             audio_bytes = await self._synthesize_safe(spoken, session.language_code, speaker=speaker)
             if key in self._active_sessions:
                 del self._active_sessions[key]
@@ -273,7 +312,8 @@ class InterviewCoordinator:
 
         # Fast path: Pre-rendered static prompt for instant zero-latency playback
         if "நான் குரல் செவி" in text or "இந்த தகவல்கள் உங்கள் கல்வி" in text:
-            for p in ("static_audio/consent_ta.wav", "apps/voice-api/static_audio/consent_ta.wav"):
+            static_consent = os.path.join(os.path.dirname(__file__), "..", "static_audio", "consent_ta.wav")
+            for p in (static_consent, "static_audio/consent_ta.wav", "apps/voice-api/static_audio/consent_ta.wav"):
                 if os.path.exists(p):
                     with open(p, "rb") as f:
                         return f.read()

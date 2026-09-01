@@ -5,11 +5,13 @@
  * Beneficiary Profile -> Hard Filter (Stage 1) -> Vector/AHP-TOPSIS (Stage 3)
  * -> Confidence (FR-8) -> Explanation (FR-8a) -> Officer Decision Audit
  */
-import { applyHardFilters } from '../packages/recommendation-engine/src/stage1-hard-filter';
-import { rankPathways } from '../packages/recommendation-engine/src/stage3-ahp-topsis';
-import { computeConfidence } from '../packages/recommendation-engine/src/confidence';
-import { generateExplanation } from '../packages/recommendation-engine/src/explanation';
-import type { NSQFTrade, ConfirmedProfile } from '../packages/shared/src';
+import {
+  applyHardFilters,
+  rankPathways,
+  computeConfidence,
+  generateExplanation,
+} from '@kural-sevi/recommendation-engine';
+import type { NSQFTrade, ConfirmedProfile } from '@kural-sevi/shared';
 
 const SAMPLE_CATALOG: NSQFTrade[] = [
   {

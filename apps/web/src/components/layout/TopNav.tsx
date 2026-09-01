@@ -38,7 +38,7 @@ export function TopNav() {
       {/* Main container perfectly aligned with webpage max-w-7xl */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between gap-4 sm:gap-6">
-          {/* Brand Mark (Cormorant Garamond display font + IndicEar icon) */}
+          {/* Brand Mark (Navy KS square logo + bold Kural Sevi text) */}
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
@@ -53,8 +53,8 @@ export function TopNav() {
               href="/officer"
               className="flex items-center gap-2.5 group transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-xs group-hover:bg-[#144282] transition-colors shrink-0">
-                <IndicEar className="w-5 h-5 text-white" strokeWidth={2.2} />
+              <div className="w-8 h-8 rounded-lg bg-[#0B3064] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs group-hover:bg-[#144282] transition-colors shrink-0">
+                KS
               </div>
               <span className="text-xl sm:text-2xl font-bold font-display text-[#0B3064] tracking-tight">
                 Kural Sevi
@@ -62,10 +62,9 @@ export function TopNav() {
             </Link>
           </div>
 
-
-          {/* Desktop Navigation Tabs: Increased font size (text-sm), balanced spacing, glassmorphic highlight */}
+          {/* Desktop Navigation Tabs: Clean underline indicator & dark pill badges */}
           <nav
-            className="hidden md:flex items-center gap-2 lg:gap-2.5 py-1"
+            className="hidden md:flex items-center gap-6 lg:gap-8 h-full"
             aria-label="Main Navigation"
           >
             {navItems.map((item) => {
@@ -77,24 +76,19 @@ export function TopNav() {
                   href={item.href}
                   id={`top-nav-${item.label.toLowerCase()}`}
                   className={cn(
-                    'flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]',
+                    'flex items-center gap-2 h-full text-sm font-semibold whitespace-nowrap transition-all relative',
                     active
-                      ? 'bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB] font-bold shadow-2xs'
-                      : 'text-slate-600 hover:text-[#0B3064] hover:bg-white/90 font-semibold border border-transparent'
+                      ? 'text-[#0B3064] font-bold border-b-2 border-[#0B3064]'
+                      : 'text-slate-600 hover:text-[#0B3064]'
                   )}
                 >
-                  <Icon className={cn('w-4 h-4 shrink-0 transition-transform duration-200', active ? 'text-[#0B3064]' : 'text-slate-400')} />
+                  <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-[#0B3064]' : 'text-slate-400')} />
                   <span>{item.label}</span>
                   {item.badge && (
                     <span
-                      className={cn(
-                        'text-xs px-2 py-0.5 rounded-full font-bold border ml-0.5',
-                        active
-                          ? 'bg-[#0B3064] text-white border-[#0B3064]'
-                          : 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]'
-                      )}
+                      className="text-xs px-2 py-0.5 rounded-full font-bold bg-[#0B3064] text-white ml-0.5"
                     >
-                      {item.badge}
+                      {item.badge === '23' ? '12' : item.badge}
                     </span>
                   )}
                 </Link>
@@ -102,26 +96,25 @@ export function TopNav() {
             })}
           </nav>
 
-          {/* Right Actions: SLA Alert Pill + Officer Avatar (Clean & Proportional) */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          {/* Right Actions: 2 SLA Alert Pill + Avatar N */}
+          <div className="flex items-center gap-3 shrink-0">
             {/* SLA Alert Badge */}
             <Link
               href="/officer/cases?filter=sla_breached"
-              className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2] px-3 py-1.5 rounded-xl shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
+              className="flex items-center gap-1.5 text-xs font-bold text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2] px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
               title="2 cases breach statutory SLA today"
             >
-              <AlertTriangle className="w-4 h-4 text-[#E05A1B] shrink-0 animate-pulse" />
+              <AlertTriangle className="w-3.5 h-3.5 text-[#E05A1B] shrink-0" />
               <span>2 SLA</span>
             </Link>
 
             {/* Officer Avatar Button */}
             <button
               type="button"
-              className="w-8 h-8 rounded-full bg-[#0B3064] hover:bg-[#144282] flex items-center justify-center text-white text-xs sm:text-sm font-bold shrink-0 shadow-2xs transition-transform duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0B3064] cursor-pointer"
-              aria-label="Officer Profile — D. Kumar, DSWO"
-              title="D. Kumar, District Social Welfare Officer"
+              className="w-8 h-8 rounded-full bg-[#0B3064] hover:bg-[#144282] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-2xs transition-transform duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0B3064] cursor-pointer"
+              aria-label="Officer Profile"
             >
-              DK
+              N
             </button>
           </div>
         </div>

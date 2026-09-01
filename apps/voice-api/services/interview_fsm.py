@@ -85,9 +85,9 @@ class InterviewSession:
         return sum(self.extraction_certainties) / len(self.extraction_certainties) if self.extraction_certainties else 0.7
 
     def advance_to_next_field(self):
-        """Move to next uncollected field."""
-        for i in range(self.current_field_index + 1, len(PS_FIELDS_ORDER)):
-            f = self.fields[PS_FIELDS_ORDER[i]]
+        """Move to earliest uncollected field, supporting out-of-order user responses."""
+        for i, field_key in enumerate(PS_FIELDS_ORDER):
+            f = self.fields[field_key]
             if f.status in ("pending", "rejected"):
                 self.current_field_index = i
                 return
