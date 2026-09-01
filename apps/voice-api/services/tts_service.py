@@ -67,22 +67,39 @@ def put_cached_audio(text: str, language_code: str, speaker: str, audio_bytes: b
     except Exception as e:
         logger.warning(f"Failed writing audio cache {cache_file}: {e}")
 
-# Global persistent keep-alive client pool for Sarvam (eliminates 3.8s TLS handshake on every turn)
-_tts_http_client: Optional[httpx.AsyncClient] = None
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
-def _get_http_client() -> httpx.AsyncClient:
-    global _tts_http_client
+# Global persistent keep-alive requests session for Sarvam (eliminates macOS TLS socket drops)
+_tts_sync_session: Optional[requests.Session] = None
+
+def _get_tts_sync_session() -> requests.Session:
+    global _tts_sync_session
+    if _tts_sync_session is None:
+        _tts_sync_session = requests.Session()
+        retries = Retry(total=4, connect=4, read=4, backoff_factor=0.05, allowed_methods=['POST', 'GET'])
+        adapter = HTTPAdapter(max_retries=retries, pool_connections=10, pool_maxsize=20)
+        _tts_sync_session.mount('https://', adapter)
+        _tts_sync_session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+            'Content-Type': 'application/json',
+        })
+    return _tts_sync_session
+
+def warmup_tts():
+    """Warms up TLS socket to Sarvam in background thread."""
     try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-    if _tts_http_client is None or _tts_http_client.is_closed or getattr(_tts_http_client, "_loop", None) != loop:
-        _tts_http_client = httpx.AsyncClient(
-            timeout=10.0,
-            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=60.0),
+        from config import settings
+        session = _get_tts_sync_session()
+        session.post(
+            settings.sarvam_tts_url,
+            headers={"api-subscription-key": settings.sarvam_api_key},
+            json={"inputs": ["வணக்கம்"], "target_language_code": "ta-IN", "speaker": "kavitha", "model": "bulbul:v3", "enable_preprocessing": False, "speech_sample_rate": 8000, "pace": 1.2},
+            timeout=3.0,
         )
-        _tts_http_client._loop = loop
-    return _tts_http_client
+    except Exception:
+        pass
 
 async def synthesize_speech(
     text: str,
@@ -128,53 +145,44 @@ async def synthesize_speech(
 
     # Sarvam limits TTS to 500 chars per call; split if longer
     chunks = _split_text(text, max_chars=450)
-    client = _get_http_client()
 
-    async def _synthesize_chunk(chunk: str) -> bytes:
+    def _sync_post_chunk(chunk_text: str) -> bytes:
+        session = _get_tts_sync_session()
         payload = {
-            "inputs": [chunk],
+            "inputs": [chunk_text],
             "target_language_code": _sarvam_lang(language_code),
             "speaker": speaker,
             "model": "bulbul:v3",
             "enable_preprocessing": False,  # False saves ~1.2s; LLM already outputs clean Tamil
             "speech_sample_rate": 8000,     # 8kHz telephony standard
-            "pace": 1.15,                   # 1.15x pace cuts audio synthesis and playback latency
+            "pace": 1.3,                    # 1.3x pace cuts audio synthesis and playback latency
         }
-        client = _get_http_client()
-        for attempt in range(2):
-            try:
-                response = await client.post(
-                    sarvam_tts_url,
-                    json=payload,
-                    headers={
-                        "api-subscription-key": sarvam_api_key,
-                        "Content-Type": "application/json",
-                    }
-                )
-                if response.status_code == 200:
-                    circuit_breaker.record_success("sarvam_tts")
-                    data = response.json()
-                    audio_b64 = data.get("audios", [""])[0]
-                    if audio_b64:
-                        return base64.b64decode(audio_b64)
-                elif response.status_code == 429:
-                    circuit_breaker.trip("sarvam_tts", "429 Rate Limit", cooldown=60.0)
-                    break
-                else:
-                    logger.warning(f"Sarvam TTS error ({response.status_code}): {response.text[:120]}")
-            except Exception as e:
-                global _tts_http_client
-                _tts_http_client = None
-                client = _get_http_client()
-                logger.warning(f"Sarvam TTS attempt {attempt+1} connection issue ({e}). Retrying with fresh socket...")
-                await asyncio.sleep(0.05)
+        headers = {
+            "api-subscription-key": sarvam_api_key,
+        }
+        try:
+            resp = session.post(sarvam_tts_url, json=payload, headers=headers, timeout=7.0)
+            if resp.status_code == 200:
+                circuit_breaker.record_success("sarvam_tts")
+                data = resp.json()
+                audio_b64 = data.get("audios", [""])[0]
+                if audio_b64:
+                    return base64.b64decode(audio_b64)
+            elif resp.status_code == 429:
+                circuit_breaker.trip("sarvam_tts", "429 Rate Limit", cooldown=15.0)
+            else:
+                logger.warning(f"Sarvam TTS error ({resp.status_code}): {resp.text[:120]}")
+        except Exception as e:
+            if "429" in str(e):
+                circuit_breaker.trip("sarvam_tts", "429 Rate Limit", cooldown=15.0)
+            logger.warning(f"Sarvam TTS request failed: {repr(e)}")
         return b""
 
-    # Synthesize chunks in parallel if multiple
+    # Synthesize chunks in parallel if multiple, via asyncio.to_thread
     if len(chunks) == 1:
-        all_audio = await _synthesize_chunk(chunks[0])
+        all_audio = await asyncio.to_thread(_sync_post_chunk, chunks[0])
     else:
-        results = await asyncio.gather(*[_synthesize_chunk(c) for c in chunks])
+        results = await asyncio.gather(*[asyncio.to_thread(_sync_post_chunk, c) for c in chunks])
         all_audio = b"".join(results)
 
     if not all_audio:

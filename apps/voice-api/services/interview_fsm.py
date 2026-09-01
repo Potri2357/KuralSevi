@@ -57,6 +57,7 @@ class InterviewSession:
     extraction_certainties: list[float] = field(default_factory=list)
     turn_count: int = 0
     last_confirmed_field: Optional[str] = None
+    conversation_history: list[dict[str, str]] = field(default_factory=list)
     
     @property
     def current_field(self) -> Optional[str]:
@@ -142,18 +143,20 @@ class InterviewFSM:
             confidence = kwargs.get("confidence", 0.7)
             readback = kwargs.get("readback_text", "")
             
-            s.fields[field_name].value = field_value
-            s.fields[field_name].confidence = confidence
-            s.fields[field_name].status = "extracted"
-            s.fields[field_name].readback_text = readback
-            s.extraction_certainties.append(confidence)
-            s.state = InterviewState.CONFIRMATION
+            if field_name in s.fields:
+                s.fields[field_name].value = field_value
+                s.fields[field_name].confidence = confidence
+                s.fields[field_name].status = "extracted"
+                s.fields[field_name].readback_text = readback
+                s.extraction_certainties.append(confidence)
+                s.state = InterviewState.CONFIRMATION
         
         elif event == "field_unknown" and s.state == InterviewState.FIELD_COLLECTION:
             field_name = kwargs["field_name"]
-            s.fields[field_name].status = "unknown"
-            s.last_confirmed_field = field_name
-            s.advance_to_next_field()
+            if field_name in s.fields:
+                s.fields[field_name].status = "unknown"
+                s.last_confirmed_field = field_name
+                s.advance_to_next_field()
             
             if s.all_fields_collected:
                 s.state = InterviewState.COMPLETED
@@ -163,10 +166,11 @@ class InterviewFSM:
         elif event == "field_confirmed" and s.state == InterviewState.CONFIRMATION:
             field_name = kwargs["field_name"]
             from datetime import datetime, timezone
-            s.fields[field_name].status = "confirmed"
-            s.fields[field_name].confirmed_at = datetime.now(timezone.utc).isoformat()
-            s.last_confirmed_field = field_name
-            s.advance_to_next_field()
+            if field_name in s.fields:
+                s.fields[field_name].status = "confirmed"
+                s.fields[field_name].confirmed_at = datetime.now(timezone.utc).isoformat()
+                s.last_confirmed_field = field_name
+                s.advance_to_next_field()
             
             if s.all_fields_collected:
                 s.state = InterviewState.COMPLETED
@@ -175,8 +179,9 @@ class InterviewFSM:
         
         elif event == "field_rejected" and s.state == InterviewState.CONFIRMATION:
             field_name = kwargs["field_name"]
-            s.fields[field_name].status = "rejected"
-            s.fields[field_name].value = None
+            if field_name in s.fields:
+                s.fields[field_name].status = "rejected"
+                s.fields[field_name].value = None
             s.state = InterviewState.FIELD_COLLECTION  # Re-ask the field
         
         elif event == "call_dropped":

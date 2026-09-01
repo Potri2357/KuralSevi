@@ -46,9 +46,24 @@ logging.getLogger().addHandler(_rb_handler)
 # Shared interview coordinator
 _shared_coordinator = InterviewCoordinator()
 
+from services.llm_service import warmup_llm
+from services.tts_service import warmup_tts
+import asyncio
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Kural Sevi Voice API starting up...")
+    # Pre-warm TLS connection pools in background for instant zero-latency first turn
+    asyncio.create_task(asyncio.to_thread(warmup_llm))
+    asyncio.create_task(asyncio.to_thread(warmup_tts))
+    # Pre-check database table presence so unmigrated DB never blocks call turns
+    def _probe_db():
+        if _shared_coordinator.sm.db:
+            try:
+                _shared_coordinator.sm.db.table("sessions").select("id").limit(1).execute()
+            except Exception as e:
+                _shared_coordinator.sm._cb_record_failure(e)
+    asyncio.create_task(asyncio.to_thread(_probe_db))
     yield
     logger.info("Kural Sevi Voice API shutting down...")
 

@@ -16,7 +16,7 @@ class APICircuitBreaker:
     Thread-safe, process-wide circuit breaker for all external LLM and Voice APIs.
     Eliminates futile network calls to exhausted providers.
     """
-    def __init__(self, default_cooldown_seconds: float = 60.0):
+    def __init__(self, default_cooldown_seconds: float = 15.0):
         self.default_cooldown = default_cooldown_seconds
         # provider -> expiry_timestamp
         self._cooldown_until: dict[str, float] = {}
@@ -46,4 +46,4 @@ class APICircuitBreaker:
             logger.info(f"[CIRCUIT BREAKER RESTORED] Provider '{provider}' is healthy again.")
 
 # Global singleton instance
-circuit_breaker = APICircuitBreaker(default_cooldown_seconds=60.0)
+circuit_breaker = APICircuitBreaker(default_cooldown_seconds=15.0)

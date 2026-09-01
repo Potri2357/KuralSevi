@@ -48,6 +48,11 @@ class SessionManager:
         # Circuit breaker state
         self._cb_failures = 0
         self._cb_open_until: Optional[datetime] = None
+        if self.db:
+            try:
+                self.db.table("sessions").select("id").limit(1).execute()
+            except Exception as e:
+                self._cb_record_failure(e)
 
     def _db_ok(self) -> bool:
         """Returns True if Supabase calls should be attempted (circuit closed)."""

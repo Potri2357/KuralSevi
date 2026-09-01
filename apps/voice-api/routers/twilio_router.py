@@ -112,12 +112,13 @@ def _play_or_say(response: VoiceResponse, turn_result: CoordinatorTurnResult, lo
 
 
 def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
-    """Builds a final TwiML response with <Play> + <Gather> for the next speech turn."""
+    """Builds a final TwiML response with nested <Gather><Play>...</Play></Gather> for natural barge-in and zero conversational lag."""
     response = VoiceResponse()
-    _play_or_say(response, turn_result, log_label="(turn)")
     if turn_result.is_completed:
+        _play_or_say(response, turn_result, log_label="(completion)")
         response.hangup()
         return response
+
     gather = Gather(
         input="speech",
         action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn",
@@ -127,7 +128,18 @@ def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
         timeout=8,
         action_on_empty_result=True,
         speech_model="phone_call",
+        barge_in=True,
     )
+    if turn_result.audio_bytes:
+        audio_id = _cache_audio(turn_result.audio_bytes)
+        audio_url = f"{settings.voice_api_url}/webhooks/twilio/audio/{audio_id}.wav"
+        logger.info(f"Serving Sarvam TTS (turn) via nested <Gather><Play>: {audio_url}")
+        gather.play(audio_url)
+    else:
+        hold_url = f"{settings.voice_api_url}/webhooks/twilio/audio/hold_ta.wav"
+        logger.warning("No Sarvam audio (turn), serving static Tamil audio via nested <Gather><Play>")
+        gather.play(hold_url)
+
     response.append(gather)
     # Safety redirect: if Gather still gets nothing, re-prompt
     response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-turn", method="POST")
@@ -180,18 +192,19 @@ async def start_interview(
     target_phone = (data.get("To") if is_outbound else None) or data.get("From") or data.get("Caller") or "+910000000000"
     language = data.get("language") or "ta"
 
-    # Fire session initialization in background (0ms dial-in delay)
+    # Fire fresh session initialization in background (0ms dial-in delay)
     asyncio.create_task(coordinator.process_turn(
         phone=target_phone,
         channel="ivr",
         language=language,
         session_key=CallSid,
         is_initial=True,
+        force_fresh=True,
     ))
-
+    # Pre-call health probe across Groq, OpenRouter, and Gemini while caller listens to consent greeting
+    asyncio.create_task(coordinator.llm.probe_fastest_provider())
     response = VoiceResponse()
     consent_url = f"{settings.voice_api_url}/webhooks/twilio/audio/consent_ta.wav"
-    response.play(consent_url)
 
     gather = Gather(
         input="speech",
@@ -202,7 +215,9 @@ async def start_interview(
         timeout=8,
         action_on_empty_result=True,
         speech_model="phone_call",
+        barge_in=True,
     )
+    gather.play(consent_url)
     response.append(gather)
     # Redirect fallback if no speech detected within timeout — explicit POST
     response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-turn?CallSid={CallSid}&timeout=true", method="POST")
@@ -249,16 +264,16 @@ async def process_turn(
         coordinator=coordinator,
     ))
 
-    # Fast path: Wait up to 5.0s directly — returns <Play> + <Gather> in 1 HTTP hop, eliminating redirect round-trips!
+    # Fast path: Wait up to 7.0s directly — returns <Play> + <Gather> in 1 HTTP hop, eliminating redirect round-trips!
     try:
-        await asyncio.wait_for(asyncio.shield(task), timeout=5.0)
+        await asyncio.wait_for(asyncio.shield(task), timeout=7.0)
         turn_result = _pending_results.get(turn_id)
         if turn_result is not None:
             del _pending_results[turn_id]
             response = _build_gather_response(turn_result)
             return Response(content=str(response), media_type="application/xml")
     except asyncio.TimeoutError:
-        logger.info(f"Turn {turn_id} exceeded 5.0s direct response window, falling back to deferred redirect.")
+        logger.info(f"Turn {turn_id} exceeded 7.0s direct response window, falling back to deferred redirect.")
 
     # Safety fallback redirect if processing took >3.2s
     response = VoiceResponse()
@@ -287,13 +302,18 @@ async def _process_turn_background(
         logger.info(f"Background turn {turn_id} completed. Spoken: {turn_result.spoken_response[:60]}")
     except Exception as e:
         logger.error(f"Background turn {turn_id} failed: {e}", exc_info=True)
-        # Store a safe fallback result so Twilio doesn't hang indefinitely
+        # Store a safe fallback result with real audio so Twilio NEVER plays dead silence!
         from services.interview_coordinator import CoordinatorTurnResult
         from services.interview_fsm import InterviewState
+        apology_text = "மன்னிக்கவும், நீங்கள் கூறியதை மீண்டும் ஒருமுறை கூற முடியுமா?"
+        fallback_audio = await coordinator._synthesize_safe(apology_text, "ta")
+        if not fallback_audio:
+            hold_file = _STATIC_AUDIO_DIR / "hold_ta.wav"
+            fallback_audio = hold_file.read_bytes() if hold_file.exists() else _SILENT_WAV
         _pending_results[turn_id] = CoordinatorTurnResult(
             session_id=call_sid,
-            spoken_response="மன்னிக்கவும், சிறிது நிறுத்தம் ஏற்பட்டது. மீண்டும் சொல்லுங்கள்.",
-            audio_bytes=None,
+            spoken_response=apology_text,
+            audio_bytes=fallback_audio,
             state=InterviewState.FIELD_COLLECTION,
             is_completed=False,
             case_id=None,

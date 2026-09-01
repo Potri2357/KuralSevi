@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     
     # Groq Fallback
     groq_api_key: Optional[str] = None
-    groq_model: str = "llama-3.1-8b-instant"
+    groq_model: str = "qwen/qwen3.8-27b"
     
     # OpenRouter Fallback
     openrouter_api_key: Optional[str] = None
