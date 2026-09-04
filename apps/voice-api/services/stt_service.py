@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 SARVAM_LANGUAGE_CODES = {
     "ta": "ta-IN",
+    "ml": "ml-IN",
     "hi": "hi-IN",
     "te": "te-IN",
 }
@@ -68,7 +69,7 @@ async def transcribe_audio(
         "api-subscription-key": sarvam_api_key,
     }
 
-    async with httpx.AsyncClient(http1=True, http2=False, timeout=35.0) as client:
+    async with httpx.AsyncClient(http2=True, timeout=30.0, headers={"User-Agent": "curl/8.7.1"}) as client:
         response = await client.post(
             sarvam_stt_url,
             files=files,

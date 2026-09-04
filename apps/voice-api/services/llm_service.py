@@ -14,6 +14,7 @@ import google.generativeai as genai
 
 from config import settings
 from .interview_fsm import InterviewSession, InterviewFSM, InterviewState, PS_FIELDS_ORDER
+from .field_normalizer import normalize_field_to_english
 from prompts.interview_system_prompt import (
     build_system_prompt, CONSENT_SCRIPTS, WRAP_UP_SCRIPTS, LANGUAGE_GREETINGS
 )
@@ -22,38 +23,39 @@ from .circuit_breaker import circuit_breaker
 
 logger = logging.getLogger(__name__)
 
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+# Global persistent keep-alive httpx client with HTTP/2 for Groq & OpenRouter (eliminates [Errno 54] drops)
+_llm_async_client: Optional[httpx.AsyncClient] = None
 
-# Global persistent keep-alive requests session with retries for Groq (eliminates [Errno 54] drops)
-_groq_sync_session: Optional[requests.Session] = None
-
-def _get_groq_sync_session() -> requests.Session:
-    global _groq_sync_session
-    if _groq_sync_session is None:
-        _groq_sync_session = requests.Session()
-        retries = Retry(total=1, connect=1, read=0, backoff_factor=0.05, allowed_methods=['POST', 'GET'])
-        adapter = HTTPAdapter(max_retries=retries, pool_connections=10, pool_maxsize=20)
-        _groq_sync_session.mount('https://', adapter)
-        _groq_sync_session.headers.update({
-            'User-Agent': 'KuralSevi-VoiceAPI/1.0',
-            'Content-Type': 'application/json',
-        })
-    return _groq_sync_session
+def _get_llm_client() -> httpx.AsyncClient:
+    global _llm_async_client
+    if _llm_async_client is None or _llm_async_client.is_closed:
+        limits = httpx.Limits(max_keepalive_connections=20, max_connections=40, keepalive_expiry=30.0)
+        _llm_async_client = httpx.AsyncClient(
+            http2=True,
+            timeout=httpx.Timeout(8.0, connect=5.0),
+            limits=limits,
+            headers={
+                "User-Agent": "curl/8.7.1",
+                "Content-Type": "application/json",
+            }
+        )
+    return _llm_async_client
 
 def warmup_llm():
-    """Warms up TLS socket to Groq in background thread."""
+    """Warms up TLS socket to Groq in background."""
     if not settings.groq_api_key:
         return
     try:
-        session = _get_groq_sync_session()
-        session.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {settings.groq_api_key}"},
-            json={"model": settings.groq_model or "qwen/qwen3.8-27b", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1},
-            timeout=3.0,
-        )
+        client = _get_llm_client()
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {settings.groq_api_key}"},
+                json={"model": settings.groq_model or "qwen/qwen3.8-27b", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1},
+            ))
+        except RuntimeError:
+            pass
     except Exception:
         pass
 
@@ -79,13 +81,13 @@ class LLMExtractionResult:
 
 class GeminiInterviewDriver:
     """
-    Wraps LLM APIs (Groq, OpenRouter, Gemini 3.5) to drive the Kural Sevi interview.
-    Features 1-second proactive health probing, automatic failover, and conversation history.
+    Wraps LLM APIs (Groq, OpenRouter, Gemini 2.5) to drive the Kural Sevi interview.
+    Features proactive health probing, automatic failover, and conversation history.
     """
-    def __init__(self, api_key: str, model: str = "gemini-3.5-flash-lite", mock_mode: bool = False):
+    def __init__(self, api_key: str, model: str = "gemini-2.5-flash", mock_mode: bool = False):
         self.mock_mode = mock_mode
-        self.candidate_models = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-2.5-flash"]
-        self.fastest_provider: str = "openrouter"
+        self.candidate_models = [settings.gemini_model or "gemini-2.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+        self.fastest_provider: str = "groq"
         self._last_probe: float = 0.0
         if not mock_mode:
             genai.configure(api_key=api_key)
@@ -93,69 +95,66 @@ class GeminiInterviewDriver:
 
     async def probe_fastest_provider(self) -> str:
         """
-        Pings Groq, OpenRouter, and Gemini in parallel with a strict 1.0s timeout.
+        Pings Groq, OpenRouter, and Gemini in parallel.
         Updates self.fastest_provider to the lowest-latency healthy provider.
         """
         now = time.perf_counter()
-        if now - self._last_probe < 20.0 and self.fastest_provider:
+        if now - self._last_probe < 30.0 and self.fastest_provider:
             return self.fastest_provider
+
+        client = _get_llm_client()
 
         async def _ping_groq():
             t0 = time.perf_counter()
             if not settings.groq_api_key or not circuit_breaker.is_available("groq"):
                 return "groq", 999.0
-            def _req():
-                s = _get_groq_sync_session()
-                return s.post(
+            try:
+                r = await client.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers={"Authorization": f"Bearer {settings.groq_api_key}"},
-                    json={"model": "qwen/qwen3.8-27b", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1},
-                    timeout=1.0,
+                    json={"model": settings.groq_model or "qwen/qwen3.8-27b", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1},
+                    timeout=1.5,
                 )
-            try:
-                r = await asyncio.to_thread(_req)
                 if r.status_code == 200:
                     return "groq", time.perf_counter() - t0
                 elif r.status_code == 429:
-                    circuit_breaker.trip("groq", "429 Rate Limit", cooldown=30.0)
+                    circuit_breaker.trip("groq", "429 Rate Limit", cooldown=20.0)
             except Exception as e:
-                circuit_breaker.trip("groq", f"Probe failed ({str(e)[:40]})", cooldown=20.0)
+                if isinstance(e, (httpx.ConnectError, httpx.NetworkError)) or "Connection reset" in str(e):
+                    circuit_breaker.trip("groq", "Connection Reset / Blocked", cooldown=60.0)
+                logger.warning(f"Groq probe failed: {e}")
             return "groq", 999.0
 
         async def _ping_openrouter():
             t0 = time.perf_counter()
             if not settings.openrouter_api_key or not circuit_breaker.is_available("openrouter"):
                 return "openrouter", 999.0
-            def _req():
-                s = _get_groq_sync_session()
-                return s.post(
+            try:
+                r = await client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
                     headers={"Authorization": f"Bearer {settings.openrouter_api_key}", "HTTP-Referer": "https://kuralsevi.gov.in"},
-                    json={"model": "meta-llama/llama-3.3-70b-instruct", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1},
-                    timeout=1.0,
+                    json={"model": settings.openrouter_model or "meta-llama/llama-3.3-70b-instruct", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1},
+                    timeout=2.0,
                 )
-            try:
-                r = await asyncio.to_thread(_req)
                 if r.status_code == 200:
                     return "openrouter", time.perf_counter() - t0
                 elif r.status_code == 429:
-                    circuit_breaker.trip("openrouter", "429 Rate Limit", cooldown=30.0)
+                    circuit_breaker.trip("openrouter", "429 Rate Limit", cooldown=20.0)
             except Exception as e:
-                circuit_breaker.trip("openrouter", f"Probe failed ({str(e)[:40]})", cooldown=20.0)
+                logger.warning(f"OpenRouter probe failed: {e}")
             return "openrouter", 999.0
 
         async def _ping_gemini():
             t0 = time.perf_counter()
             if not circuit_breaker.is_available("gemini"):
                 return "gemini", 999.0
-            def _req():
-                mod = genai.GenerativeModel("gemini-3.5-flash-lite")
-                return mod.generate_content("hi", generation_config={"max_output_tokens": 1})
             try:
-                await asyncio.to_thread(_req)
-                return "gemini", time.perf_counter() - t0
+                mod = genai.GenerativeModel(self.candidate_models[0])
+                resp = await mod.generate_content_async("hi", generation_config={"max_output_tokens": 1})
+                if resp.text:
+                    return "gemini", time.perf_counter() - t0
             except Exception as e:
-                circuit_breaker.trip("gemini", f"Probe failed ({str(e)[:40]})", cooldown=20.0)
+                logger.warning(f"Gemini probe failed: {e}")
             return "gemini", 999.0
 
         results = await asyncio.gather(_ping_groq(), _ping_openrouter(), _ping_gemini(), return_exceptions=True)
@@ -166,8 +165,8 @@ class GeminiInterviewDriver:
             self.fastest_provider = valid[0][0]
             logger.info(f"[AI HEALTH PROBE] Fastest available AI: {self.fastest_provider.upper()} ({valid[0][1]:.3f}s)")
         else:
-            self.fastest_provider = "gemini"
-            logger.warning("[AI HEALTH PROBE] All cloud probes timed out, defaulting to Gemini")
+            self.fastest_provider = "groq" if settings.groq_api_key else "gemini"
+            logger.info(f"[AI HEALTH PROBE] Fallback fastest provider: {self.fastest_provider}")
         return self.fastest_provider
 
     async def process_turn(
@@ -203,29 +202,42 @@ class GeminiInterviewDriver:
             k: v.value for k, v in session.fields.items()
             if v.status == "confirmed"
         }
+        if getattr(session, "is_known_caller", False) and not getattr(session, "identity_confirmed", False):
+            identity_status = "confirm_known"
+            caller_identity_info = f"Name: {getattr(session, 'caller_name', 'Unknown')}, District: {getattr(session, 'caller_place', 'Unknown')}"
+        elif not getattr(session, "is_known_caller", False) and not getattr(session, "identity_confirmed", False):
+            identity_status = "collect_unknown"
+            caller_identity_info = "Unknown / Unregistered Caller"
+        else:
+            identity_status = "confirmed"
+            caller_identity_info = f"Confirmed: {getattr(session, 'caller_name', 'Beneficiary')}"
+
         system_prompt = build_system_prompt(
             language_code=session.language_code,
             current_field=context.get("field_name", ""),
             confirmed_fields=confirmed_fields,
+            identity_status=identity_status,
+            caller_identity_info=caller_identity_info,
         )
 
         user_msg = user_speech or f"Please ask about {context.get('field_name', 'information')}"
+        lang_names = {"ta": "Tamil", "ml": "Malayalam", "hi": "Hindi", "te": "Telugu"}
+        lang_name = lang_names.get(session.language_code, "Tamil")
         prompt = (
             f"{system_prompt}\n\n"
             f"Beneficiary Spoke: \"{user_msg}\"\n\n"
-            "Instructions: Extract fields into EXTRACT, speak in Tamil in SPOKEN."
+            f"Instructions: Extract all livelihood fields in clean English into EXTRACT. Speak in {lang_name} in SPOKEN."
         )
 
         raw_text = None
         last_err = None
         history = getattr(session, "conversation_history", [])
 
-        # Dynamic Provider Order based on pre-call health probe
-        await self.probe_fastest_provider()
+        # Use current healthy provider without firing redundant dummy probe requests during active turns
         ordered_providers = ["groq", "openrouter", "gemini"]
-        if self.fastest_provider == "openrouter":
+        if getattr(self, "fastest_provider", "groq") == "openrouter":
             ordered_providers = ["openrouter", "groq", "gemini"]
-        elif self.fastest_provider == "gemini":
+        elif getattr(self, "fastest_provider", "groq") == "gemini":
             ordered_providers = ["gemini", "openrouter", "groq"]
 
         for prov in ordered_providers:
@@ -319,7 +331,7 @@ class GeminiInterviewDriver:
         model: Optional[str] = None,
         history: Optional[list[dict[str, str]]] = None,
     ) -> Optional[str]:
-        """Groq API: fastest LLM (~0.3s). Uses robust requests session with automatic TLS retries."""
+        """Groq API: fastest LLM (~0.25s). Uses persistent httpx HTTP/2 client."""
         if not settings.groq_api_key:
             return None
         url = "https://api.groq.com/openai/v1/chat/completions"
@@ -330,26 +342,22 @@ class GeminiInterviewDriver:
             messages.extend(history[-6:])
         messages.append({"role": "user", "content": f"Beneficiary Spoke: \"{user_msg}\""})
 
-        def _sync_request():
-            session = _get_groq_sync_session()
-            headers = {
-                "Authorization": f"Bearer {settings.groq_api_key}",
-            }
-            payload = {
-                "model": chosen_model,
-                "messages": messages,
-                "temperature": 0.35,
-                "max_tokens": 150,
-            }
-            return session.post(url, headers=headers, json=payload, timeout=4.0)
-
+        client = _get_llm_client()
+        headers = {
+            "Authorization": f"Bearer {settings.groq_api_key}",
+        }
+        payload = {
+            "model": chosen_model,
+            "messages": messages,
+            "temperature": 0.3,
+            "max_tokens": 150,
+        }
         try:
-            resp = await asyncio.to_thread(_sync_request)
+            resp = await client.post(url, headers=headers, json=payload, timeout=3.5)
             if resp.status_code == 200:
                 circuit_breaker.record_success("groq")
                 data = resp.json()
-                content = data["choices"][0]["message"]["content"]
-                return content
+                return data["choices"][0]["message"]["content"]
             elif resp.status_code == 429 or "429" in resp.text:
                 circuit_breaker.trip("groq", "429 Rate Limit (RPM Exceeded)", cooldown=15.0)
                 return None
@@ -362,12 +370,15 @@ class GeminiInterviewDriver:
             if "429" in str(e):
                 circuit_breaker.trip("groq", "429 Rate Limit", cooldown=15.0)
                 return None
+            elif isinstance(e, (httpx.ConnectError, httpx.NetworkError)) or "Connection reset" in str(e):
+                circuit_breaker.trip("groq", "Connection Reset / Blocked", cooldown=60.0)
+                return None
             logger.warning(f"Groq request to {chosen_model} failed: {repr(e)}")
             return None
 
 
     async def _call_openrouter(self, system_prompt: str, user_msg: str) -> Optional[str]:
-        """OpenRouter API fallback using universal endpoint with robust session and retries."""
+        """OpenRouter API fallback using universal endpoint with persistent httpx HTTP/2."""
         if not settings.openrouter_api_key:
             return None
         url = "https://openrouter.ai/api/v1/chat/completions"
@@ -386,12 +397,9 @@ class GeminiInterviewDriver:
             "temperature": 0.2,
             "max_tokens": 180,
         }
-        def _sync_request():
-            session = _get_groq_sync_session()
-            return session.post(url, headers=headers, json=payload, timeout=4.0)
-
+        client = _get_llm_client()
         try:
-            resp = await asyncio.to_thread(_sync_request)
+            resp = await client.post(url, headers=headers, json=payload, timeout=4.0)
             if resp.status_code == 200:
                 circuit_breaker.record_success("openrouter")
                 data = resp.json()
@@ -453,7 +461,8 @@ class GeminiInterviewDriver:
                     if "fields" in data and isinstance(data["fields"], dict):
                         for fn, fv in data["fields"].items():
                             if fv and str(fv).strip().lower() not in invalid_values:
-                                extracted_fields[fn] = str(fv).strip()
+                                clean_v = normalize_field_to_english(fn, str(fv).strip())
+                                extracted_fields[fn] = clean_v
                         if extracted_fields:
                             result_action = "extract"
                             field_name = next(iter(extracted_fields))
@@ -464,10 +473,11 @@ class GeminiInterviewDriver:
                         fn = data.get("field")
                         fv = data.get("value")
                         if fn and fv and str(fv).strip().lower() not in invalid_values and confidence >= 0.5:
-                            extracted_fields[fn] = str(fv).strip()
+                            clean_v = normalize_field_to_english(fn, str(fv).strip())
+                            extracted_fields[fn] = clean_v
                             result_action = "extract"
                             field_name = fn
-                            field_value = str(fv).strip()
+                            field_value = clean_v
 
         # 2. Match UNKNOWN::{...}
         unknown_match = re.search(r"UNKNOWN:?\s*:?\s*(\{.*?\})", raw_text, re.DOTALL)

@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.twilio_router import router as twilio_router, handle_twilio_whatsapp
 from routers.whatsapp_router import router as meta_whatsapp_router
 from services.interview_coordinator import InterviewCoordinator, get_completed_calls_records
+from services.field_normalizer import normalize_field_to_english
 from services.stt_service import transcribe_audio
 from services.tts_service import synthesize_speech
 from config import settings
@@ -161,10 +162,11 @@ async def view_call_records_dashboard():
         fields_html = ""
         for fn, fv in r.get("confirmed_fields", {}).items():
             nice_name = fn.replace("_", " ").title()
+            clean_fv = normalize_field_to_english(fn, str(fv), r.get("language", "ta"))
             fields_html += f"""
             <div style="background: #1e293b; padding: 8px 12px; border-radius: 6px; border: 1px solid #334155;">
                 <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">{nice_name}</div>
-                <div style="font-size: 13.5px; color: #f8fafc; margin-top: 2px; font-weight: 500;">{fv}</div>
+                <div style="font-size: 13.5px; color: #f8fafc; margin-top: 2px; font-weight: 500;">{clean_fv}</div>
             </div>
             """
         if not fields_html:

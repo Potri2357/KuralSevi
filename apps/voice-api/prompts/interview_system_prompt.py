@@ -95,34 +95,42 @@ CRITICAL RULES TO PREVENT REPETITION:
 
 OUTPUT FORMAT:
 Your response must consist of EXACTLY two sections in this format:
-SPOKEN: <Your warm conversational response echoing the caller under 8 words>
+SPOKEN: <Your warm conversational response echoing the caller under 8 words in {language_name}>
 EXTRACT: {{"fields": {{"<field_name_1>": "<value_1>", "<field_name_2>": "<value_2>"}}, "confidence": 0.95}}
 
-DO NOT output any notes, markdown code blocks, bullet points, or English explanations.
+CRITICAL REQUIREMENT FOR EXTRACT VALUES:
+ALL field values in EXTRACT MUST be in English ONLY (e.g., "Class 10 completed", "Agriculture / Farming", "Self-employment (own shop)", "Commercial Driver", "Can travel to nearby towns", "Local village market").
+NEVER output Tamil, Malayalam, Hindi, or Telugu script inside the EXTRACT JSON. All records are reviewed by government welfare officers in English.
+
+DO NOT output any notes, markdown code blocks, bullet points, or English explanations outside of SPOKEN and EXTRACT.
 """
 
 LANGUAGE_GREETINGS = {
     "ta": "வணக்கம்! நான் குரல் செவி. அரசு உதவி திட்ட தகவல்களுக்காக அழைக்கிறேன். பேசலாங்களா?",
+    "ml": "നമസ്കാരം! ഞാൻ കുരൽ സെവി. സർക്കാർ സഹായ പദ്ധതി വിവരങ്ങൾക്കായി വിളിക്കുന്നതാണ്. സംസാരിക്കാമോ?",
     "hi": "नमस्ते! मैं कुरल सेवी हूँ। PM-AJAY योजना के तहत आपकी आजीविका जानकारी एकत्र करने के लिए कॉल कर रहा हूँ।",
     "te": "నమస్కారం! నేను కురల్ సేవి. PM-AJAY పథకం కింద మీ జీవనాధార సమాచారాన్ని సేకరించడానికి కాల్ చేస్తున్నాను.",
 }
 
 CONSENT_SCRIPTS = {
     "ta": "வணக்கம்! நான் குரல் செவி. அரசு உதவி திட்ட தகவல்களுக்காக அழைக்கிறேன். பேசலாங்களா?",
+    "ml": "നമസ്കാരം! ഞാൻ കുരൽ സെവി. സർക്കാർ സഹായ പദ്ധതി വിവരങ്ങൾക്കായി വിളിക്കുന്നതാണ്. സംസാരിക്കാമോ?",
     "hi": "मैं कुरल सेवी हूँ। PM-AJAY योजना के लिए आपकी शिक्षा, काम और कौशल के बारे में कुछ सवाल पूछूँगा। जानकारी गोपनीय रहेगी। क्या आप सहमत हैं? हाँ कहें।",
     "te": "నేను కురల్ సేవి. PM-AJAY పథకం కోసం మీ చదువు, పని, నైపుణ్యాల గురించి కొన్ని ప్రశ్నలు అడుగుతాను. సమాచారం రహస్యంగా ఉంటుంది. సమ్మతిస్తారా? అవును అని చెప్పండి.",
 }
 
 WRAP_UP_SCRIPTS = {
     "ta": "நன்றி! உங்கள் தகவல்கள் வெற்றிகரமாக பதிவு செய்யப்பட்டன. அடுத்த 3 நாட்களில் மாவட்ட அலுவலர் தொடர்புகொள்வார். நன்றி, வணக்கம்.",
+    "ml": "വളരെ നന്ദി! നിങ്ങളുടെ എല്ലാ വിവരങ്ങളും വിജയകരമായി രേഖപ്പെടുത്തിയിട്ടുണ്ട്. അടുത്ത 3 ദിവസത്തിനുള്ളിൽ ജില്ലാ ഉദ്യോഗസ്ഥൻ ബന്ധപ്പെടും. നന്ദി, നമസ്കാരം.",
     "hi": "धन्यवाद! आपकी जानकारी सफलतापूर्वक दर्ज कर ली गई है। अगले 3 दिनों में जिला अधिकारी आपसे संपर्क करेंगे। नमस्ते।",
     "te": "ధన్యవాదాలు! మీ సమాచారం విజయవంతంగా నమోదు చేయబడింది. వచ్చే 3 రోజులలో జిల్లా అధికారి మిమ్మల్ని సంప్రదిస్తారు. నమస్కారం.",
 }
 
 REFUSAL_SCRIPTS = {
     "ta": "நன்றி. உங்கள் விருப்பத்தை மதிக்கிறோம். உங்களுக்கு அரசு உதவி தேவைப்பட்டால் எப்போது வேண்டுமானாலும் அழைக்கலாம். நன்றி, வணக்கம்.",
+    "ml": "നന്ദി. നിങ്ങളുടെ തീരുമാനത്തെ ഞങ്ങൾ മാനിക്കുന്നു. സഹായം ആവശ്യമുള്ളപ്പോൾ എപ്പോൾ വേണമെങ്കിലും വിളിക്കാം. നന്ദി, നമസ്കാരം.",
     "hi": "धन्यवाद। हम आपके निर्णय का सम्मान करते हैं। सहायता या प्रशिक्षण की आवश्यकता होने पर आप पुनः संपर्क कर सकते हैं। नमस्ते।",
-    "te": "ధన్యవాదాలు. మీ నిర్ణయాన్ని మేము గౌరవిస్తాము. సహాయம் அல்லது శిక్షణ అవసరమైతే ఎప్పుడైనా సంప్రదించండి. నమస్కారం.",
+    "te": "ధన్యవాదాలు. మీ నిర్ణయాన్ని మేము గౌరవిస్తాము. సహాయം அல்லது శిక్షణ అవసరమైతే ఎప్పుడైనా సంప్రదించండి. నమస్కారం.",
 }
 
 ALL_PS_FIELDS = [
@@ -135,9 +143,15 @@ ALL_PS_FIELDS = [
     "local_economic_context",
 ]
 
-def build_system_prompt(language_code: str, current_field: str, confirmed_fields: dict) -> str:
+def build_system_prompt(
+    language_code: str,
+    current_field: str,
+    confirmed_fields: dict,
+    identity_status: str = "confirmed",
+    caller_identity_info: str = "",
+) -> str:
     """Build the full system prompt for the current interview turn."""
-    language_names = {"ta": "Tamil", "hi": "Hindi", "te": "Telugu"}
+    language_names = {"ta": "Tamil", "ml": "Malayalam", "hi": "Hindi", "te": "Telugu"}
     language_name = language_names.get(language_code, "Hindi")
     
     confirmed_summary = ", ".join([

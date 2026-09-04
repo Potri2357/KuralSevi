@@ -1,12 +1,22 @@
 import { Metadata } from 'next';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { BookOpen, Database, Sliders, Activity } from 'lucide-react';
+import { BookOpen, Database, Sliders, Activity, PhoneCall } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'System Administration — Kural Sevi' };
 
 export default function AdminPage() {
   const adminModules = [
+    {
+      title: 'Call Records & Voice Transcripts',
+      desc: 'Real-time turn-by-turn telephony transcripts, extracted 7-field livelihood profiles, and live audio logs.',
+      badge: 'Live Dashboard',
+      badgeVariant: 'chakra' as const,
+      icon: PhoneCall,
+      iconColor: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
+      href: 'http://localhost:8000/call-records',
+      external: true,
+    },
     {
       title: 'NSQF Qualification Packs Catalog',
       desc: '40+ QP-NOS job roles seeded with sector skill council codes, minimum education criteria, and training hours.',
@@ -55,8 +65,8 @@ export default function AdminPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {adminModules.map((mod) => {
           const Icon = mod.icon;
-          return (
-            <Card key={mod.title} className="bg-[var(--bg-card)] border-[var(--border)] card-hover cursor-pointer shadow-2xs">
+          const cardContent = (
+            <Card key={mod.title} className="bg-[var(--bg-card)] border-[var(--border)] card-hover cursor-pointer shadow-2xs h-full">
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -75,6 +85,22 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           );
+
+          if (mod.href) {
+            return (
+              <a
+                key={mod.title}
+                href={mod.href}
+                target={mod.external ? '_blank' : undefined}
+                rel={mod.external ? 'noreferrer' : undefined}
+                className="block no-underline"
+              >
+                {cardContent}
+              </a>
+            );
+          }
+
+          return cardContent;
         })}
       </div>
     </div>

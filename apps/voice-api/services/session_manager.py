@@ -45,6 +45,19 @@ class SessionManager:
         self._mem_sessions: Dict[str, InterviewSession] = {}
         self._mem_session_records: Dict[str, dict] = {}
 
+        # Pre-seed demo known beneficiary for standard test line (+919876543210)
+        demo_phone_hash = hash_phone("+919876543210", self.hmac_secret)
+        self._mem_beneficiaries[demo_phone_hash] = {
+            "id": "ben-demo-001",
+            "case_id": "KS-2026-00142",
+            "phone_hash": demo_phone_hash,
+            "name": "ராமசாமி",
+            "district": "நாமக்கல்",
+            "state": "Tamil Nadu",
+            "language_code": "ta",
+            "is_known": True,
+        }
+
         # Circuit breaker state
         self._cb_failures = 0
         self._cb_open_until: Optional[datetime] = None
@@ -96,7 +109,10 @@ class SessionManager:
                 result = self.db.table("beneficiaries").select("*").eq("phone_hash", phone_hash).limit(1).execute()
                 if result.data:
                     self._cb_record_success()
-                    return result.data[0]
+                    ben = result.data[0]
+                    ben["is_known"] = bool(ben.get("name_encrypted") or ben.get("name"))
+                    ben["name"] = ben.get("name") or ben.get("name_encrypted")
+                    return ben
 
                 # Generate a new case ID
                 case_id = f"KS-2026-{secrets.randbelow(90000) + 10000}"
@@ -117,26 +133,62 @@ class SessionManager:
                 created = self.db.table("beneficiaries").insert(new_beneficiary).execute()
                 if created.data:
                     self._cb_record_success()
-                    return created.data[0]
+                    ben = created.data[0]
+                    ben["is_known"] = False
+                    ben["name"] = None
+                    return ben
             except Exception as e:
                 self._cb_record_failure(e)
                 logger.warning(f"Supabase beneficiary query failed ({e}). Using in-memory fallback.")
 
         # In-memory fallback
         if phone_hash in self._mem_beneficiaries:
-            return self._mem_beneficiaries[phone_hash]
+            ben = self._mem_beneficiaries[phone_hash]
+            ben["is_known"] = bool(ben.get("name"))
+            return ben
 
         case_id = f"KS-2026-{secrets.randbelow(90000) + 10000}"
         beneficiary = {
             "id": str(uuid.uuid4()),
             "case_id": case_id,
             "phone_hash": phone_hash,
+            "name": None,
             "district": district,
             "state": state,
             "language_code": language_code,
+            "is_known": False,
         }
         self._mem_beneficiaries[phone_hash] = beneficiary
         return beneficiary
+
+    async def update_beneficiary_identity(
+        self,
+        beneficiary_id: str,
+        name: str,
+        place: Optional[str] = None,
+    ):
+        """Persists extracted or corrected name and place to the beneficiary record."""
+        # Update in memory
+        for b in self._mem_beneficiaries.values():
+            if b.get("id") == beneficiary_id:
+                b["name"] = name
+                if place:
+                    b["district"] = place
+                b["is_known"] = True
+                logger.info(f"Updated in-memory beneficiary {beneficiary_id}: name='{name}', place='{place}'")
+                break
+
+        if self._db_ok():
+            def _sync():
+                try:
+                    update_data = {"name_encrypted": name}
+                    if place:
+                        update_data["district"] = place
+                    self.db.table("beneficiaries").update(update_data).eq("id", beneficiary_id).execute()
+                    logger.info(f"Updated database beneficiary {beneficiary_id}: name='{name}'")
+                except Exception as e:
+                    logger.warning(f"Failed to update beneficiary identity in DB: {e}")
+            await asyncio.to_thread(_sync)
 
     # ── Session lifecycle ──────────────────────────────────────────────────────
 

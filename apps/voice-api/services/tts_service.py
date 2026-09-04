@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 SARVAM_TTS_SPEAKERS = {
     "ta": "kavitha",    # Tamil speaker (bulbul:v3 compatible)
+    "ml": "kavitha",    # Malayalam speaker
     "hi": "priya",      # Hindi speaker (bulbul:v3 compatible)
     "te": "kavitha",    # Telugu speaker (bulbul:v3 compatible)
 }
@@ -67,37 +68,39 @@ def put_cached_audio(text: str, language_code: str, speaker: str, audio_bytes: b
     except Exception as e:
         logger.warning(f"Failed writing audio cache {cache_file}: {e}")
 
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+# Global persistent keep-alive httpx client with HTTP/2 for Sarvam (eliminates macOS TLS socket drops and Errno 54)
+_tts_async_client: Optional[httpx.AsyncClient] = None
 
-# Global persistent keep-alive requests session for Sarvam (eliminates macOS TLS socket drops)
-_tts_sync_session: Optional[requests.Session] = None
-
-def _get_tts_sync_session() -> requests.Session:
-    global _tts_sync_session
-    if _tts_sync_session is None:
-        _tts_sync_session = requests.Session()
-        retries = Retry(total=4, connect=4, read=4, backoff_factor=0.05, allowed_methods=['POST', 'GET'])
-        adapter = HTTPAdapter(max_retries=retries, pool_connections=10, pool_maxsize=20)
-        _tts_sync_session.mount('https://', adapter)
-        _tts_sync_session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-            'Content-Type': 'application/json',
-        })
-    return _tts_sync_session
+def _get_tts_client() -> httpx.AsyncClient:
+    global _tts_async_client
+    if _tts_async_client is None or _tts_async_client.is_closed:
+        limits = httpx.Limits(max_keepalive_connections=20, max_connections=40, keepalive_expiry=30.0)
+        _tts_async_client = httpx.AsyncClient(
+            http2=True,
+            timeout=httpx.Timeout(10.0, connect=6.0),
+            limits=limits,
+            headers={
+                "User-Agent": "curl/8.7.1",
+                "Content-Type": "application/json",
+            }
+        )
+    return _tts_async_client
 
 def warmup_tts():
-    """Warms up TLS socket to Sarvam in background thread."""
+    """Warms up TLS socket to Sarvam in background."""
     try:
         from config import settings
-        session = _get_tts_sync_session()
-        session.post(
-            settings.sarvam_tts_url,
-            headers={"api-subscription-key": settings.sarvam_api_key},
-            json={"inputs": ["வணக்கம்"], "target_language_code": "ta-IN", "speaker": "kavitha", "model": "bulbul:v3", "enable_preprocessing": False, "speech_sample_rate": 8000, "pace": 1.2},
-            timeout=3.0,
-        )
+        client = _get_tts_client()
+        # Fire and forget async probe if loop is running
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(client.post(
+                settings.sarvam_tts_url,
+                headers={"api-subscription-key": settings.sarvam_api_key},
+                json={"inputs": ["வணக்கம்"], "target_language_code": "ta-IN", "speaker": "kavitha", "model": "bulbul:v3", "enable_preprocessing": False, "speech_sample_rate": 8000, "pace": 1.2},
+            ))
+        except RuntimeError:
+            pass
     except Exception:
         pass
 
@@ -146,8 +149,8 @@ async def synthesize_speech(
     # Sarvam limits TTS to 500 chars per call; split if longer
     chunks = _split_text(text, max_chars=450)
 
-    def _sync_post_chunk(chunk_text: str) -> bytes:
-        session = _get_tts_sync_session()
+    async def _async_post_chunk(chunk_text: str) -> bytes:
+        client = _get_tts_client()
         payload = {
             "inputs": [chunk_text],
             "target_language_code": _sarvam_lang(language_code),
@@ -155,13 +158,13 @@ async def synthesize_speech(
             "model": "bulbul:v3",
             "enable_preprocessing": False,  # False saves ~1.2s; LLM already outputs clean Tamil
             "speech_sample_rate": 8000,     # 8kHz telephony standard
-            "pace": 1.3,                    # 1.3x pace cuts audio synthesis and playback latency
+            "pace": 1.25,                   # 1.25x natural brisk pace cuts audio synthesis latency
         }
         headers = {
             "api-subscription-key": sarvam_api_key,
         }
         try:
-            resp = session.post(sarvam_tts_url, json=payload, headers=headers, timeout=7.0)
+            resp = await client.post(sarvam_tts_url, json=payload, headers=headers)
             if resp.status_code == 200:
                 circuit_breaker.record_success("sarvam_tts")
                 data = resp.json()
@@ -178,23 +181,64 @@ async def synthesize_speech(
             logger.warning(f"Sarvam TTS request failed: {repr(e)}")
         return b""
 
-    # Synthesize chunks in parallel if multiple, via asyncio.to_thread
+    # Synthesize chunks in parallel if multiple
     if len(chunks) == 1:
-        all_audio = await asyncio.to_thread(_sync_post_chunk, chunks[0])
+        all_audio = await _async_post_chunk(chunks[0])
     else:
-        results = await asyncio.gather(*[asyncio.to_thread(_sync_post_chunk, c) for c in chunks])
+        results = await asyncio.gather(*[_async_post_chunk(c) for c in chunks])
         all_audio = b"".join(results)
 
     if not all_audio:
-        raise Exception("All Sarvam TTS synthesis attempts failed")
+        logger.info(f"Attempting edge-tts neural synthesis for ({language_code}): {text[:60]!r}")
+        all_audio = await _synthesize_edge_tts(text, language_code)
+
+    if not all_audio:
+        logger.warning(f"All TTS synthesis failed for: {text[:60]!r}")
+        return None
 
     # Store synthesized audio in persistent cache for zero latency next time!
     put_cached_audio(text, language_code, speaker, all_audio)
     
     return TTSResult(audio_bytes=all_audio, audio_format="wav")
 
+async def _synthesize_edge_tts(text: str, language_code: str) -> Optional[bytes]:
+    """Fallback neural TTS using Microsoft edge-tts (Sobhana/Pallavi/Swara/Shruti)."""
+    voice_map = {
+        "ml": "ml-IN-SobhanaNeural",
+        "ta": "ta-IN-PallaviNeural",
+        "hi": "hi-IN-SwaraNeural",
+        "te": "te-IN-ShrutiNeural",
+    }
+    voice = voice_map.get(language_code, "ml-IN-SobhanaNeural")
+    try:
+        import edge_tts
+        import subprocess
+        import tempfile
+        import os
+
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp_mp3:
+            tmp_mp3_path = tmp_mp3.name
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
+            tmp_wav_path = tmp_wav.name
+
+        try:
+            communicate = edge_tts.Communicate(text, voice, rate="+15%")
+            await communicate.save(tmp_mp3_path)
+            cmd = ["ffmpeg", "-y", "-i", tmp_mp3_path, "-ar", "8000", "-ac", "1", "-c:a", "pcm_s16le", tmp_wav_path]
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            wav_bytes = Path(tmp_wav_path).read_bytes()
+            if wav_bytes:
+                return wav_bytes
+        finally:
+            for p in (tmp_mp3_path, tmp_wav_path):
+                if os.path.exists(p):
+                    os.remove(p)
+    except Exception as e:
+        logger.warning(f"edge-tts fallback synthesis failed: {e}")
+    return None
+
 def _sarvam_lang(code: str) -> str:
-    return {"ta": "ta-IN", "hi": "hi-IN", "te": "te-IN"}.get(code, "hi-IN")
+    return {"ta": "ta-IN", "ml": "ml-IN", "hi": "hi-IN", "te": "te-IN"}.get(code, "ml-IN" if code == "ml" else "hi-IN")
 
 
 def _split_text(text: str, max_chars: int = 490) -> list[str]:
@@ -225,13 +269,15 @@ def _sanitize_for_tts(text: str, language_code: str) -> str:
     # Indic Unicode block ranges Sarvam accepts
     INDIC_RANGES = {
         "ta": (0x0B80, 0x0BFF),   # Tamil block
+        "ml": (0x0D00, 0x0D7F),   # Malayalam block
         "hi": (0x0900, 0x097F),   # Devanagari
         "te": (0x0C00, 0x0C7F),   # Telugu
     }
-    lo, hi = INDIC_RANGES.get(language_code, (0x0900, 0x0BFF))
+    lo, hi = INDIC_RANGES.get(language_code, (0x0900, 0x0D7F))
 
     SAFE_FALLBACKS = {
         "ta": "மன்னிக்கவும், மீண்டும் சொல்லுங்கள்.",
+        "ml": "ക്ഷമിക്കണം, വീണ്ടും പറയാമോ?",
         "hi": "माफ़ कीजिए, कृपया दोबारा बोलें।",
         "te": "క్షమించండి, మళ్ళీ చెప్పండి.",
     }

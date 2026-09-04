@@ -53,11 +53,17 @@ class InterviewSession:
     })
     current_field_index: int = 0
     consent_given: bool = False
+    consent_prompted: bool = False
     stt_confidences: list[float] = field(default_factory=list)
     extraction_certainties: list[float] = field(default_factory=list)
     turn_count: int = 0
     last_confirmed_field: Optional[str] = None
     conversation_history: list[dict[str, str]] = field(default_factory=list)
+    is_known_caller: bool = False
+    caller_name: Optional[str] = None
+    caller_place: Optional[str] = None
+    identity_asked: bool = False
+    identity_confirmed: bool = False
     
     @property
     def current_field(self) -> Optional[str]:

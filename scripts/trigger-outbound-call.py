@@ -34,24 +34,31 @@ _load_dotenv()
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 scripts/trigger-outbound-call.py <PHONE_NUMBER_WITH_COUNTRY_CODE>")
-        print("Example: python3 scripts/trigger-outbound-call.py +919342900638")
+        print("Usage: python3 scripts/trigger-outbound-call.py <PHONE_NUMBER_WITH_COUNTRY_CODE> [LANGUAGE_CODE]")
+        print("Example (Tamil):     python3 scripts/trigger-outbound-call.py +919342900638 ta")
+        print("Example (Malayalam): python3 scripts/trigger-outbound-call.py +919342900638 ml")
         sys.exit(1)
 
     target_phone = sys.argv[1].strip()
+    language = sys.argv[2].strip().lower() if len(sys.argv) > 2 else "ta"
     account_sid = os.environ.get("TWILIO_ACCOUNT_SID", "")
     auth_token = os.environ.get("TWILIO_AUTH_TOKEN", "")
     from_number = os.environ.get("TWILIO_PHONE_NUMBER", "")
-    webhook_url = os.environ.get("VOICE_API_URL", "https://charita-techiest-histogenetically.ngrok-free.dev") + "/webhooks/twilio/interview-start"
+    base_url = os.environ.get("VOICE_API_URL", "https://charita-techiest-histogenetically.ngrok-free.dev")
+    webhook_url = f"{base_url}/webhooks/twilio/interview-start?language={language}"
 
     if not account_sid or not auth_token or not from_number:
         print("ERROR: Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in .env")
         sys.exit(1)
 
+    lang_names = {"ta": "Tamil (தமிழ்)", "ml": "Malayalam (മലയാളം)", "hi": "Hindi (हिंदी)", "te": "Telugu (తెలుగు)"}
+    lang_display = lang_names.get(language, language.upper())
+
     print("=" * 65)
     print("  KURAL SEVI: Live Telephony Call Initiator")
     print("=" * 65)
     print(f"Calling:    {target_phone}")
+    print(f"Language:   {lang_display}")
     print(f"Caller ID:  {from_number}")
     print(f"Webhook:    {webhook_url}")
     print("Connecting to Twilio API...")

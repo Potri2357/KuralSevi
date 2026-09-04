@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Menu,
   X,
+  PhoneCall,
 } from 'lucide-react';
 
 import { IndicEar } from '@/components/icons/indic';
@@ -98,6 +99,18 @@ export function TopNav() {
 
           {/* Right Actions: 2 SLA Alert Pill + Avatar N */}
           <div className="flex items-center gap-3 shrink-0">
+            {/* Call Records Dashboard */}
+            <a
+              href="http://localhost:8000/call-records"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#0B3064] bg-[#EAF1FB] hover:bg-[#D9E6F7] border border-[#BACEEB] px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
+              title="Open Call Records & Verified Transcripts Dashboard"
+            >
+              <PhoneCall className="w-3.5 h-3.5 text-[#0B3064] shrink-0" />
+              <span>Call Records</span>
+            </a>
+
             {/* SLA Alert Badge */}
             <Link
               href="/officer/cases?filter=sla_breached"
