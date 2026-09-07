@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     twilio_account_sid: str
     twilio_auth_token: str
     twilio_phone_number: str
+    twilio_whatsapp_number: str = "whatsapp:+14155238886"
     
     # WhatsApp
     whatsapp_api_token: str

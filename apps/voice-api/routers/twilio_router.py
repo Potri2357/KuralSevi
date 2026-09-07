@@ -17,12 +17,21 @@ from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.twiml.messaging_response import MessagingResponse
 from typing import Optional
 
-from services.interview_coordinator import InterviewCoordinator, CoordinatorTurnResult
+from services.interview_coordinator import InterviewCoordinator, CoordinatorTurnResult, confirm_case_from_citizen
+from services.notification_service import FIELD_LABELS
 from services.stt_service import transcribe_audio
 from config import settings
 
 router = APIRouter(prefix="/webhooks/twilio", tags=["Twilio IVR & WhatsApp"])
 logger = logging.getLogger(__name__)
+
+AFFIRMATIVE_KEYWORDS = [
+    "yes", "y", "1", "ok", "confirm", "confirmed", "correct", "true", "done",
+    "சரி", "ஆமாம்", "உண்மை", "சரிங்க", "உறுதி",
+    "അതെ", "ശരി", "ഉറപ്പ്", "ശരിയാണ്",
+    "हाँ", "हां", "सही", "सही है", "स्वीकार",
+    "అవును", "సరే", "నిజం", "ధృవీకరించబడింది"
+]
 
 # Shared application coordinator instance
 _coordinator = InterviewCoordinator()
@@ -440,6 +449,17 @@ async def handle_twilio_whatsapp(
         except Exception as e:
             logger.error(f"Error transcribing WhatsApp audio: {e}", exc_info=True)
 
+    # Check if citizen is replying to confirm their application details
+    user_lower = user_speech.lower().strip()
+    if any(k in user_lower for k in AFFIRMATIVE_KEYWORDS):
+        confirmed_case = confirm_case_from_citizen(phone, channel="WHATSAPP")
+        if confirmed_case:
+            lang = confirmed_case.get("language", "ta")
+            ack_text = FIELD_LABELS.get(lang, FIELD_LABELS["ta"])["ack"]
+            msg_resp = MessagingResponse()
+            msg_resp.message(ack_text)
+            return Response(content=str(msg_resp), media_type="application/xml")
+
     turn_result: CoordinatorTurnResult = await coordinator.process_turn(
         phone=phone,
         channel="whatsapp",
@@ -452,4 +472,36 @@ async def handle_twilio_whatsapp(
 
     msg_resp = MessagingResponse()
     msg_resp.message(turn_result.spoken_response)
+    return Response(content=str(msg_resp), media_type="application/xml")
+
+
+# ── Twilio Programmable SMS API & Webhook ────────────────────────────────────────
+
+@router.post("/sms")
+async def handle_twilio_sms(
+    From: str = Form(...),
+    To: str = Form(...),
+    Body: Optional[str] = Form(default=""),
+    coordinator: InterviewCoordinator = Depends(get_coordinator),
+):
+    """
+    Twilio SMS Webhook.
+    Receives incoming citizen SMS replies (e.g. YES, 1, சரி, हाँ) and confirms their PM-AJAY case.
+    """
+    phone = From
+    user_text = (Body or "").lower().strip()
+    logger.info(f"Received SMS from {phone}: '{user_text}'")
+
+    if any(k in user_text for k in AFFIRMATIVE_KEYWORDS):
+        confirmed_case = confirm_case_from_citizen(phone, channel="SMS")
+        if confirmed_case:
+            lang = confirmed_case.get("language", "ta")
+            ack_text = FIELD_LABELS.get(lang, FIELD_LABELS["ta"])["ack"]
+            msg_resp = MessagingResponse()
+            msg_resp.message(ack_text)
+            return Response(content=str(msg_resp), media_type="application/xml")
+
+    # Default acknowledgment if unknown reply
+    msg_resp = MessagingResponse()
+    msg_resp.message("PM-AJAY: Message received. Your case is under review / உங்கள் செய்தி பெறப்பட்டது.")
     return Response(content=str(msg_resp), media_type="application/xml")

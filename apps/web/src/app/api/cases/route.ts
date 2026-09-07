@@ -1,12 +1,7 @@
-import { Metadata } from 'next';
-import { CaseQueueView, type CaseListItem } from '@/features/cases';
+import { NextResponse } from 'next/server';
 import { getAllOfficerCases } from '@/lib/recommendation-service';
+import type { CaseListItem } from '@/features/cases/types';
 
-export const metadata: Metadata = {
-  title: 'Case Queue — Officer Dashboard',
-};
-
-// Default benchmark cases for portfolio demonstration
 const BENCHMARK_CASES: CaseListItem[] = [
   {
     id: '1',
@@ -24,7 +19,7 @@ const BENCHMARK_CASES: CaseListItem[] = [
     has_mobility: false,
     sla_deadline: new Date(Date.now() + 2 * 86400000).toISOString(),
     created_at: new Date().toISOString(),
-    consultant_required: true,
+    consultant_required: false,
   },
   {
     id: '2',
@@ -42,7 +37,7 @@ const BENCHMARK_CASES: CaseListItem[] = [
     has_mobility: false,
     sla_deadline: new Date(Date.now() + 1 * 86400000).toISOString(),
     created_at: new Date().toISOString(),
-    consultant_required: true,
+    consultant_required: false,
   },
   {
     id: '3',
@@ -60,7 +55,7 @@ const BENCHMARK_CASES: CaseListItem[] = [
     has_mobility: true,
     sla_deadline: new Date(Date.now() - 1 * 86400000).toISOString(),
     created_at: new Date().toISOString(),
-    consultant_required: false,
+    consultant_required: true,
   },
   {
     id: '4',
@@ -100,20 +95,14 @@ const BENCHMARK_CASES: CaseListItem[] = [
   },
 ];
 
-export const dynamic = 'force-dynamic';
-
-export default async function CasesPage() {
-  let allCases: CaseListItem[] = BENCHMARK_CASES;
-
+export async function GET() {
   try {
-    const liveCalls = await getAllOfficerCases();
-    if (liveCalls && liveCalls.length > 0) {
-      // Show real completed calls first on officer's active docket
-      allCases = [...liveCalls, ...BENCHMARK_CASES];
-    }
-  } catch (err) {
-    console.error('Error fetching officer cases for CasesPage:', err);
+    const liveCallCases = await getAllOfficerCases();
+    // Prepend live call cases from telephony to the docket
+    const merged = [...liveCallCases, ...BENCHMARK_CASES];
+    return NextResponse.json({ cases: merged, count: merged.length, liveCallsCount: liveCallCases.length });
+  } catch (err: any) {
+    console.error('Error fetching officer cases:', err);
+    return NextResponse.json({ cases: BENCHMARK_CASES, count: BENCHMARK_CASES.length, error: err?.message }, { status: 200 });
   }
-
-  return <CaseQueueView initialCases={allCases} />;
 }

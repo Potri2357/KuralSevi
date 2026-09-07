@@ -11,6 +11,7 @@ import os
 import io
 import time
 import wave
+import json
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -23,15 +24,33 @@ from .llm_service import GeminiInterviewDriver, LLMExtractionResult
 from .interview_fsm import InterviewFSM, InterviewSession, InterviewState, PS_FIELDS_ORDER
 from .tts_service import synthesize_speech, TTSResult
 from .field_normalizer import normalize_field_to_english, has_indic_characters
+from .notification_service import NotificationService, FIELD_LABELS
 from prompts.interview_system_prompt import CONSENT_SCRIPTS, WRAP_UP_SCRIPTS, REFUSAL_SCRIPTS
 from config import settings
 
 logger = logging.getLogger(__name__)
 
 _STATIC_AUDIO_DIR = Path(__file__).resolve().parent.parent / "static_audio"
+_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
+_PERSISTENCE_FILE = _DATA_DIR / "completed_calls.json"
+
+def _load_persisted_records() -> list[dict]:
+    if _PERSISTENCE_FILE.exists():
+        try:
+            return json.loads(_PERSISTENCE_FILE.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning(f"Failed to load persisted records: {e}")
+    return []
+
+def _save_persisted_records():
+    try:
+        _PERSISTENCE_FILE.write_text(json.dumps(_completed_calls_records, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:
+        logger.warning(f"Failed to persist call records: {e}")
 
 # Registry of completed and active call records for dashboard/telephony logs
-_completed_calls_records: list[dict] = []
+_completed_calls_records: list[dict] = _load_persisted_records()
 
 def get_completed_calls_records() -> list[dict]:
     sanitized = []
@@ -45,6 +64,29 @@ def get_completed_calls_records() -> list[dict]:
         }
         sanitized.append(r_copy)
     return sanitized
+
+def confirm_case_from_citizen(phone: str, channel: str = "SMS") -> Optional[dict]:
+    """
+    Two-way feedback loop: Promotes a completed case to BENEFICIARY_CONFIRMED
+    when the citizen replies YES / சரி / हाँ via SMS or WhatsApp.
+    """
+    clean_phone = phone.replace("whatsapp:", "").strip()
+    clean_digits = "".join(c for c in clean_phone if c.isdigit())
+    
+    for rec in _completed_calls_records:
+        rec_phone = rec.get("phone", "").replace("whatsapp:", "").strip()
+        rec_digits = "".join(c for c in rec_phone if c.isdigit())
+        
+        # Match by full phone or last 10 digits
+        if rec_digits == clean_digits or (len(clean_digits) >= 10 and rec_digits.endswith(clean_digits[-10:])) or (len(rec_digits) >= 10 and clean_digits.endswith(rec_digits[-10:])):
+            rec["status"] = "BENEFICIARY_CONFIRMED"
+            rec["citizen_confirmed"] = True
+            rec["confirmed_via"] = channel.upper()
+            rec["confirmed_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            _save_persisted_records()
+            logger.info(f"Case {rec.get('case_id')} marked as BENEFICIARY_CONFIRMED via {channel} by {phone}")
+            return rec
+    return None
 
 @dataclass
 class CoordinatorTurnResult:
@@ -381,6 +423,7 @@ class InterviewCoordinator:
             api_key=settings.google_ai_api_key,
             model=settings.gemini_model,
         )
+        self.notification_service = NotificationService()
         self._active_sessions: dict[str, dict] = {}
 
     async def _get_or_create_session(
@@ -743,6 +786,8 @@ class InterviewCoordinator:
                     "channel": channel,
                     "language": lang,
                     "status": "COMPLETED",
+                    "citizen_confirmed": False,
+                    "notification_status": "DISPATCHED",
                     "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
                     "confirmed_fields": confirmed_dict,
                     "turns_count": len(getattr(session, "transcript_turns", [])),
@@ -751,6 +796,16 @@ class InterviewCoordinator:
                 _completed_calls_records.insert(0, record)
                 if len(_completed_calls_records) > 100:
                     _completed_calls_records.pop()
+                _save_persisted_records()
+
+                # Asynchronously dispatch post-call bilingual confirmation (WhatsApp + SMS)
+                asyncio.create_task(self.notification_service.dispatch_bilingual_confirmation(
+                    phone=phone,
+                    language_code=lang,
+                    case_id=case_id,
+                    confirmed_fields=confirmed_dict,
+                    caller_name=getattr(session, "caller_name", None),
+                ))
 
                 if key in self._active_sessions:
                     del self._active_sessions[key]
@@ -885,6 +940,7 @@ class InterviewCoordinator:
                         for k, f in session.fields.items()
                         if f.status == "confirmed"
                     }
+                    _save_persisted_records()
                     break
 
             if session.all_fields_collected:

@@ -1,7 +1,8 @@
-import { CaseDetailView, type CaseDetailData } from '@/features/cases';
+import { NextRequest, NextResponse } from 'next/server';
 import { getCaseDetail } from '@/lib/recommendation-service';
+import type { CaseDetailData } from '@/features/cases/types';
 
-const SAMPLE_CASE_DATA: CaseDetailData = {
+const FALLBACK_BENCHMARK_DETAIL: CaseDetailData = {
   case_id: 'KS-2026-00142',
   district: 'Namakkal',
   state: 'Tamil Nadu',
@@ -30,7 +31,7 @@ const SAMPLE_CASE_DATA: CaseDetailData = {
       confidence: 'high',
       topsis_score: 0.88,
       explanation:
-        'Recommended because you already have hand stitching and basic tailoring skills, prefer self-employment, and are near the Namakkal garment cluster (8km).',
+        'Top recommendation because beneficiary already has strong hand stitching skills, prefers local self-employment, and is located 8km from the Namakkal garment cluster.',
       opportunity: {
         strength: 'high',
         source: 'e-Shram & Udyam District Data',
@@ -47,17 +48,17 @@ const SAMPLE_CASE_DATA: CaseDetailData = {
       qp_name: 'Papad and Ready-to-Eat Products Maker',
       nsqf_level: 2,
       pathway_type: 'home_enterprise',
-      matched_skills: ['Traditional cooking', 'Food packaging'],
-      skills_to_acquire: ['Standardized recipes', 'Hygiene standards', 'Local distribution'],
+      matched_skills: ['Traditional cooking', 'Food preservation'],
+      skills_to_acquire: ['Standardized recipes', 'Hygiene standards', 'Packaging and labelling'],
       confidence: 'high',
       topsis_score: 0.79,
       explanation:
-        'Recommended as an optimal home-based enterprise compatible with caregiving duties with steady demand in Namakkal weekly market.',
+        'Recommended as an optimal home enterprise allowing flexible hours alongside family caregiving duties with steady weekly market demand.',
       opportunity: {
         strength: 'medium',
         source: 'District Industrial Profile',
         date: 'March 2026',
-        evidence: 'Growing self-help group food enterprises in district',
+        evidence: 'Expanding self-help group food enterprises in weekly bazaar',
       },
       income_range: '₹4,000 – ₹15,000/month',
       travel_feasible: true,
@@ -74,7 +75,7 @@ const SAMPLE_CASE_DATA: CaseDetailData = {
       confidence: 'medium',
       topsis_score: 0.65,
       explanation:
-        "Aligns with your family's 3-generation weaving tradition. Medium confidence due to yarn supply fluctuations; recommended with cooperative linkage.",
+        "Directly leverages family's 3-generation weaving heritage. Medium confidence due to fluctuating market yarn prices; recommended with cooperative linkage.",
       opportunity: {
         strength: 'medium',
         source: 'e-Shram District Data',
@@ -88,23 +89,21 @@ const SAMPLE_CASE_DATA: CaseDetailData = {
   ],
 };
 
-export const dynamic = 'force-dynamic';
-
-export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolved = await params;
-  const targetId = resolved.id;
-
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
-    const liveCase = await getCaseDetail(targetId);
-    if (liveCase) {
-      return <CaseDetailView caseData={liveCase} />;
+    const detail = await getCaseDetail(id);
+    if (detail) {
+      return NextResponse.json(detail);
     }
   } catch (err) {
-    console.error(`Error loading live case detail for ${targetId}:`, err);
+    console.error(`Error loading case detail for ${id}:`, err);
   }
 
-  // Benchmark fallback
-  const caseId = targetId === '1' ? 'KS-2026-00142' : targetId.length > 5 && targetId.startsWith('KS-') ? targetId : `KS-2026-${targetId.padStart(5, '0')}`;
-  const caseData = { ...SAMPLE_CASE_DATA, case_id: caseId };
-  return <CaseDetailView caseData={caseData} />;
+  // Fallback with custom ID
+  const caseId = id.length > 5 && id.startsWith('KS-') ? id : `KS-2026-${id.padStart(5, '0')}`;
+  return NextResponse.json({ ...FALLBACK_BENCHMARK_DETAIL, case_id: caseId });
 }

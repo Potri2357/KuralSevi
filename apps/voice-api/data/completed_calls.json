@@ -1,0 +1,377 @@
+[
+  {
+    "session_id": "4b5bb19e-a2d9-4cbd-a4d6-94b38c7e0790",
+    "case_id": "4B5BB19E-A2D",
+    "phone": "+919444112233",
+    "channel": "ivr",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-06 08:43:10 UTC",
+    "confirmed_fields": {
+      "educational_background": "Class 10 completed",
+      "family_occupation": "Agriculture / Farming",
+      "current_livelihood": "Agricultural labour / Farming",
+      "skills_and_interests": "Vegetable & Retail Selling",
+      "mobility_constraints": "Local area / Prefers establishing local enterprise",
+      "employment_preference": "Self-employment (own shop)",
+      "local_economic_context": "Local Village Market / Commerce"
+    },
+    "turns_count": 5,
+    "transcript": [
+      {
+        "user": "ஆமாம், பேசலாம்",
+        "assistant": "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?",
+        "timestamp": "08:43:10"
+      },
+      {
+        "user": "என் பேரு செல்வம், நான் மதுரை",
+        "assistant": "ரொம்ப சந்தோஷம்ங்க! அரசு நலத்திட்ட பதிவிற்காக உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?",
+        "timestamp": "08:43:10"
+      },
+      {
+        "user": "பத்தாம் வகுப்பு படிச்சிருக்கேன்",
+        "assistant": "சரிங்க! அரசு திட்டத்திற்காக உங்க குடும்பத்துல வழக்கமா என்ன தொழில் செய்றாங்க?",
+        "timestamp": "08:43:10"
+      },
+      {
+        "user": "எங்க குடும்ப தொழில் விவசாயம்",
+        "assistant": "அருமைங்க! அரசு பயிற்சி உதவிக்கு உங்களுக்கு என்னென்ன தொழில் திறன்கள் அல்லது ஆர்வங்கள் இருக்கு?",
+        "timestamp": "08:43:10"
+      },
+      {
+        "user": "காய்கறி கடை வைக்க ஆசை",
+        "assistant": "சூப்பர்ங்க! சொந்த தொழில் வெற்றிக்கு உங்க ஊர்ல அல்லது சந்தையில இந்த தொழிலுக்கு நல்ல ஆதரவு இருக்கா?",
+        "timestamp": "08:43:10"
+      }
+    ],
+    "confirmed_via": "WHATSAPP",
+    "confirmed_at": "2026-09-06 08:43:10 UTC"
+  },
+  {
+    "session_id": "45c7edb1-fd6b-459a-9078-e17cd004d39d",
+    "case_id": "45C7EDB1-FD6",
+    "phone": "+917338845352",
+    "channel": "ivr",
+    "language": "hi",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-06 03:56:57 UTC",
+    "confirmed_fields": {
+      "educational_background": "Basic literacy (can read and write)",
+      "family_occupation": "Agriculture / Farming",
+      "current_livelihood": "Agricultural labour / Farming",
+      "skills_and_interests": "Vocational & Practical Trade Skills",
+      "mobility_constraints": "Local village resident",
+      "employment_preference": "Self-Employment (Own shop / enterprise)",
+      "local_economic_context": "Local village commerce (vegetable shop, grocery, tea stall, weekly market)"
+    },
+    "turns_count": 6,
+    "transcript": [
+      {
+        "user": "हां बात कर सकते हैं।",
+        "assistant": "बहुत-बहुत धन्यवाद! सबसे पहले आपका शुभ नाम और आप किस गांव या शहर से हैं, यह बताइए?",
+        "timestamp": "03:55:23"
+      },
+      {
+        "user": "नमस्ते!",
+        "assistant": "बहुत अच्छा! आपकी पढ़ाई के बारे में बताइए, क्या आप स्कूल गए हैं?",
+        "timestamp": "03:55:32"
+      },
+      {
+        "user": "नमस्ते!",
+        "assistant": "अच्छा! आपके परिवार का मुख्य व्यवसाय या पारंपरिक काम क्या है?",
+        "timestamp": "03:55:36"
+      },
+      {
+        "user": "नमस्ते मैं गांव में रहती हूं। मैं ज्यादा पढ़ाई नहीं की है। बस थोड़ा बहुत पढ़ना लिखना आता है। मैं बचपन से ही खेल।",
+        "assistant": "बहुत अच्छा! वर्तमान में अपनी दैनिक आजीविका या आमदनी के लिए आप क्या काम करते हैं?",
+        "timestamp": "03:55:55"
+      },
+      {
+        "user": "अपने घर वालों की मदद करती हूं तो छोटी बड़ी का मुझे अच्छा अनुभव है।",
+        "assistant": "बहुत खूब! खुद का काम करने के लिए आपने कौन सा हुनर या काम सीखा हुआ है?",
+        "timestamp": "03:56:02"
+      },
+      {
+        "user": "थोड़ी सी गर्मी है करीब डेढ़ डिफेक्ट उसी में हम गेहूं धान और कभी कभी सब्जियों और उगते हैं, लेकिन जमीन काम है इसलिए खेती से ज्यादा कमाई नहीं हो पाती। ऊपर से खुद की बारिश कब काम हो जाती है तभी फसल खराब हो जाती है तो आमदनी का कोई भरोसा नहीं है।",
+        "assistant": "बहुत बढ़िया! आप खुद का कोई छोटा व्यवसाय या दुकान शुरू करना चाहते हैं, या मासिक वेतन वाली नौकरी?",
+        "timestamp": "03:56:28"
+      }
+    ],
+    "confirmed_via": "SMS",
+    "confirmed_at": "2026-09-06 08:43:44 UTC"
+  },
+  {
+    "session_id": "bdf7b019-5391-49d6-a757-24c1e29ea210",
+    "case_id": "BDF7B019-539",
+    "phone": "+919876543210",
+    "channel": "ivr",
+    "language": "ml",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-04 13:38:28 UTC",
+    "confirmed_fields": {
+      "educational_background": "Class 10 completed (Secondary School)",
+      "family_occupation": "Agriculture / Farming",
+      "current_livelihood": "Agricultural labour / Farming",
+      "skills_and_interests": "Cooking & Catering",
+      "mobility_constraints": "Can travel to nearby towns",
+      "employment_preference": "Self-Employment (Own shop / enterprise)",
+      "local_economic_context": "Local village commerce (vegetable shop, grocery, tea stall, weekly market)"
+    },
+    "turns_count": 7,
+    "transcript": [
+      {
+        "user": "അതെ",
+        "assistant": "വളരെ നന്ദി! ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "എന്റെ പേര് അനീഷ്",
+        "assistant": "വളരെ സന്തോഷം! നിങ്ങളുടെ വിദ്യാഭ്യാസം എന്താണ്, സ്കൂളിൽ പോയിട്ടുണ്ടോ?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "പത്താം",
+        "assistant": "ശരി! നിങ്ങളുടെ കുടുംബത്തിന്റെ പ്രധാന തൊഴിൽ എന്താണ്?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "കൃഷി",
+        "assistant": "നന്നായി! നിങ്ങൾക്ക് എന്തൊക്കെ തൊഴിൽ നൈപുണ്യങ്ങളും താൽപ്പര്യങ്ങളുമാണ് ഉള്ളത്?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "ഷെഫ്",
+        "assistant": "നന്നായി, പാചക കല വലിയൊരു വരദാനമാണ്! ജോലിക്കായി അടുത്തുള്ള സ്ഥലങ്ങളിലേക്ക് യാത്ര ചെയ്യാൻ സാധിക്കുമോ?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "യാത്ര",
+        "assistant": "വളരെ സന്തോഷം! നിങ്ങൾക്ക് സ്വന്തമായി ബിസിനസ് തുടങ്ങാനാണോ അതോ മാസ ശമ്പളമുള്ള ജോലിയാണോ താൽപ്പര്യം?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "കട",
+        "assistant": "സ്വന്തം സംരംഭ ശ്രമങ്ങൾക്ക് എല്ലാവിധ ആശംസകളും! നിങ്ങളുടെ നാട്ടിൽ എന്തൊക്കെ കടകളോ ചന്തയോ ഉണ്ട്?",
+        "timestamp": "13:38:28"
+      }
+    ],
+    "confirmed_via": "SMS",
+    "confirmed_at": "2026-09-04 13:38:28 UTC"
+  },
+  {
+    "session_id": "c0fdb18c-6202-4a24-bb51-57901e2f6710",
+    "case_id": "C0FDB18C-620",
+    "phone": "+919877788899",
+    "channel": "ivr",
+    "language": "te",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-04 13:38:28 UTC",
+    "confirmed_fields": {
+      "educational_background": "Class 10 completed",
+      "family_occupation": "Agriculture / Farming",
+      "current_livelihood": "Agricultural labour / Farming",
+      "skills_and_interests": "Cooking & Catering",
+      "mobility_constraints": "Local area / Prefers establishing local enterprise",
+      "employment_preference": "Self-Employment (Own Shop / Enterprise)",
+      "local_economic_context": "Local Village Market / Commerce"
+    },
+    "turns_count": 6,
+    "transcript": [
+      {
+        "user": "అవును",
+        "assistant": "చాలా ధన్యవాదాలు అండీ! ముందుగా మీ పేరు మరియు మీ ఊరు ఏదో చెబుతారా?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "నా పేరు సురేష్",
+        "assistant": "చాలా సంతోషం అండੀ! మీ చదువు వివరాలు చెప్పండి, బడికి వెళ్లారా?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "10వ",
+        "assistant": "సరేనండీ! మీ కుటుంబం యొక్క ప్రధాన వృత్తి లేదా పని ఏమిటి?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "వ్యవసాయం",
+        "assistant": "ప్రభుత్వ నైపుణ్య శిక్షణ కోసం, మీకు ఏయే వృత్తి నైపుణ్యాలు లేదా ఆసక్తులు ఉన్నాయి?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "వంట",
+        "assistant": "వంట పని ఎంతో గొప్ప నైపుణ్యం అండీ! పని కోసం పక్క ఊర్లకు లేదా పట్టణాలకు వెళ్లగలరా?",
+        "timestamp": "13:38:28"
+      },
+      {
+        "user": "దుకాణం",
+        "assistant": "మీ సొంత వ్యాపార ప్రయత్నాలకు శుభాకాంక్షలు అండీ! మీ ఊర్లో ఎలాంటి దుకాణాలు లేదా మార్కెట్ ఉన్నాయి?",
+        "timestamp": "13:38:28"
+      }
+    ],
+    "confirmed_via": "SMS",
+    "confirmed_at": "2026-09-04 13:38:28 UTC"
+  },
+  {
+    "session_id": "465774f1-0e94-49c2-8e57-4069febb606a",
+    "case_id": "465774F1-0E9",
+    "phone": "+919811122233",
+    "channel": "ivr",
+    "language": "hi",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-04 13:38:15 UTC",
+    "confirmed_fields": {
+      "educational_background": "Class 10 completed",
+      "family_occupation": "Agriculture / Farming",
+      "current_livelihood": "Driver",
+      "skills_and_interests": "Driving",
+      "mobility_constraints": "Local area / Prefers establishing local enterprise",
+      "employment_preference": "Self-Employment (Own Shop / Enterprise)",
+      "local_economic_context": "Local village commerce (shops)"
+    },
+    "turns_count": 6,
+    "transcript": [
+      {
+        "user": "हाँ",
+        "assistant": "बहुत-बहुत धन्यवाद! सबसे पहले आपका शुभ नाम और आप किस गांव या शहर से हैं, यह बताइए?",
+        "timestamp": "13:38:15"
+      },
+      {
+        "user": "मेरा नाम राजेश",
+        "assistant": "बहुत अच्छा! आपकी पढ़ाई के बारे में बताइए, क्या आप स्कूल गए हैं?",
+        "timestamp": "13:38:15"
+      },
+      {
+        "user": "10वीं",
+        "assistant": "अच्छा! आपके परिवार का मुख्य व्यवसाय या पारंपरिक काम क्या है?",
+        "timestamp": "13:38:15"
+      },
+      {
+        "user": "खेती",
+        "assistant": "सरकारी कौशल योजना के लिए, आपके पास कौन से विशेष काम या हुनर की जानकारी है?",
+        "timestamp": "13:38:15"
+      },
+      {
+        "user": "ड्राइविंग",
+        "assistant": "अच्छा! क्या काम के लिए आप अपने गांव से बाहर या पास के शहर जा सकते हैं?",
+        "timestamp": "13:38:15"
+      },
+      {
+        "user": "दुकान",
+        "assistant": "आपके नए उद्यम के लिए शुभकामनाएं! आपके गांव या इलाके में कौन-सी दुकानें या बाजार हैं?",
+        "timestamp": "13:38:15"
+      }
+    ],
+    "confirmed_via": "SMS",
+    "confirmed_at": "2026-09-04 13:38:23 UTC"
+  },
+  {
+    "session_id": "26a7bd88-f101-4525-be0b-f6bd14b4b12d",
+    "case_id": "26A7BD88-F10",
+    "phone": "+919444112233",
+    "channel": "ivr",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-04 13:38:08 UTC",
+    "confirmed_fields": {
+      "educational_background": "Class 10 completed",
+      "family_occupation": "Agriculture / Farming",
+      "current_livelihood": "Agricultural labour / Farming",
+      "skills_and_interests": "Vegetable & Retail Selling",
+      "mobility_constraints": "Local area / Prefers establishing local enterprise",
+      "employment_preference": "Self-Employment (Own Shop / Enterprise)",
+      "local_economic_context": "Local Village Market / Commerce"
+    },
+    "turns_count": 5,
+    "transcript": [
+      {
+        "user": "ஆமாம், பேசலாம்",
+        "assistant": "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?",
+        "timestamp": "13:38:08"
+      },
+      {
+        "user": "என் பேரு செல்வம், நான் மதுரை",
+        "assistant": "ரொம்ப சந்தோஷம்ங்க! அரசு நலத்திட்ட பதிவிற்காக உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?",
+        "timestamp": "13:38:08"
+      },
+      {
+        "user": "பத்தாம் வகுப்பு படிச்சிருக்கேன்",
+        "assistant": "சரிங்க! அரசு திட்டத்திற்காக உங்க குடும்பத்துல வழக்கமா என்ன தொழில் செய்றாங்க?",
+        "timestamp": "13:38:08"
+      },
+      {
+        "user": "எங்க குடும்ப தொழில் விவசாயம்",
+        "assistant": "அருமைங்க! அரசு பயிற்சி உதவிக்கு உங்களுக்கு என்னென்ன தொழில் திறன்கள் அல்லது ஆர்வங்கள் இருக்கு?",
+        "timestamp": "13:38:08"
+      },
+      {
+        "user": "காய்கறி கடை வைக்க ஆசை",
+        "assistant": "சூப்பர்ங்க! சொந்த தொழில் வெற்றிக்கு உங்க ஊர்ல அல்லது சந்தையில இந்த தொழிலுக்கு நல்ல ஆதரவு இருக்கா?",
+        "timestamp": "13:38:08"
+      }
+    ],
+    "confirmed_via": "WHATSAPP",
+    "confirmed_at": "2026-09-04 13:38:08 UTC"
+  },
+  {
+    "session_id": "9437500e-58e0-49ed-bbea-a683e9743744",
+    "case_id": "9437500E-58E",
+    "phone": "+919444112233",
+    "channel": "ivr",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-04 13:37:48 UTC",
+    "confirmed_fields": {
+      "educational_background": "Class 10 completed",
+      "family_occupation": "Agriculture / Farming",
+      "current_livelihood": "Agricultural labour / Farming",
+      "skills_and_interests": "Vegetable & Retail Selling",
+      "mobility_constraints": "Local area / Prefers establishing local enterprise",
+      "employment_preference": "Self-Employment (Own Shop / Enterprise)",
+      "local_economic_context": "Local Village Market / Commerce"
+    },
+    "turns_count": 5,
+    "transcript": [
+      {
+        "user": "ஆமாம், பேசலாம்",
+        "assistant": "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?",
+        "timestamp": "13:37:48"
+      },
+      {
+        "user": "என் பேரு செல்வம், நான் மதுரை",
+        "assistant": "ரொம்ப சந்தோஷம்ங்க! அரசு நலத்திட்ட பதிவிற்காக உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?",
+        "timestamp": "13:37:48"
+      },
+      {
+        "user": "பத்தாம் வகுப்பு படிச்சிருக்கேன்",
+        "assistant": "சரிங்க! அரசு திட்டத்திற்காக உங்க குடும்பத்துல வழக்கமா என்ன தொழில் செய்றாங்க?",
+        "timestamp": "13:37:48"
+      },
+      {
+        "user": "எங்க குடும்ப தொழில் விவசாயம்",
+        "assistant": "அருமைங்க! அரசு பயிற்சி உதவிக்கு உங்களுக்கு என்னென்ன தொழில் திறன்கள் அல்லது ஆர்வங்கள் இருக்கு?",
+        "timestamp": "13:37:48"
+      },
+      {
+        "user": "காய்கறி கடை வைக்க ஆசை",
+        "assistant": "சூப்பர்ங்க! சொந்த தொழில் வெற்றிக்கு உங்க ஊர்ல அல்லது சந்தையில இந்த தொழிலுக்கு நல்ல ஆதரவு இருக்கா?",
+        "timestamp": "13:37:48"
+      }
+    ],
+    "confirmed_via": "SMS",
+    "confirmed_at": "2026-09-04 13:37:48 UTC"
+  }
+]

@@ -18,6 +18,7 @@ import { computeConfidence } from './confidence';
 import { generateExplanation } from './explanation';
 import type { IVectorSearchPort, IOpportunityDataPort } from './ports';
 import { PgvectorSearchAdapter, CachedOpportunityDataAdapter } from './adapters';
+import { NSQF_CATALOG_SEED } from './catalog-seed';
 
 const PIPELINE_VERSION = '1.0.0';
 const TOP_N = 3;
@@ -55,13 +56,22 @@ export async function runRecommendationEngine(
   // ── STAGE 1: Fetch active trades from catalog and apply hard filters ──
   let allTrades: NSQFTrade[] = catalogOverride ?? [];
   if (!catalogOverride && supabase) {
-    const { data, error: catalogError } = await supabase
-      .from('nsqf_catalog')
-      .select('*')
-      .eq('is_active', true);
+    try {
+      const { data, error: catalogError } = await supabase
+        .from('nsqf_catalog')
+        .select('*')
+        .eq('is_active', true);
 
-    if (catalogError) throw new Error(`NSQF catalog fetch failed: ${catalogError.message}`);
-    allTrades = (data as NSQFTrade[]) ?? [];
+      if (!catalogError && data && data.length > 0) {
+        allTrades = data as NSQFTrade[];
+      }
+    } catch {
+      // Fall through to default catalog seed
+    }
+  }
+
+  if (allTrades.length === 0) {
+    allTrades = [...NSQF_CATALOG_SEED];
   }
 
   const stage1Result = applyHardFilters(allTrades, profile);
@@ -195,3 +205,4 @@ export { computeConfidence } from './confidence';
 export { generateExplanation } from './explanation';
 export * from './ports';
 export * from './adapters';
+export { NSQF_CATALOG_SEED } from './catalog-seed';

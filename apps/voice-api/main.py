@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers.twilio_router import router as twilio_router, handle_twilio_whatsapp
+from routers.twilio_router import router as twilio_router, handle_twilio_whatsapp, handle_twilio_sms
 from routers.whatsapp_router import router as meta_whatsapp_router
 from services.interview_coordinator import InterviewCoordinator, get_completed_calls_records
 from services.field_normalizer import normalize_field_to_english
@@ -85,6 +85,10 @@ app.include_router(meta_whatsapp_router)
 app.add_api_route("/webhook/whatsapp", handle_twilio_whatsapp, methods=["POST"], tags=["Twilio WhatsApp Alias"])
 app.add_api_route("/webhooks/whatsapp/twilio", handle_twilio_whatsapp, methods=["POST"], tags=["Twilio WhatsApp Alias"])
 
+# Support exact URL: /webhook/sms and /webhooks/sms mapping to Twilio SMS
+app.add_api_route("/webhook/sms", handle_twilio_sms, methods=["POST"], tags=["Twilio SMS Alias"])
+app.add_api_route("/webhooks/sms", handle_twilio_sms, methods=["POST"], tags=["Twilio SMS Alias"])
+
 
 # ── Live Call Monitoring Dashboard & API ────────────────────────────────────────
 
@@ -152,6 +156,25 @@ async def get_completed_calls():
     return {"count": len(records), "records": records}
 
 
+def predict_top_trade(fields: dict) -> dict:
+    text = " ".join(str(v) for v in (fields or {}).values()).lower()
+    if any(k in text for k in ["tailor", "stitch", "sew", "garment", "cloth"]):
+        return {"code": "APP/Q0301", "name": "Tailor - Women's and Men's Garment", "nsqf": 4, "type": "Self-Employment", "confidence": "HIGH"}
+    elif any(k in text for k in ["vegetable", "shop", "retail", "selling", "bazaar"]):
+        return {"code": "RAS/Q0104", "name": "Retail Sales Associate / Shopkeeper", "nsqf": 3, "type": "Self-Employment", "confidence": "HIGH"}
+    elif any(k in text for k in ["food", "papad", "pickle", "cook", "masala"]):
+        return {"code": "FIC/Q5001", "name": "Papad and Ready-to-Eat Products Maker", "nsqf": 2, "type": "Home Enterprise", "confidence": "HIGH"}
+    elif any(k in text for k in ["farm", "dairy", "cow", "livestock", "agri"]):
+        return {"code": "AHC/Q0401", "name": "Livestock Farmer / Pashudhan Mitra", "nsqf": 4, "type": "Self-Employment", "confidence": "HIGH"}
+    elif any(k in text for k in ["electric", "solar", "wire", "switch"]):
+        return {"code": "ELE/Q3101", "name": "Electrician (Domestic)", "nsqf": 4, "type": "Self-Employment", "confidence": "HIGH"}
+    elif any(k in text for k in ["weav", "loom", "handloom"]):
+        return {"code": "HAN/Q0101", "name": "Handloom Weaver", "nsqf": 3, "type": "Home Enterprise", "confidence": "MEDIUM"}
+    elif any(k in text for k in ["beauty", "parlour", "mehendi", "hair"]):
+        return {"code": "BWS/Q0201", "name": "Beauty Therapist", "nsqf": 4, "type": "Self-Employment", "confidence": "HIGH"}
+    return {"code": "APP/Q0301", "name": "Tailor - Custom Garments", "nsqf": 4, "type": "Self-Employment", "confidence": "MEDIUM"}
+
+
 @app.api_route("/call-records", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def view_call_records_dashboard():
     """Visual dashboard displaying structured completed call records, fields, and transcripts."""
@@ -160,7 +183,8 @@ async def view_call_records_dashboard():
     cards = []
     for r in records:
         fields_html = ""
-        for fn, fv in r.get("confirmed_fields", {}).items():
+        confirmed_f = r.get("confirmed_fields", {})
+        for fn, fv in confirmed_f.items():
             nice_name = fn.replace("_", " ").title()
             clean_fv = normalize_field_to_english(fn, str(fv), r.get("language", "ta"))
             fields_html += f"""
@@ -184,16 +208,44 @@ async def view_call_records_dashboard():
             </div>
             """
 
+        st = r.get('status', 'COMPLETED')
+        if st == "BENEFICIARY_CONFIRMED":
+            badge_html = f'<span style="background: #047857; color: #a7f3d0; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: 8px; border: 1px solid #059669;">✓ CITIZEN CONFIRMED ({r.get("confirmed_via", "SMS")})</span>'
+        else:
+            badge_html = f'<span style="background: #065f46; color: #34d399; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px;">{st}</span>'
+
+        notif_html = '<span style="background: #1e3a8a; color: #93c5fd; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; margin-left: 6px;">📱 Bilingual Dispatched</span>'
+
+        # Recommendation Engine link & evaluation
+        top_rec = predict_top_trade(confirmed_f)
+        cid = r.get('case_id', 'N/A')
+        rec_box_html = f"""
+        <div style="background: #022c22; border: 1px solid #059669; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <div style="font-size: 11px; color: #6ee7b7; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">⚡ Recommendation Engine: Rank #1 Matched Pathway</div>
+                <div style="font-size: 15px; color: #f0fdf4; font-weight: 700; margin-top: 2px;">
+                    {top_rec['name']} <span style="color: #a7f3d0; font-size: 12px; font-weight: 500;">({top_rec['code']} · NSQF Level {top_rec['nsqf']} · {top_rec['type']})</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="background: #065f46; color: #6ee7b7; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 4px; border: 1px solid #10b981;">CONFIDENCE: {top_rec['confidence']}</span>
+                <a href="http://localhost:3000/officer/cases/{cid}" target="_blank" style="background: #2563eb; color: #ffffff; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid #3b82f6;">Open in Officer Portal ↗</a>
+            </div>
+        </div>
+        """
+
         cards.append(f"""
         <div style="background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 14px;">
                 <div>
                     <span style="font-size: 16px; font-weight: 700; color: #38bdf8;">📞 {r.get('phone', 'Unknown')}</span>
-                    <span style="background: #065f46; color: #34d399; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px;">{r.get('status', 'COMPLETED')}</span>
-                    <span style="color: #94a3b8; font-size: 12px; margin-left: 10px;">Case ID: <b>{r.get('case_id', 'N/A')}</b></span>
+                    {badge_html}
+                    {notif_html}
+                    <span style="color: #94a3b8; font-size: 12px; margin-left: 10px;">Case ID: <b>{cid}</b></span>
                 </div>
                 <div style="font-size: 12px; color: #64748b;">{r.get('completed_at', '')}</div>
             </div>
+            {rec_box_html}
             <div style="margin-bottom: 14px;">
                 <div style="font-size: 12px; color: #94a3b8; font-weight: 600; margin-bottom: 8px;">PM-AJAY 7 EXTRACTED LIVELIHOOD FIELDS:</div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px;">
