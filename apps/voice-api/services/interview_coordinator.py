@@ -65,161 +65,86 @@ def get_completed_calls_records() -> list[dict]:
         sanitized.append(r_copy)
     return sanitized
 
-CATALOG_COURSES = [
-    {
-        "rank": 1,
-        "qp_code": "LSS/Q2301",
-        "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
-        "ta_name": "தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி",
-        "hi_name": "चमड़ा और जूता निर्माण प्रशिक्षण",
-        "ml_name": "ലെതർ, പാദരക്ഷാ നിർമ്മാണ പരിശീലനം",
-        "te_name": "పాదరక్షలు మరియు లెదర్ వస్తువుల తయారీ శిక్షణ",
-        "nsqf_level": 4,
-        "keywords": ["செருப்பு", "பாதணி", "தோல்", "சப்பல்", "காலணி", "footwear", "shoe", "shoes", "chappal", "leather", "जूता", "चप्पल", "பாதரக்ஷలు"],
-        "duration_hours": 240,
-    },
-    {
-        "rank": 2,
-        "qp_code": "AGR/Q4301",
-        "qp_name": "Small Poultry Farmer & Meat Retailer",
-        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
-        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
-        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
-        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
-        "nsqf_level": 3,
-        "keywords": ["poultry", "farmer", "chicken", "farm", "கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "broiler", "விவசாயம்", "முட்டை"],
-        "duration_hours": 160,
-    },
-    {
-        "rank": 3,
-        "qp_code": "RAS/Q0104",
-        "qp_name": "Retail Sales Associate / Shopkeeper",
-        "ta_name": "மளிகை மற்றும் சில்லறை விற்பனைக் கடை பயிற்சி",
-        "hi_name": "किराना दुकान और खुदरा बिक्री प्रशिक्षण",
-        "ml_name": "റീട്ടെയിൽ വിൽപന, പലചരക്ക് കട പരിശീലനം",
-        "te_name": "కిరాణా దుకాణం మరియు రిటైల్ అమ్మకాల శిక్షణ",
-        "nsqf_level": 3,
-        "keywords": ["retail", "shop", "grocery", "store", "vendor", "மளிகை", "கடை", "வியாபாரம்", "kirana", "மல்லிகை", "கடைக்காரர்"],
-        "duration_hours": 120,
-    },
-    {
-        "rank": 4,
-        "qp_code": "AGR/Q4101",
-        "qp_name": "Dairy Farmer & Milk Processing Operator",
-        "ta_name": "கால்நடை வளர்ப்பு மற்றும் பால் பண்ணை பயிற்சி",
-        "hi_name": "डेयरी फार्मिंग और दुग्ध व्यवसाय प्रशिक्षण",
-        "ml_name": "ക്ഷീരകർഷക, പാൽ സംസ്കരണ പരിശീലനം",
-        "te_name": "పాడి పరిశ్రమ మరియు పాల వ్యాపార శిక్షణ",
-        "nsqf_level": 3,
-        "keywords": ["பால்", "மாடு", "ஆடு", "dairy", "milk", "cattle", "பண்ணை", "கறவை"],
-        "duration_hours": 150,
-    },
-    {
-        "rank": 5,
-        "qp_code": "APP/Q0301",
-        "qp_name": "Tailor - Garment Construction",
-        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
-        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
-        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
-        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
-        "nsqf_level": 4,
-        "keywords": ["tailor", "stitching", "garment", "sewing", "தையல்", "ஆடை", "துணி", "dress"],
-        "duration_hours": 300,
-    },
-    {
-        "rank": 6,
-        "qp_code": "ASC/Q1401",
-        "qp_name": "Automotive Service Technician (Two-Wheeler)",
-        "ta_name": "டூவீலர் மெக்கானிக் பயிற்சி",
-        "hi_name": "दोपहिया वाहन मैकेनिक प्रशिक्षण",
-        "ml_name": "ടൂവീലർ മെക്കാനിക്ക് പരിശീലനം",
-        "te_name": "టూవీలర్ మెకానిక్ శిక్షణ",
-        "nsqf_level": 4,
-        "keywords": ["mechanic", "bike", "auto", "மெக்கானிக்", "பைக்", "வண்டி", "டூவீலர்", "workshop"],
-        "duration_hours": 240,
-    },
-    {
-        "rank": 7,
-        "qp_code": "BWS/Q0201",
-        "qp_name": "Beauty Therapist & Salon Stylist",
-        "ta_name": "அழகுக்கலை மற்றும் சலூன் பயிற்சி",
-        "hi_name": "ब्यूटी पार्लर और सैलून प्रशिक्षण",
-        "ml_name": "ബ്യൂട്ടി പാർലർ, സലൂൺ പരിശീലനം",
-        "te_name": "బ్యూటీ పార్లర్ మరియు సెలూన్ శిక్షణ",
-        "nsqf_level": 4,
-        "keywords": ["beauty", "parlour", "salon", "therapy", "makeup", "அழகு", "சலூன்", "skin"],
-        "duration_hours": 300,
-    },
-    {
-        "rank": 8,
-        "qp_code": "ELE/Q3104",
-        "qp_name": "Field Technician - Home Appliances & Wiring",
-        "ta_name": "வீட்டு உபயோக மின்சாதனங்கள் பழுதுநீக்கும் பயிற்சி",
-        "hi_name": "घरेलू बिजली उपकरण मरम्मत प्रशिक्षण",
-        "ml_name": "ഇലക്ട്രിക്കൽ റിപ്പയറിംഗ് പരിശീലനം",
-        "te_name": "గృహోపకరణాల ఎలక్ట్రికల్ మరమ్మతు శిక్షణ",
-        "nsqf_level": 4,
-        "keywords": ["electric", "appliance", "technician", "repair", "motor", "மின்சாரம்", "mechanic", "வயரிங்"],
-        "duration_hours": 240,
-    },
-    {
-        "rank": 9,
-        "qp_code": "FIC/Q0201",
-        "qp_name": "Food Catering & Pickle Making Technician",
-        "ta_name": "உணவு தயாரிப்பு மற்றும் கேட்டரிங் பயிற்சி",
-        "hi_name": "खाद्य प्रसंस्करण और कैटरिंग प्रशिक्षण",
-        "ml_name": "ഭക്ഷണ നിർമ്മാണവും കാറ്ററിംഗും",
-        "te_name": "ఫుడ్ కేటరింగ్ మరియు పచ్చళ్ల తయారీ శిక్షణ",
-        "nsqf_level": 3,
-        "keywords": ["food", "pickle", "cooking", "catering", "உணவு", "ஊறுகாய்", "சமையல்", "ஹோட்டல்", "சாப்பாடு"],
-        "duration_hours": 150,
-    },
-    {
-        "rank": 10,
-        "qp_code": "MEP/Q0101",
-        "qp_name": "Micro-Enterprise & Rural Store Operator",
-        "ta_name": "கிராமப்புற சிறுதொழில் மற்றும் சுயதொழில் பயிற்சி",
-        "hi_name": "ग्रामीण लघु उद्योग और स्वरोजगार प्रशिक्षण",
-        "ml_name": "ചെറുകിട സംരംഭവും സ്വയംതൊഴിലും",
-        "te_name": "చిన్న వ్యాపారం మరియు స్వయం ఉపాధి శిక్షణ",
-        "nsqf_level": 4,
-        "keywords": ["business", "enterprise", "தொழில்", "சொந்த", "வியாபாரம்", "பிசினஸ்", "முதலீடு"],
-        "duration_hours": 180,
-    },
-]
+from services.course_catalog import (
+    CATALOG_COURSES,
+    get_localized_course_name,
+    get_short_english_name,
+    find_course_in_catalog,
+    compute_top_recommended_courses,
+    format_course_selection_whatsapp,
+    format_recommended_course_item,
+)
 
-def get_localized_course_name(course: dict, lang: str = "ta") -> str:
-    """Returns the natural conversational course name for the given language."""
-    key = f"{lang}_name"
-    if key in course and course[key]:
-        return course[key]
-    return course.get("ta_name") or course.get("qp_name", "பயிற்சி").split("-")[0].strip()
 
-def compute_top_recommended_courses(confirmed_fields: dict, transcript: Optional[list] = None) -> list[dict]:
-    """Scores NSQF trade catalog against citizen profile fields AND full conversation transcript for genuine personalized recommendations."""
-    parts = [str(v).lower() for v in confirmed_fields.values()]
-    if transcript:
-        for t in transcript:
-            if isinstance(t, dict):
-                user_say = t.get("user") or ""
-                if user_say:
-                    parts.append(user_say.lower())
-    text_corpus = " ".join(parts)
-    
-    scored = []
-    for c in CATALOG_COURSES:
-        score = 0
-        for kw in c["keywords"]:
-            if kw.lower() in text_corpus:
-                score += 10
-        scored.append((score, c))
-    
-    # Sort descending by score, maintaining catalog order as secondary key
-    scored.sort(key=lambda x: x[0], reverse=True)
-    top3 = [dict(x[1]) for x in scored[:3]]
-    for idx, item in enumerate(top3, 1):
-        item["rank"] = idx
-    return top3
+def detect_spoken_language(user_speech: str, current_lang: str = "en") -> str:
+    """
+    Detects language from user speech using Unicode ranges and vernacular keywords.
+    Supported: 'ta' (Tamil), 'hi' (Hindi), 'te' (Telugu), 'ml' (Malayalam), 'en' (English).
+    """
+    if not user_speech:
+        return current_lang
+
+    text = user_speech.strip()
+
+    # 1. Unicode Range Checks (Highest Precision)
+    tamil_chars = len([c for c in text if '\u0B80' <= c <= '\u0BFF'])
+    hindi_chars = len([c for c in text if '\u0900' <= c <= '\u097F'])
+    telugu_chars = len([c for c in text if '\u0C00' <= c <= '\u0C7F'])
+    malayalam_chars = len([c for c in text if '\u0D00' <= c <= '\u0D7F'])
+
+    counts = [
+        (tamil_chars, "ta"),
+        (hindi_chars, "hi"),
+        (telugu_chars, "te"),
+        (malayalam_chars, "ml"),
+    ]
+    counts.sort(key=lambda x: x[0], reverse=True)
+    if counts[0][0] >= 2:
+        return counts[0][1]
+
+    # 2. Phonetic / Romanized Transliteration & Keyword Matching
+    lower = text.lower()
+    words = set(lower.replace(",", " ").replace(".", " ").replace("!", " ").replace("?", " ").split())
+
+    ta_keywords = {
+        "vanakkam", "pesalam", "pesunga", "pesalaam", "aama", "aamanga", "aamaa",
+        "seri", "sari", "tamil", "thamizh", "thamil", "enakku", "solunga", "sollunga",
+        "puriyala", "kekkudhu", "vaanga", "illai", "kedaikkum", "irukku", "theriyum",
+        "thozhil", "padipu", "velai", "oor", "enga", "neenga", "romba", "nandri"
+    }
+    hi_keywords = {
+        "namaste", "namaskar", "shuru", "kariye", "kijiye", "boliye", "bataiye",
+        "haan", "theek", "suno", "hindi", "accha", "samajh", "aaya", "kripya",
+        "mera", "naam", "kaam", "koshish", "dhanbad", "dhanyavad", "padhai"
+    }
+    te_keywords = {
+        "namaskaram", "matladandi", "cheppandi", "avunu", "sare", "telugu",
+        "vinapadutondi", "meeru", "naaku", "chadavaledu", "pani", "dhanyavadalu"
+    }
+    ml_keywords = {
+        "namaskaram", "parayoo", "athe", "sheriyaanu", "malayalam", "kelkkamo",
+        "cheyyaam", "njan", "entha", "paditham", "pani", "nanni"
+    }
+    en_keywords = {
+        "yes", "proceed", "continue", "hello", "hi", "sure", "start", "go ahead",
+        "i want", "english", "okay", "ok", "speak", "tell", "listen", "course",
+        "training", "work", "job", "myself", "fine", "ready", "confirm"
+    }
+
+    scores = {
+        "ta": sum(1 for w in words if w in ta_keywords or any(k in w for k in ["vanakk", "pesal", "aama", "thamizh"])),
+        "hi": sum(1 for w in words if w in hi_keywords or any(k in w for k in ["namas", "kariy", "theek"])),
+        "te": sum(1 for w in words if w in te_keywords or any(k in w for k in ["namask", "matlad", "chepp"])),
+        "ml": sum(1 for w in words if w in ml_keywords or any(k in w for k in ["namask", "paray", "athe"])),
+        "en": sum(1 for w in words if w in en_keywords),
+    }
+
+    best_lang, best_score = max(scores.items(), key=lambda x: x[1])
+    if best_score > 0:
+        return best_lang
+
+    return current_lang
+
 
 def confirm_case_from_citizen(phone: str, channel: str = "SMS", reply_text: str = "") -> Optional[dict]:
     """
@@ -621,6 +546,14 @@ class InterviewCoordinator:
         user_lower = (user_speech or "").lower().strip()
         lang = session.language_code
 
+        # Dynamic language detection and auto-switching based on caller speech
+        if user_speech:
+            detected_lang = detect_spoken_language(user_speech, current_lang=session.language_code)
+            if detected_lang != session.language_code:
+                logger.info(f"Language auto-switched from {session.language_code} to {detected_lang} based on user speech: '{user_speech}'")
+                session.language_code = detected_lang
+                lang = detected_lang
+
         # ── Turn 0: Initial prompt (greeting + consent explanation) ────────────
         if is_initial:
             session.consent_prompted = True
@@ -642,7 +575,10 @@ class InterviewCoordinator:
         if session.state == InterviewState.CONSENT_PENDING:
             # If caller is silent / empty speech after the greeting was already played
             if not user_speech:
-                if lang == "ml":
+                if lang == "en":
+                    reprompt_text = "Hello, are you there? Can you hear me? Shall we proceed?"
+                    reprompt_audio = await self._synthesize_safe(reprompt_text, "en", speaker=speaker)
+                elif lang == "ml":
                     reprompt_text = "നമസ്കാരം, ഞാൻ പറയുന്നത് കേൾക്കാമോ? സംസാരിക്കാമോ?"
                     reprompt_audio = _get_static_bytes("intro_reprompt_ml.wav")
                 elif lang == "hi":
@@ -715,7 +651,10 @@ class InterviewCoordinator:
 
                 if getattr(session, "is_known_caller", False) and getattr(session, "caller_name", None):
                     place_str = f"{session.caller_place} " if getattr(session, "caller_place", None) else ""
-                    if lang == "ml":
+                    if lang == "en":
+                        place_desc = f"from {session.caller_place}" if getattr(session, "caller_place", None) else "a local resident"
+                        q1_text = f"Hello! Am I speaking with {session.caller_name}? Are you {place_desc}?"
+                    elif lang == "ml":
                         q1_text = f"നമസ്കാരം! താങ്കൾ {session.caller_name} ആണോ സംസാരിക്കുന്നത്? താങ്കൾ {place_str}സ്വദേശി ആണോ?"
                     elif lang == "hi":
                         q1_text = f"नमस्ते! क्या आप {session.caller_name} जी बोल रहे हैं? क्या आप {place_str}से हैं?"
@@ -725,7 +664,10 @@ class InterviewCoordinator:
                         q1_text = f"வணக்கம்ங்க! நீங்க {session.caller_name} தானுங்களா? நீங்க {place_str}ஊர்லதான இருக்கீங்க?"
                     q1_audio = await self._synthesize_safe(q1_text, lang, speaker=speaker)
                 else:
-                    if lang == "ml":
+                    if lang == "en":
+                        q1_text = "Thank you! To begin, could you please tell me your name and your village or town?"
+                        q1_audio = await self._synthesize_safe(q1_text, "en", speaker=speaker)
+                    elif lang == "ml":
                         q1_text = "വളരെ നന്ദി! ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?"
                         q1_audio = _get_static_bytes("q1_name_village_ml.wav")
                     elif lang == "hi":
@@ -836,7 +778,9 @@ class InterviewCoordinator:
             }
 
             # Warm celebratory wrap-up text acknowledging selected course
-            if lang == "ml":
+            if lang == "en":
+                wrap_text = f"Wonderful! Your selected course {selected_course_local} has been recorded. Complete details have been sent to your WhatsApp. Thank you, have a wonderful day!"
+            elif lang == "ml":
                 wrap_text = f"വളരെ സന്തോഷം! നിങ്ങൾ തിരഞ്ഞെടുത്ത {selected_course_local} വിജയകരമായി രേഖപ്പെടുത്തി. പൂർണ്ണ വിവരങ്ങൾ വാട്ട്‌സ്ആപ്പിലും അയച്ചിട്ടുണ്ട്. നന്ദി, ശുഭദിനം!"
             elif lang == "hi":
                 wrap_text = f"बहुत बढ़िया! आपके पसंदीदा {selected_course_local} का चयन सफलतापूर्वक दर्ज हो गया है। पूरा विवरण व्हाट्सएप पर भेज दिया गया है। धन्यवाद!"

@@ -126,8 +126,8 @@ def _cache_audio(audio_bytes: bytes) -> str:
 
 def _play_or_say(response: VoiceResponse, turn_result: CoordinatorTurnResult, log_label: str = ""):
     """Appends <Play> or <Say> depending on whether audio was synthesized."""
-    lang_code = getattr(turn_result, "language_code", "ta") or "ta"
-    lang_tag = GATHER_LANG_MAP.get(lang_code, "ta-IN")
+    lang_code = getattr(turn_result, "language_code", "en") or "en"
+    lang_tag = GATHER_LANG_MAP.get(lang_code, "en-IN")
     if turn_result.audio_bytes:
         audio_id = _cache_audio(turn_result.audio_bytes)
         audio_url = f"{settings.voice_api_url}/webhooks/twilio/audio/{audio_id}.wav"
@@ -141,8 +141,8 @@ def _play_or_say(response: VoiceResponse, turn_result: CoordinatorTurnResult, lo
 def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
     """Builds a final TwiML response with nested <Gather><Play>...</Play></Gather> for natural barge-in and zero conversational lag."""
     response = VoiceResponse()
-    lang_code = getattr(turn_result, "language_code", "ta") or "ta"
-    lang_tag = GATHER_LANG_MAP.get(lang_code, "ta-IN")
+    lang_code = getattr(turn_result, "language_code", "en") or "en"
+    lang_tag = GATHER_LANG_MAP.get(lang_code, "en-IN")
     if turn_result.is_completed:
         _play_or_say(response, turn_result, log_label="(completion)")
         response.hangup()
@@ -212,7 +212,7 @@ async def start_interview(
     # For outbound calls, the beneficiary is 'To'; for inbound calls, the beneficiary is 'From'
     is_outbound = data.get("Direction") == "outbound-api"
     target_phone = (data.get("To") if is_outbound else None) or data.get("From") or data.get("Caller") or "+910000000000"
-    language = data.get("language") or request.query_params.get("language") or "ta"
+    language = data.get("language") or request.query_params.get("language") or "en"
 
     # Fire fresh session initialization in background (0ms dial-in delay)
     asyncio.create_task(coordinator.process_turn(
@@ -229,9 +229,9 @@ async def start_interview(
     
     consent_filename = f"consent_{language}.wav"
     if not (_STATIC_AUDIO_DIR / consent_filename).exists():
-        consent_filename = "consent_ta.wav"
+        consent_filename = "consent_en.wav" if (_STATIC_AUDIO_DIR / "consent_en.wav").exists() else "consent_ta.wav"
     consent_url = f"{settings.voice_api_url}/webhooks/twilio/audio/{consent_filename}"
-    lang_tag = GATHER_LANG_MAP.get(language, "ta-IN")
+    lang_tag = GATHER_LANG_MAP.get(language, "en-IN")
 
     gather = Gather(
         input="speech",
@@ -274,7 +274,7 @@ async def process_turn(
     From = data.get("From") or data.get("Caller") or CallSid
     SpeechResult = data.get("SpeechResult") or ""
     Confidence = float(data.get("Confidence") or 0.7)
-    language = data.get("language") or request.query_params.get("language") or "ta"
+    language = data.get("language") or request.query_params.get("language") or "en"
 
     is_outbound = data.get("Direction") == "outbound-api"
     phone = (data.get("To") if is_outbound else None) or data.get("From") or data.get("Caller") or CallSid
@@ -462,16 +462,25 @@ async def handle_twilio_whatsapp(
             choice_num = confirmed_case.get("citizen_selected_choice", 1)
             
             if course_name:
-                if lang == "ta":
-                    ack_text = f"நன்றி! உங்கள் PM-AJAY பயிற்சி விருப்பம் '{course_name}' (முன்னுரிமை {choice_num} / Priority {choice_num}) பதிவு செய்யப்பட்டது. மாவட்ட நல அலுவலர் சரிபார்த்து ஆணை வழங்குவார்."
-                elif lang == "hi":
-                    ack_text = f"धन्यवाद! आपका पसंदीदा PM-AJAY कोर्स '{course_name}' (प्राथमिकता {choice_num} / Priority {choice_num}) दर्ज कर लिया गया है। जिला अधिकारी जल्द स्वीकृति आदेश जारी करेंगे।"
-                elif lang == "te":
-                    ack_text = f"ధన్యవాదాలు! మీ PM-AJAY కోర్సు ఎంపిక '{course_name}' (ప్రాధాన్యత {choice_num} / Priority {choice_num}) నమోదు చేయబడింది. జిల్లా సంక్షేమ అధికారి త్వరలో ఆమోదం తెలుపుతారు."
-                elif lang == "ml":
-                    ack_text = f"നന്ദി! നിങ്ങളുടെ PM-AJAY കോഴ്സ് മുൻഗണന '{course_name}' (മുൻഗണന {choice_num} / Priority {choice_num}) രേഖപ്പെടുത്തി. ജില്ലാ ഉദ്യോഗസ്ഥൻ ഉടൻ അനുമതി നൽകും."
+                from services.course_catalog import find_course_in_catalog, get_localized_course_name, get_short_english_name
+                cd = find_course_in_catalog(course_name)
+                if cd:
+                    native_name = get_localized_course_name(cd, lang)
+                    short_en = get_short_english_name(cd)
+                    c_display = f"'{native_name}' ({short_en})"
                 else:
-                    ack_text = f"Thank you! Your PM-AJAY course choice '{course_name}' (Priority {choice_num}) has been recorded. District Welfare Officer will review and issue sanction order."
+                    c_display = f"'{course_name}'"
+
+                if lang == "ta":
+                    ack_text = f"நன்றி! உங்கள் PM-AJAY பயிற்சி விருப்பம் {c_display} (முன்னுரிமை {choice_num} / Priority {choice_num}) பதிவு செய்யப்பட்டது. மாவட்ட நல அலுவலர் சரிபார்த்து ஆணை வழங்குவார்."
+                elif lang == "hi":
+                    ack_text = f"धन्यवाद! आपका पसंदीदा PM-AJAY कोर्स {c_display} (प्राथमिकता {choice_num} / Priority {choice_num}) दर्ज कर लिया गया है। जिला अधिकारी जल्द स्वीकृति आदेश जारी करेंगे।"
+                elif lang == "te":
+                    ack_text = f"ధన్యవాదాలు! మీ PM-AJAY కోర్సు ఎంపిక {c_display} (ప్రాధాన్యత {choice_num} / Priority {choice_num}) నమోదు చేయబడింది. జిల్లా సంక్షేమ అధికారి త్వరలో ఆమోదం తెలుపుతారు."
+                elif lang == "ml":
+                    ack_text = f"നന്ദി! നിങ്ങളുടെ PM-AJAY കോഴ്സ് മുൻഗണന {c_display} (മുൻഗണന {choice_num} / Priority {choice_num}) രേഖപ്പെടുത്തി. ജില്ലാ ഉദ്യോഗസ്ഥൻ ഉടൻ അനുമതി നൽകും."
+                else:
+                    ack_text = f"Thank you! Your PM-AJAY course choice {c_display} (Priority {choice_num}) has been recorded. District Welfare Officer will review and issue sanction order."
             else:
                 ack_text = FIELD_LABELS.get(lang, FIELD_LABELS["ta"])["ack"]
 

@@ -12,6 +12,14 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 
 from config import settings
+from services.course_catalog import (
+    CATALOG_COURSES,
+    get_localized_course_name,
+    get_short_english_name,
+    find_course_in_catalog,
+    format_course_selection_whatsapp,
+    format_recommended_course_item,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -240,27 +248,30 @@ class NotificationService:
 
         # Course Information Section
         if selected_course:
-            selected_hdr = {
-                "ta": "உங்களால் தேர்ந்தெடுக்கப்பட்ட பயிற்சி:",
-                "hi": "आपके द्वारा चुना गया PM-AJAY कौशल कोर्स:",
-                "ml": "നിങ്ങൾ തിരഞ്ഞെടുത്ത PM-AJAY കോഴ്സ്:",
-                "te": "మీరు ఎంచుకున్న PM-AJAY కోర్సు:",
-            }.get(lang, "Selected PM-AJAY Vocational Course:")
-
+            hdr, bold_line, details_line = format_course_selection_whatsapp(
+                selected_course,
+                lang=lang,
+                recommended_courses=recommended_courses
+            )
             lines.extend([
                 "",
-                f"*{selected_hdr}*",
-                f"🎯 *{selected_course}*",
+                f"*{hdr}*",
+                bold_line,
+                details_line,
             ])
 
-            # Try to enrich with duration / level from recommended_courses if available
-            if recommended_courses:
+            cd = find_course_in_catalog(str(selected_course))
+            if not cd and recommended_courses:
                 for rc in recommended_courses:
-                    if rc.get("qp_name", "").strip().lower() == selected_course.strip().lower() or selected_course in rc.get("qp_name", ""):
-                        lines.append(f"• QP Code: {rc.get('qp_code', 'N/A')} | NSQF Level: {rc.get('nsqf_level', 4)}")
-                        if rc.get("duration_hours"):
-                            lines.append(f"• Training Duration: {rc.get('duration_hours')} Hours")
+                    if str(selected_course).strip().lower() in rc.get("qp_name", "").lower():
+                        cd = rc
                         break
+            if cd:
+                qp_code = cd.get("qp_code", "N/A")
+                nsqf = cd.get("nsqf_level", 4)
+                lines.append(f"• QP Code: {qp_code} | NSQF Level: {nsqf}")
+                if cd.get("duration_hours"):
+                    lines.append(f"• Training Duration: {cd.get('duration_hours')} Hours")
 
             status_text = {
                 "ta": "• *விண்ணப்ப நிலை:* குரல் அழைப்பு மூலம் வெற்றிகரமாக உறுதி செய்யப்பட்டுள்ளது (BENEFICIARY_CONFIRMED)",
@@ -272,7 +283,7 @@ class NotificationService:
             officer_text = {
                 "ta": "அடுத்த 3 வேலை நாட்களில் உங்கள் மாவட்ட சமூக நல அலுவலர் நேரடி சரிபார்ப்பிற்கு உங்களைத் தொடர்புகொள்வார்.",
                 "hi": "अगले 3 कार्यदिवसों में जिला कल्याण अधिकारी आपसे संपर्क करेंगे।",
-                "ml": "അടുത്ത 3 प्रവൃത്തി ദിവസങ്ങൾക്കുള്ളിൽ ജില്ലാ ഓഫീസർ ബന്ധപ്പെടും.",
+                "ml": "അടുത്ത 3 പ്രവൃത്തി ദിവസങ്ങൾക്കുള്ളിൽ ജില്ലാ ഓഫീസർ ബന്ധപ്പെടും.",
                 "te": "వచ్చే 3 పనిదినాల్లో జిల్లా సంక్షేమ అధికారి మిమ్మల్ని సంప్రదిస్తారు.",
             }.get(lang, "District Welfare Officer will contact you within 3 working days.")
 
@@ -292,10 +303,7 @@ class NotificationService:
                     f"*{c_hdr}*",
                 ])
                 for i, c in enumerate(courses[:3], 1):
-                    c_name = c.get("qp_name", f"Course {i}").split("-")[0].strip()
-                    nsqf_lvl = c.get("nsqf_level", 3)
-                    duration = f" ({c.get('duration_hours')} hrs)" if c.get("duration_hours") else ""
-                    lines.append(f"{i}. *{c_name}* (NSQF Level {nsqf_lvl}{duration})")
+                    lines.append(format_recommended_course_item(i, c, lang=lang))
 
                 lines.extend([
                     "",
@@ -325,34 +333,47 @@ class NotificationService:
         selected_course: Optional[str] = None,
     ) -> str:
         """
-        Generates cleanly aligned, professional SMS with zero emojis.
-        Uses real profile fields and real course selections.
+        Generates cleanly aligned, 100% GSM-7 / ASCII SMS with real profile fields.
+        Ensures all non-ASCII characters are stripped/normalized to prevent UCS-2 segment explosion on Twilio (Error 30044).
         """
-        cid = (case_id or "N/A")[:8]
-        name = (caller_name or "Beneficiary")[:20]
-        edu = confirmed_fields.get("educational_background", "Recorded")[:25]
-        livelihood = confirmed_fields.get("current_livelihood", confirmed_fields.get("family_occupation", "Recorded"))[:25]
-        skills = confirmed_fields.get("skills_and_interests", "General")[:25]
+        cid = (case_id or "N/A")[:8].upper()
+        # Ensure pure ASCII name
+        raw_name = caller_name or "Beneficiary"
+        clean_name = "".join(c for c in raw_name if ord(c) < 128).strip() or "Beneficiary"
+        clean_name = clean_name[:20]
+
+        raw_edu = confirmed_fields.get("educational_background", "Recorded")
+        clean_edu = "".join(c for c in str(raw_edu) if ord(c) < 128).strip() or "Recorded"
+        clean_edu = clean_edu[:20]
+
+        raw_work = confirmed_fields.get("current_livelihood", confirmed_fields.get("family_occupation", "Recorded"))
+        clean_work = "".join(c for c in str(raw_work) if ord(c) < 128).strip() or "Recorded"
+        clean_work = clean_work[:20]
 
         lines = [
             f"PM-AJAY Ref: {cid}",
-            f"Beneficiary: {name}",
-            f"Edu: {edu}",
-            f"Work: {livelihood}",
-            f"Skill: {skills}",
+            f"Beneficiary: {clean_name}",
+            f"Edu: {clean_edu}",
+            f"Work: {clean_work}",
         ]
 
         if selected_course:
-            lines.append(f"Chosen Course: {selected_course[:30]}")
-            lines.append("Status: CONFIRMED via Voice Call.")
-            lines.append("Officer will contact within 3 days.")
+            cd = find_course_in_catalog(str(selected_course))
+            if cd:
+                course_str = cd.get("qp_name", str(selected_course))
+            else:
+                course_str = str(selected_course)
+            clean_c = "".join(c for c in course_str if ord(c) < 128).strip() or "Vocational Training"
+            lines.append(f"Chosen Course: {clean_c[:32]}")
+            lines.append("Status: CONFIRMED via Voice Call")
         else:
             courses = recommended_courses or []
             if courses and len(courses) >= 2:
                 lines.append("Top Courses:")
                 for idx, c in enumerate(courses[:2], 1):
-                    c_name = c.get("qp_name", f"Course {idx}").split("-")[0].strip()[:24]
-                    lines.append(f"{idx}. {c_name}")
+                    c_name = get_short_english_name(c)
+                    clean_cn = "".join(ch for ch in c_name if ord(ch) < 128).strip()
+                    lines.append(f"{idx}. {clean_cn[:24]}")
                 lines.append("Reply 1, 2 or YES to confirm.")
             else:
                 lines.append("Status: Recorded. Reply YES to confirm.")

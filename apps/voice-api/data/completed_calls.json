@@ -1,5 +1,565 @@
 [
   {
+    "session_id": "12673303-141c-4a87-b772-e543fed384ae",
+    "case_id": "12673303-141",
+    "phone": "+919876543210",
+    "channel": "VOICE_CALL",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "confirmed_via": "VOICE_CALL",
+    "confirmed_at": "2026-09-08 09:01:18 UTC",
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-08 09:01:18 UTC",
+    "confirmed_fields": {
+      "educational_background": "Known value",
+      "family_occupation": "Known value",
+      "current_livelihood": "Known value",
+      "skills_and_interests": "tailoring / garment stitching",
+      "mobility_constraints": "Known value",
+      "employment_preference": "Known value",
+      "local_economic_context": "Local Village Market & Commerce"
+    },
+    "turns_count": 2,
+    "transcript": [
+      {
+        "user": "தையல் வேலை கடை இருக்கு சந்தை பக்கத்துல",
+        "assistant": "மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க விருப்பத்தின்படி இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி. இரண்டு, தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி. இந்த பயிற்சிகளில் உங்களுக்கு எதில் அதிக ஆர்வம் உள்ளது?",
+        "timestamp": "09:01:18"
+      },
+      {
+        "user": "முதல் தையல் பயிற்சி தான் விருப்பம்",
+        "assistant": "ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!",
+        "timestamp": "09:01:18"
+      }
+    ],
+    "recommended_courses": [
+      {
+        "rank": 1,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Tailor - Garment Construction",
+        "short_en": "Tailor",
+        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
+        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
+        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
+        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "tailor",
+          "stitching",
+          "garment",
+          "sewing",
+          "தையல்",
+          "ஆடை",
+          "துணி",
+          "dress"
+        ],
+        "duration_hours": 300
+      },
+      {
+        "rank": 2,
+        "qp_code": "LSS/Q2301",
+        "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
+        "short_en": "Footwear & Leather",
+        "ta_name": "தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி",
+        "hi_name": "चमड़ा और जूता निर्माण प्रशिक्षण",
+        "ml_name": "ലെതർ, പാദരക്ഷാ നിർമ്മാണ പരിശീലനം",
+        "te_name": "పాదరక్షలు మరియు లెదర్ వస్తువుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "செருப்பு",
+          "பாதணி",
+          "தோல்",
+          "சப்பல்",
+          "காலணி",
+          "footwear",
+          "shoe",
+          "shoes",
+          "chappal",
+          "leather",
+          "जूता",
+          "चप्पल",
+          "పాదరక్షలు"
+        ],
+        "duration_hours": 240
+      },
+      {
+        "rank": 3,
+        "qp_code": "AGR/Q4301",
+        "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "short_en": "Poultry Farmer",
+        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
+        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
+        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
+        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
+        "nsqf_level": 3,
+        "keywords": [
+          "poultry",
+          "farmer",
+          "chicken",
+          "farm",
+          "கோழி",
+          "பண்ணை",
+          "கோழிப்பண்ணை",
+          "முட்டை",
+          "broiler",
+          "விவசாயம்"
+        ],
+        "duration_hours": 160
+      }
+    ],
+    "citizen_selected_choice": 1,
+    "citizen_selected_course": "Tailor - Garment Construction"
+  },
+  {
+    "session_id": "45ac9fc3-f248-4257-8d81-65e60a4ea8cb",
+    "case_id": "45AC9FC3-F24",
+    "phone": "+919876543210",
+    "channel": "VOICE_CALL",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "confirmed_via": "VOICE_CALL",
+    "confirmed_at": "2026-09-08 09:00:36 UTC",
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-08 09:00:36 UTC",
+    "confirmed_fields": {
+      "educational_background": "Known value",
+      "family_occupation": "Known value",
+      "current_livelihood": "Known value",
+      "skills_and_interests": "tailoring / garment stitching",
+      "mobility_constraints": "Known value",
+      "employment_preference": "Known value",
+      "local_economic_context": "Local Village Market & Commerce"
+    },
+    "turns_count": 2,
+    "transcript": [
+      {
+        "user": "தையல் வேலை கடை இருக்கு சந்தை பக்கத்துல",
+        "assistant": "மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க விருப்பத்தின்படி இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி. இரண்டு, தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி. இந்த பயிற்சிகளில் உங்களுக்கு எதில் அதிக ஆர்வம் உள்ளது?",
+        "timestamp": "09:00:36"
+      },
+      {
+        "user": "முதல் தையல் பயிற்சி தான் விருப்பம்",
+        "assistant": "ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!",
+        "timestamp": "09:00:36"
+      }
+    ],
+    "recommended_courses": [
+      {
+        "rank": 1,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Tailor - Garment Construction",
+        "short_en": "Tailor",
+        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
+        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
+        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
+        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "tailor",
+          "stitching",
+          "garment",
+          "sewing",
+          "தையல்",
+          "ஆடை",
+          "துணி",
+          "dress"
+        ],
+        "duration_hours": 300
+      },
+      {
+        "rank": 2,
+        "qp_code": "LSS/Q2301",
+        "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
+        "short_en": "Footwear & Leather",
+        "ta_name": "தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி",
+        "hi_name": "चमड़ा और जूता निर्माण प्रशिक्षण",
+        "ml_name": "ലെതർ, പാദരക്ഷാ നിർമ്മാണ പരിശീലനം",
+        "te_name": "పాదరక్షలు మరియు లెదర్ వస్తువుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "செருப்பு",
+          "பாதணி",
+          "தோல்",
+          "சப்பல்",
+          "காலணி",
+          "footwear",
+          "shoe",
+          "shoes",
+          "chappal",
+          "leather",
+          "जूता",
+          "चप्पल",
+          "పాదరక్షలు"
+        ],
+        "duration_hours": 240
+      },
+      {
+        "rank": 3,
+        "qp_code": "AGR/Q4301",
+        "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "short_en": "Poultry Farmer",
+        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
+        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
+        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
+        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
+        "nsqf_level": 3,
+        "keywords": [
+          "poultry",
+          "farmer",
+          "chicken",
+          "farm",
+          "கோழி",
+          "பண்ணை",
+          "கோழிப்பண்ணை",
+          "முட்டை",
+          "broiler",
+          "விவசாயம்"
+        ],
+        "duration_hours": 160
+      }
+    ],
+    "citizen_selected_choice": 1,
+    "citizen_selected_course": "Tailor - Garment Construction"
+  },
+  {
+    "session_id": "14e83b77-9f0e-4edb-b9ac-b6be6b3d0ae0",
+    "case_id": "14E83B77-9F0",
+    "phone": "+919876543210",
+    "channel": "VOICE_CALL",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "confirmed_via": "VOICE_CALL",
+    "confirmed_at": "2026-09-08 08:59:55 UTC",
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-08 08:59:55 UTC",
+    "confirmed_fields": {
+      "educational_background": "Known value",
+      "family_occupation": "Known value",
+      "current_livelihood": "Known value",
+      "skills_and_interests": "tailoring / garment stitching",
+      "mobility_constraints": "Known value",
+      "employment_preference": "Known value",
+      "local_economic_context": "Local Village Market & Commerce"
+    },
+    "turns_count": 2,
+    "transcript": [
+      {
+        "user": "தையல் வேலை கடை இருக்கு சந்தை பக்கத்துல",
+        "assistant": "மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க விருப்பத்தின்படி இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி. இரண்டு, தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி. இந்த பயிற்சிகளில் உங்களுக்கு எதில் அதிக ஆர்வம் உள்ளது?",
+        "timestamp": "08:59:55"
+      },
+      {
+        "user": "முதல் தையல் பயிற்சி தான் விருப்பம்",
+        "assistant": "ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!",
+        "timestamp": "08:59:55"
+      }
+    ],
+    "recommended_courses": [
+      {
+        "rank": 1,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Tailor - Garment Construction",
+        "short_en": "Tailor",
+        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
+        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
+        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
+        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "tailor",
+          "stitching",
+          "garment",
+          "sewing",
+          "தையல்",
+          "ஆடை",
+          "துணி",
+          "dress"
+        ],
+        "duration_hours": 300
+      },
+      {
+        "rank": 2,
+        "qp_code": "LSS/Q2301",
+        "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
+        "short_en": "Footwear & Leather",
+        "ta_name": "தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி",
+        "hi_name": "चमड़ा और जूता निर्माण प्रशिक्षण",
+        "ml_name": "ലെതർ, പാദരക്ഷാ നിർമ്മാണ പരിശീലനം",
+        "te_name": "పాదరక్షలు మరియు లెదర్ వస్తువుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "செருப்பு",
+          "பாதணி",
+          "தோல்",
+          "சப்பல்",
+          "காலணி",
+          "footwear",
+          "shoe",
+          "shoes",
+          "chappal",
+          "leather",
+          "जूता",
+          "चप्पल",
+          "పాదరక్షలు"
+        ],
+        "duration_hours": 240
+      },
+      {
+        "rank": 3,
+        "qp_code": "AGR/Q4301",
+        "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "short_en": "Poultry Farmer",
+        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
+        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
+        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
+        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
+        "nsqf_level": 3,
+        "keywords": [
+          "poultry",
+          "farmer",
+          "chicken",
+          "farm",
+          "கோழி",
+          "பண்ணை",
+          "கோழிப்பண்ணை",
+          "முட்டை",
+          "broiler",
+          "விவசாயம்"
+        ],
+        "duration_hours": 160
+      }
+    ],
+    "citizen_selected_choice": 1,
+    "citizen_selected_course": "Tailor - Garment Construction"
+  },
+  {
+    "session_id": "51c5933b-f9ba-4375-a69a-31457431873b",
+    "case_id": "51C5933B-F9B",
+    "phone": "+919876543210",
+    "channel": "VOICE_CALL",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "confirmed_via": "VOICE_CALL",
+    "confirmed_at": "2026-09-08 08:59:29 UTC",
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-08 08:59:29 UTC",
+    "confirmed_fields": {
+      "educational_background": "Known value",
+      "family_occupation": "Known value",
+      "current_livelihood": "Known value",
+      "skills_and_interests": "tailoring / garment stitching",
+      "mobility_constraints": "Known value",
+      "employment_preference": "Known value",
+      "local_economic_context": "Local Village Market & Commerce"
+    },
+    "turns_count": 2,
+    "transcript": [
+      {
+        "user": "தையல் வேலை கடை இருக்கு சந்தை பக்கத்துல",
+        "assistant": "மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க விருப்பத்தின்படி இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி. இரண்டு, தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி. இந்த பயிற்சிகளில் உங்களுக்கு எதில் அதிக ஆர்வம் உள்ளது?",
+        "timestamp": "08:59:29"
+      },
+      {
+        "user": "முதல் தையல் பயிற்சி தான் விருப்பம்",
+        "assistant": "ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!",
+        "timestamp": "08:59:29"
+      }
+    ],
+    "recommended_courses": [
+      {
+        "rank": 1,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Tailor - Garment Construction",
+        "short_en": "Tailor",
+        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
+        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
+        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
+        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "tailor",
+          "stitching",
+          "garment",
+          "sewing",
+          "தையல்",
+          "ஆடை",
+          "துணி",
+          "dress"
+        ],
+        "duration_hours": 300
+      },
+      {
+        "rank": 2,
+        "qp_code": "LSS/Q2301",
+        "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
+        "short_en": "Footwear & Leather",
+        "ta_name": "தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி",
+        "hi_name": "चमड़ा और जूता निर्माण प्रशिक्षण",
+        "ml_name": "ലെതർ, പാദരക്ഷാ നിർമ്മാണ പരിശീലനം",
+        "te_name": "పాదరక్షలు మరియు లెదర్ వస్తువుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "செருப்பு",
+          "பாதணி",
+          "தோல்",
+          "சப்பல்",
+          "காலணி",
+          "footwear",
+          "shoe",
+          "shoes",
+          "chappal",
+          "leather",
+          "जूता",
+          "चप्पल",
+          "పాదరక్షలు"
+        ],
+        "duration_hours": 240
+      },
+      {
+        "rank": 3,
+        "qp_code": "AGR/Q4301",
+        "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "short_en": "Poultry Farmer",
+        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
+        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
+        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
+        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
+        "nsqf_level": 3,
+        "keywords": [
+          "poultry",
+          "farmer",
+          "chicken",
+          "farm",
+          "கோழி",
+          "பண்ணை",
+          "கோழிப்பண்ணை",
+          "முட்டை",
+          "broiler",
+          "விவசாயம்"
+        ],
+        "duration_hours": 160
+      }
+    ],
+    "citizen_selected_choice": 1,
+    "citizen_selected_course": "Tailor - Garment Construction"
+  },
+  {
+    "session_id": "ff8b4b20-c8ec-46da-9c83-a96945e06e7e",
+    "case_id": "FF8B4B20-C8E",
+    "phone": "+919876543210",
+    "channel": "VOICE_CALL",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "confirmed_via": "VOICE_CALL",
+    "confirmed_at": "2026-09-08 08:58:20 UTC",
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-08 08:58:20 UTC",
+    "confirmed_fields": {
+      "educational_background": "Known value",
+      "family_occupation": "Known value",
+      "current_livelihood": "Known value",
+      "skills_and_interests": "tailoring / garment stitching",
+      "mobility_constraints": "Known value",
+      "employment_preference": "Known value",
+      "local_economic_context": "Local Village Market & Commerce"
+    },
+    "turns_count": 2,
+    "transcript": [
+      {
+        "user": "தையல் வேலை கடை இருக்கு சந்தை பக்கத்துல",
+        "assistant": "மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க விருப்பத்தின்படி இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி. இரண்டு, தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி. இந்த பயிற்சிகளில் உங்களுக்கு எதில் அதிக ஆர்வம் உள்ளது?",
+        "timestamp": "08:58:20"
+      },
+      {
+        "user": "முதல் தையல் பயிற்சி தான் விருப்பம்",
+        "assistant": "ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!",
+        "timestamp": "08:58:20"
+      }
+    ],
+    "recommended_courses": [
+      {
+        "rank": 1,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Tailor - Garment Construction",
+        "short_en": "Tailor",
+        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
+        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
+        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
+        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "tailor",
+          "stitching",
+          "garment",
+          "sewing",
+          "தையல்",
+          "ஆடை",
+          "துணி",
+          "dress"
+        ],
+        "duration_hours": 300
+      },
+      {
+        "rank": 2,
+        "qp_code": "LSS/Q2301",
+        "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
+        "short_en": "Footwear & Leather",
+        "ta_name": "தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி",
+        "hi_name": "चमड़ा और जूता निर्माण प्रशिक्षण",
+        "ml_name": "ലെതർ, പാദരക്ഷാ നിർമ്മാണ പരിശീലനം",
+        "te_name": "పాదరక్షలు మరియు లెదర్ వస్తువుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "keywords": [
+          "செருப்பு",
+          "பாதணி",
+          "தோல்",
+          "சப்பல்",
+          "காலணி",
+          "footwear",
+          "shoe",
+          "shoes",
+          "chappal",
+          "leather",
+          "जूता",
+          "चप्पल",
+          "పాదరక్షలు"
+        ],
+        "duration_hours": 240
+      },
+      {
+        "rank": 3,
+        "qp_code": "AGR/Q4301",
+        "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "short_en": "Poultry Farmer",
+        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
+        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
+        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
+        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
+        "nsqf_level": 3,
+        "keywords": [
+          "poultry",
+          "farmer",
+          "chicken",
+          "farm",
+          "கோழி",
+          "பண்ணை",
+          "கோழிப்பண்ணை",
+          "முட்டை",
+          "broiler",
+          "விவசாயம்"
+        ],
+        "duration_hours": 160
+      }
+    ],
+    "citizen_selected_choice": 1,
+    "citizen_selected_course": "Tailor - Garment Construction"
+  },
+  {
     "session_id": "f5eba9a1-87d6-4e42-bb45-aec856191463",
     "case_id": "F5EBA9A1-87D",
     "phone": "+918618437517",

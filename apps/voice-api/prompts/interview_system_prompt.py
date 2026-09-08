@@ -106,6 +106,7 @@ DO NOT output any notes, markdown code blocks, bullet points, or English explana
 """
 
 LANGUAGE_GREETINGS = {
+    "en": "Hello! I am Kural Sevi from the PM-AJAY government welfare scheme. May we proceed?",
     "ta": "வணக்கம்! நான் குரல் செவி. அரசு உதவி திட்ட தகவல்களுக்காக அழைக்கிறேன். பேசலாங்களா?",
     "ml": "നമസ്കാരം! ഞാൻ കുരൽ സെവി. സർക്കാർ സഹായ പദ്ധതി വിവരങ്ങൾക്കായി വിളിക്കുന്നതാണ്. സംസാരിക്കാമോ?",
     "hi": "नमस्ते! मैं कुरल सेवी हूँ। PM-AJAY योजना के तहत आपकी आजीविका जानकारी एकत्र करने के लिए कॉल कर रहा हूँ।",
@@ -113,6 +114,7 @@ LANGUAGE_GREETINGS = {
 }
 
 CONSENT_SCRIPTS = {
+    "en": "Hello, welcome to PM-AJAY beneficiary voice verification. You may speak in English, Tamil, Hindi, Telugu, or Malayalam. May we proceed?",
     "ta": "வணக்கம்! நான் குரல் செவி. அரசு உதவி திட்ட தகவல்களுக்காக அழைக்கிறேன். பேசலாங்களா?",
     "ml": "നമസ്കാരം! ഞാൻ കുരൽ സെവി. സർക്കാർ സഹായ പദ്ധതി വിവരങ്ങൾക്കായി വിളിക്കുന്നതാണ്. സംസാരിക്കാമോ?",
     "hi": "मैं कुरल सेवी हूँ। PM-AJAY योजना के लिए आपकी शिक्षा, काम और कौशल के बारे में कुछ सवाल पूछूँगा। जानकारी गोपनीय रहेगी। क्या आप सहमत हैं? हाँ कहें।",
@@ -120,6 +122,7 @@ CONSENT_SCRIPTS = {
 }
 
 WRAP_UP_SCRIPTS = {
+    "en": "Thank you! Your information has been successfully recorded. The District Welfare Officer will contact you within 3 days. Thank you!",
     "ta": "நன்றி! உங்கள் தகவல்கள் வெற்றிகரமாக பதிவு செய்யப்பட்டன. அடுத்த 3 நாட்களில் மாவட்ட அலுவலர் தொடர்புகொள்வார். நன்றி, வணக்கம்.",
     "ml": "വളരെ നന്ദി! നിങ്ങളുടെ എല്ലാ വിവരങ്ങളും വിജയകരമായി രേഖപ്പെടുത്തിയിട്ടുണ്ട്. അടുത്ത 3 ദിവസത്തിനുള്ളിൽ ജില്ലാ ഉദ്യോഗസ്ഥൻ ബന്ധപ്പെടും. നന്ദി, നമസ്കാരം.",
     "hi": "धन्यवाद! आपकी जानकारी सफलतापूर्वक दर्ज कर ली गई है। अगले 3 दिनों में जिला अधिकारी आपसे संपर्क करेंगे। नमस्ते।",
@@ -127,6 +130,7 @@ WRAP_UP_SCRIPTS = {
 }
 
 REFUSAL_SCRIPTS = {
+    "en": "Thank you. We respect your choice. You may contact us anytime if you need government assistance. Have a good day.",
     "ta": "நன்றி. உங்கள் விருப்பத்தை மதிக்கிறோம். உங்களுக்கு அரசு உதவி தேவைப்பட்டால் எப்போது வேண்டுமானாலும் அழைக்கலாம். நன்றி, வணக்கம்.",
     "ml": "നന്ദി. നിങ്ങളുടെ തീരുമാനത്തെ ഞങ്ങൾ മാനിക്കുന്നു. സഹായം ആവശ്യമുള്ളപ്പോൾ എപ്പോൾ വേണമെങ്കിലും വിളിക്കാം. നന്ദി, നമസ്കാരം.",
     "hi": "धन्यवाद। हम आपके निर्णय का सम्मान करते हैं। सहायता या प्रशिक्षण की आवश्यकता होने पर आप पुनः संपर्क कर सकते हैं। नमस्ते।",
@@ -151,8 +155,8 @@ def build_system_prompt(
     caller_identity_info: str = "",
 ) -> str:
     """Build the full system prompt for the current interview turn."""
-    language_names = {"ta": "Tamil", "ml": "Malayalam", "hi": "Hindi", "te": "Telugu"}
-    language_name = language_names.get(language_code, "Hindi")
+    language_names = {"en": "English", "ta": "Tamil", "ml": "Malayalam", "hi": "Hindi", "te": "Telugu"}
+    language_name = language_names.get(language_code, "English" if language_code == "en" else "Tamil")
     
     confirmed_summary = ", ".join([
         f"{k}: {v[:30]}..." if len(str(v)) > 30 else f"{k}: {v}"

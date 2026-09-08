@@ -518,9 +518,6 @@ export function buildRealDataWhatsAppMessage(options: {
       te: 'మీరు ఎంచుకున్న PM-AJAY కోర్సు:',
       en: 'Selected PM-AJAY Vocational Course:',
     };
-    lines.push('');
-    lines.push(`*${selectedHdr[lang] || selectedHdr.en}*`);
-    lines.push(`🎯 *${selectedCourse}*`);
 
     // Enrich with QP code, NSQF level, duration if found in recommended courses
     const matchedCourse = recommendedCourses.find(
@@ -529,13 +526,21 @@ export function buildRealDataWhatsAppMessage(options: {
         selectedCourse.toLowerCase().includes(c.qp_name?.toLowerCase().trim() || '---')
     );
 
+    const nativeName = matchedCourse ? ((matchedCourse as any)[`${lang}_name`] || matchedCourse.ta_name || selectedCourse) : selectedCourse;
+    const qpName = matchedCourse?.qp_name || selectedCourse;
+    const qpCode = matchedCourse?.qp_code;
+
+    lines.push('');
+    lines.push(`*${selectedHdr[lang] || selectedHdr.en}*`);
+    lines.push(`🎯 *${nativeName}*`);
+    if (qpCode) {
+      lines.push(`_(${qpName} | QP Code: ${qpCode})_`);
+    } else {
+      lines.push(`_(${qpName})_`);
+    }
+
     if (matchedCourse) {
-      lines.push(`• QP Code: ${matchedCourse.qp_code} | NSQF Level: ${matchedCourse.nsqf_level || 4}`);
-      if (matchedCourse.duration_hours) {
-        lines.push(`• Training Duration: ${matchedCourse.duration_hours} Hours`);
-      } else if (matchedCourse.duration) {
-        lines.push(`• Training Duration: ${matchedCourse.duration}`);
-      }
+      lines.push(`• NSQF Level: ${matchedCourse.nsqf_level || 4}${matchedCourse.duration_hours ? ` | Training Duration: ${matchedCourse.duration_hours} Hours` : ''}`);
     }
 
     const statusText: Record<string, string> = {
@@ -563,10 +568,11 @@ export function buildRealDataWhatsAppMessage(options: {
     lines.push(`*${labels.courses_header}*`);
     recommendedCourses.slice(0, 3).forEach((c, idx) => {
       const courseNumber = idx + 1;
-      const cleanName = (c.qp_name || `Course ${courseNumber}`).split('-')[0].trim();
-      const nsqf = c.nsqf_level ? ` (NSQF Level ${c.nsqf_level})` : '';
-      const dur = c.duration_hours ? ` [${c.duration_hours} hrs]` : '';
-      lines.push(`${courseNumber}. *${cleanName}*${nsqf}${dur}`);
+      const cleanName = (c.qp_name || `Course ${courseNumber}`).split('-')[0].split('/')[0].trim();
+      const nativeName = (c as any)[`${lang}_name`] || c.ta_name || cleanName;
+      const nsqf = c.nsqf_level ? ` - NSQF Level ${c.nsqf_level}` : '';
+      const dur = c.duration_hours ? ` (${c.duration_hours} hrs)` : '';
+      lines.push(`${courseNumber}. *${nativeName}* (${cleanName})${nsqf}${dur}`);
     });
 
     lines.push('');
