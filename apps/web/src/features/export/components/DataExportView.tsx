@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { ExportCard } from './ExportCard';
 import {
@@ -39,100 +39,125 @@ import {
 } from 'lucide-react';
 import type { ExportOption } from '../types';
 
-const EXPORT_OPTIONS: ExportOption[] = [
-  {
-    id: 'case-data',
-    title: 'Anonymized Case Data Export',
-    desc: 'All verified beneficiary profiles and recommended pathway assignments (anonymized per DPDP Act 2023).',
-    icon: Users,
-    iconBg: 'bg-blue-50/80 border-blue-100',
-    iconColor: 'text-[#0B3064]',
-    badge: 'DPDP Anonymized',
-    badgeIcon: ShieldCheck,
-    badgeVariant: 'green',
-    recordCount: '1,420 Cases',
-    lastUpdated: 'Live Sync',
-    fields: [
-      { name: 'Case ID', icon: Hash },
-      { name: 'District', icon: MapPin },
-      { name: 'QP Codes', icon: Tag },
-      { name: 'Confidence Score', icon: Sparkles },
-      { name: 'Officer Actions', icon: CheckCircle2 },
-      { name: 'Beneficiary Decisions', icon: UserCheck },
-    ],
-  },
-  {
-    id: 'planning-data',
-    title: 'District Planning Intelligence Dataset',
-    desc: 'Aggregated vocational trade demands, skill gap summaries, and mobility metrics for district collectorate review.',
-    icon: BarChart3,
-    iconBg: 'bg-indigo-50/80 border-indigo-100',
-    iconColor: 'text-[#0B3064]',
-    badge: 'District Aggregate',
-    badgeIcon: Building2,
-    badgeVariant: 'chakra',
-    recordCount: '38 Districts',
-    lastUpdated: 'Updated Today',
-    fields: [
-      { name: 'Top 10 Trades by District', icon: TrendingUp },
-      { name: 'Employment Split', icon: PieChart },
-      { name: 'Recurring Skill Gaps', icon: AlertCircle },
-      { name: 'Mobility Barrier Count', icon: Compass },
-      { name: 'Monthly Trend', icon: Calendar },
-    ],
-  },
-  {
-    id: 'recommendations',
-    title: 'NSQF & SIDH Integration Export',
-    desc: 'QP-NOS pathway recommendations formatted for NSDC Skill India Digital Hub (SIDH) synchronization.',
-    icon: Cpu,
-    iconBg: 'bg-emerald-50/80 border-emerald-100',
-    iconColor: 'text-[#0A783C]',
-    badge: 'SIDH Schema',
-    badgeIcon: Award,
-    badgeVariant: 'chakra',
-    recordCount: '5,120 Recommendations',
-    lastUpdated: 'NSQF V2 Aligned',
-    fields: [
-      { name: 'QP Code', icon: Hash },
-      { name: 'NSQF Level', icon: Award },
-      { name: 'Matched Skills', icon: Check },
-      { name: 'Bridge Modules', icon: Plus },
-      { name: 'Confidence Index', icon: Sparkles },
-      { name: 'Explanation Factors', icon: FileText },
-    ],
-  },
-  {
-    id: 'officer-actions',
-    title: 'Officer Action & Compliance Audit',
-    desc: 'Comprehensive log of all sanction orders, modification notes, and SLA compliance metrics.',
-    icon: History,
-    iconBg: 'bg-orange-50/80 border-orange-100',
-    iconColor: 'text-[#C24810]',
-    badge: 'Audit Log',
-    badgeIcon: Clock,
-    badgeVariant: 'saffron',
-    recordCount: '890 Actions Logged',
-    lastUpdated: 'Immutable Hash',
-    fields: [
-      { name: 'Officer ID', icon: UserCheck },
-      { name: 'Case ID', icon: Hash },
-      { name: 'Action Taken', icon: CheckCircle2 },
-      { name: 'Timestamp', icon: Clock },
-      { name: 'SLA Status', icon: Timer },
-      { name: 'Administrative Notes', icon: FileText },
-    ],
-  },
-];
-
 export function DataExportView() {
   const [exportingId, setExportingId] = useState<string | null>(null);
+  const [counts, setCounts] = useState<{ cases: number; actions: number; districts: number } | null>(null);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/cases', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          const cases = json.cases || [];
+          const districtsSet = new Set(cases.map((c: any) => c.district));
+          setCounts({
+            cases: cases.length,
+            actions: cases.filter((c: any) => c.officer_action !== 'pending').length,
+            districts: districtsSet.size,
+          });
+        }
+      } catch (err) {}
+    }
+    loadStats();
+  }, []);
+
+  const casesCount = counts?.cases ?? 0;
+  const actionsCount = counts?.actions ?? 0;
+  const districtsCount = counts && counts.districts > 0 ? counts.districts : 1;
+
+  const exportOptions: ExportOption[] = [
+    {
+      id: 'case-data',
+      title: 'Anonymized Case Data Export',
+      desc: 'All verified beneficiary profiles and recommended pathway assignments (anonymized per DPDP Act 2023).',
+      icon: Users,
+      iconBg: 'bg-blue-50/80 border-blue-100',
+      iconColor: 'text-[#0B3064]',
+      badge: 'DPDP Anonymized',
+      badgeIcon: ShieldCheck,
+      badgeVariant: 'green',
+      recordCount: `${casesCount} Case${casesCount !== 1 ? 's' : ''}`,
+      lastUpdated: 'Live Sync',
+      fields: [
+        { name: 'Case ID', icon: Hash },
+        { name: 'District', icon: MapPin },
+        { name: 'QP Codes', icon: Tag },
+        { name: 'Confidence Score', icon: Sparkles },
+        { name: 'Officer Actions', icon: CheckCircle2 },
+        { name: 'Beneficiary Decisions', icon: UserCheck },
+      ],
+    },
+    {
+      id: 'planning-data',
+      title: 'District Planning Intelligence Dataset',
+      desc: 'Aggregated vocational trade demands, skill gap summaries, and mobility metrics for district collectorate review.',
+      icon: BarChart3,
+      iconBg: 'bg-indigo-50/80 border-indigo-100',
+      iconColor: 'text-[#0B3064]',
+      badge: 'District Aggregate',
+      badgeIcon: Building2,
+      badgeVariant: 'chakra',
+      recordCount: `${districtsCount} District${districtsCount !== 1 ? 's' : ''}`,
+      lastUpdated: 'Updated Today',
+      fields: [
+        { name: 'Top 10 Trades by District', icon: TrendingUp },
+        { name: 'Employment Split', icon: PieChart },
+        { name: 'Recurring Skill Gaps', icon: AlertCircle },
+        { name: 'Mobility Barrier Count', icon: Compass },
+        { name: 'Monthly Trend', icon: Calendar },
+      ],
+    },
+    {
+      id: 'recommendations',
+      title: 'NSQF & SIDH Integration Export',
+      desc: 'QP-NOS pathway recommendations formatted for NSDC Skill India Digital Hub (SIDH) synchronization.',
+      icon: Cpu,
+      iconBg: 'bg-emerald-50/80 border-emerald-100',
+      iconColor: 'text-[#0A783C]',
+      badge: 'SIDH Schema',
+      badgeIcon: Award,
+      badgeVariant: 'chakra',
+      recordCount: `${casesCount * 3} Recommendations`,
+      lastUpdated: 'NSQF V2 Aligned',
+      fields: [
+        { name: 'QP Code', icon: Hash },
+        { name: 'NSQF Level', icon: Award },
+        { name: 'Matched Skills', icon: Check },
+        { name: 'Bridge Modules', icon: Plus },
+        { name: 'Confidence Index', icon: Sparkles },
+        { name: 'Explanation Factors', icon: FileText },
+      ],
+    },
+    {
+      id: 'officer-actions',
+      title: 'Officer Action & Compliance Audit',
+      desc: 'Comprehensive log of all sanction orders, modification notes, and SLA compliance metrics.',
+      icon: History,
+      iconBg: 'bg-orange-50/80 border-orange-100',
+      iconColor: 'text-[#C24810]',
+      badge: 'Audit Log',
+      badgeIcon: Clock,
+      badgeVariant: 'saffron',
+      recordCount: `${actionsCount} Action${actionsCount !== 1 ? 's' : ''} Logged`,
+      lastUpdated: 'Immutable Hash',
+      fields: [
+        { name: 'Officer ID', icon: UserCheck },
+        { name: 'Case ID', icon: Hash },
+        { name: 'Action Taken', icon: CheckCircle2 },
+        { name: 'Timestamp', icon: Clock },
+        { name: 'SLA Status', icon: Timer },
+        { name: 'Administrative Notes', icon: FileText },
+      ],
+    },
+  ];
 
   const handleExport = (type: string, format: 'json' | 'csv') => {
     setExportingId(`${type}-${format}`);
     setTimeout(() => setExportingId(null), 2000);
     window.open(`/api/export?type=${type}&format=${format}`, '_blank');
   };
+
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
@@ -180,7 +205,7 @@ export function DataExportView() {
 
       {/* Export Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {EXPORT_OPTIONS.map((opt) => (
+        {exportOptions.map((opt) => (
           <ExportCard
             key={opt.id}
             option={opt}

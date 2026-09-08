@@ -104,6 +104,21 @@ def warmup_tts():
     except Exception:
         pass
 
+
+def _normalize_lang(code: str) -> str:
+    c = (code or "").strip().lower()
+    if c.startswith("ta") or "tamil" in c:
+        return "ta"
+    if c.startswith("hi") or "hindi" in c:
+        return "hi"
+    if c.startswith("te") or "telugu" in c:
+        return "te"
+    if c.startswith("en") or "english" in c:
+        return "en"
+    if c.startswith("ml") or "malayalam" in c:
+        return "ml"
+    return "ta"
+
 async def synthesize_speech(
     text: str,
     language_code: str,
@@ -116,6 +131,7 @@ async def synthesize_speech(
     Converts text to speech using Sarvam Bulbul V3 with SHA-256 disk and memory caching.
     Returns audio bytes ready for streaming.
     """
+    language_code = _normalize_lang(language_code)
     speaker = speaker_override or SARVAM_TTS_SPEAKERS.get(language_code, "kavitha")
     text = _sanitize_for_tts(text, language_code)
 
@@ -208,8 +224,9 @@ async def _synthesize_edge_tts(text: str, language_code: str) -> Optional[bytes]
         "ta": "ta-IN-PallaviNeural",
         "hi": "hi-IN-SwaraNeural",
         "te": "te-IN-ShrutiNeural",
+        "en": "en-IN-NeerjaNeural",
     }
-    voice = voice_map.get(language_code, "ml-IN-SobhanaNeural")
+    voice = voice_map.get(language_code, "ta-IN-PallaviNeural" if language_code == "ta" else "en-IN-NeerjaNeural")
     try:
         import edge_tts
         import subprocess
@@ -222,13 +239,17 @@ async def _synthesize_edge_tts(text: str, language_code: str) -> Optional[bytes]
             tmp_wav_path = tmp_wav.name
 
         try:
-            communicate = edge_tts.Communicate(text, voice, rate="+15%")
+            communicate = edge_tts.Communicate(text, voice, rate="+0%")
             await communicate.save(tmp_mp3_path)
-            cmd = ["ffmpeg", "-y", "-i", tmp_mp3_path, "-ar", "8000", "-ac", "1", "-c:a", "pcm_s16le", tmp_wav_path]
-            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            wav_bytes = Path(tmp_wav_path).read_bytes()
-            if wav_bytes:
-                return wav_bytes
+            try:
+                cmd = ["ffmpeg", "-y", "-i", tmp_mp3_path, "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", tmp_wav_path]
+                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+                wav_bytes = Path(tmp_wav_path).read_bytes()
+                if wav_bytes:
+                    return wav_bytes
+            except Exception:
+                # Fallback to direct MP3
+                return Path(tmp_mp3_path).read_bytes()
         finally:
             for p in (tmp_mp3_path, tmp_wav_path):
                 if os.path.exists(p):

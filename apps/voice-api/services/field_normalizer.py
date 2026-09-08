@@ -70,11 +70,15 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
         if any(k in text for k in farming_tokens):
             return "Agriculture / Farming"
 
+        poultry_tokens = ["கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "poultry", "chicken", "broiler", "मुर्गी", "కోడి"]
+        if any(k in text for k in poultry_tokens):
+            return "Poultry Farming & Livestock"
+
         weaving_tokens = ["நெசவு", "கைத்தறி", "చేనేత", "మగ్గం", "बुनकर", "हथकरघा", "നെയ്ത്ത്"]
         if any(k in text for k in weaving_tokens):
             return "Weaving / Handloom"
 
-        pottery_tokens = ["மண்பாண்டம்", "குயவர்", "मண்பானை", "कुम्हार", "కుమ్మరి", "മൺപാത്ര"]
+        pottery_tokens = ["மண்பாண்டம்", "குயவர்", "மண்பானை", "कुम्हार", "కుమ్మరి", "മൺപാത്ര"]
         if any(k in text for k in pottery_tokens):
             return "Pottery & Clay Artisan"
 
@@ -106,6 +110,14 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
         ]
         if any(k in text for k in farming_tokens):
             return "Agricultural labour / Farming"
+
+        poultry_tokens = ["கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "poultry", "chicken", "broiler", "मुर्गी", "కోడి"]
+        if any(k in text for k in poultry_tokens):
+            return "Poultry Farming & Poultry Shop"
+
+        footwear_tokens = ["செருப்பு", "பாதணி", "சப்பல்", "காலணி", "தோல்", "footwear", "chappal", "shoe", "leather", "shoes", "जूता", "चप्पल", "పాదరక్షలు"]
+        if any(k in text for k in footwear_tokens):
+            return "Footwear Retail & Leather Goods Shop"
 
         cooking_tokens = [
             "பிரியாணி", "சமையல்", "ஹோட்டல்", "சாப்பாடு", "மாஸ்டர்", "கேட்டரிங்",
@@ -147,8 +159,16 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
 
     # 4. Skills and Interests
     elif field_name == "skills_and_interests":
-        vegetable_tokens = ["காய்கறி", "பழம்", "சந்தை", "கடை", "सब्जी", "फल", "కూరగాయలు", "పచ్చക്കറി"]
-        if any(k in text for k in vegetable_tokens) and any(j in text for j in ["கடை", "விற்பனை", "வியாபாரம்", "दुकान", "షాపు", "കച്ചവടം"]):
+        footwear_tokens = ["செருப்பு", "பாதணி", "சப்பல்", "காலணி", "தோல்", "footwear", "chappal", "shoe", "leather", "shoes", "जूता", "चप्पल", "పాదరక్షలు"]
+        if any(k in text for k in footwear_tokens):
+            return "Footwear & Leather Goods Specialist"
+
+        poultry_tokens = ["கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "poultry", "chicken", "broiler", "मुर्गी", "కోడి"]
+        if any(k in text for k in poultry_tokens):
+            return "Poultry Farming & Livestock"
+
+        vegetable_tokens = ["காய்கறி", "பழம்", "சந்தை", "சந்தை", "सब्जी", "फल", "కూరగాయలు", "పచ్చക്കറി"]
+        if any(k in text for k in vegetable_tokens) and any(j in text for j in ["விற்பனை", "வியாபாரம்", "दुकान", "షాపు", "കച്ചവടം"]):
             return "Vegetable & Produce Retail Selling"
 
         grocery_tokens = ["மளிகை", "கிர்ணா", "किराना", "కిరాణా", "പലചരക്ക്"]

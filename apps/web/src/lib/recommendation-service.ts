@@ -8,9 +8,11 @@ import path from 'path';
 import {
   runRecommendationEngine,
   NSQF_CATALOG_SEED,
+  TRADE_SKILL_SYNONYMS,
 } from '@kural-sevi/recommendation-engine';
 import type { ConfirmedProfile, NSQFTrade } from '@kural-sevi/shared';
 import type { CaseListItem, CaseDetailData, RecommendationDetail } from '@/features/cases/types';
+import type { CallRecordItem } from '@/features/calls/types';
 
 interface CompletedCallRecord {
   session_id: string;
@@ -27,6 +29,9 @@ interface CompletedCallRecord {
   transcript?: Array<{ user: string; assistant: string; timestamp?: string }>;
   confirmed_via?: string;
   confirmed_at?: string;
+  citizen_selected_choice?: number;
+  citizen_selected_course?: string;
+  recommended_courses?: Array<{ rank: number; qp_code: string; qp_name: string; nsqf_level: number }>;
 }
 
 interface OfficerActionRecord {
@@ -38,16 +43,24 @@ interface OfficerActionRecord {
   actioned_at: string;
 }
 
+import type { PlanningMetricsData, PlanningInsight } from '@/features/planning/types';
+
 // In-memory cache for generated recommendations by case_id
 const _recCache = new Map<string, RecommendationDetail[]>();
+
+export function clearRecommendationCache() {
+  _recCache.clear();
+}
 
 function getStoragePaths() {
   const root = process.cwd();
   // We check possible locations for completed_calls.json
   const possibleCallPaths = [
-    path.resolve(root, '../../apps/voice-api/data/completed_calls.json'),
+    path.resolve(root, 'apps/voice-api/data/completed_calls.json'),
     path.resolve(root, '../voice-api/data/completed_calls.json'),
+    path.resolve(root, '../../apps/voice-api/data/completed_calls.json'),
     path.resolve(root, 'data/completed_calls.json'),
+    '/Users/potrinathanpm/Projects/KuralSevi/apps/voice-api/data/completed_calls.json',
   ];
   let callPath = possibleCallPaths[0];
   for (const p of possibleCallPaths) {
@@ -57,7 +70,19 @@ function getStoragePaths() {
     }
   }
 
-  const actionPath = path.resolve(root, 'data/officer_actions.json');
+  const possibleActionPaths = [
+    path.resolve(root, 'apps/web/data/officer_actions.json'),
+    path.resolve(root, 'data/officer_actions.json'),
+    path.resolve(root, '../web/data/officer_actions.json'),
+    '/Users/potrinathanpm/Projects/KuralSevi/apps/web/data/officer_actions.json',
+  ];
+  let actionPath = possibleActionPaths[0];
+  for (const p of possibleActionPaths) {
+    if (fs.existsSync(p)) {
+      actionPath = p;
+      break;
+    }
+  }
   return { callPath, actionPath };
 }
 
@@ -72,6 +97,28 @@ export function loadCompletedCalls(): CompletedCallRecord[] {
     console.error('Failed to load completed calls:', err);
   }
   return [];
+}
+
+export function saveCompletedCall(record: CompletedCallRecord) {
+  const { callPath } = getStoragePaths();
+  try {
+    const dir = path.dirname(callPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const current = loadCompletedCalls();
+    const idx = current.findIndex(
+      (c) => (record.session_id && c.session_id === record.session_id) || (record.case_id && c.case_id === record.case_id)
+    );
+    if (idx >= 0) {
+      current[idx] = { ...current[idx], ...record };
+    } else {
+      current.unshift(record);
+    }
+    fs.writeFileSync(callPath, JSON.stringify(current, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to save completed call:', err);
+  }
 }
 
 export function loadOfficerActions(): Record<string, OfficerActionRecord> {
@@ -116,7 +163,7 @@ function parseEducationYears(edu: string): number {
 }
 
 /**
- * Extracts skills from text strings
+ * Extracts meaningful vocational skill and interest tokens from text strings
  */
 function extractSkillTokens(text: string): string[] {
   if (!text) return [];
@@ -124,7 +171,7 @@ function extractSkillTokens(text: string): string[] {
     .toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
-    .filter(w => w.length > 2 && !['and', 'for', 'the', 'with', 'own', 'shop', 'area'].includes(w));
+    .filter(w => w.length > 2 && !['and', 'for', 'the', 'with', 'own', 'area', 'completed', 'class', 'standard'].includes(w));
   return Array.from(new Set(words));
 }
 
@@ -170,10 +217,14 @@ export function callRecordToProfile(call: CompletedCallRecord): ConfirmedProfile
     empPref = 'wage';
   }
 
+  // Only extract vocational skills from current livelihood if it is a specific trade (e.g. shop, tailoring)
+  // rather than generic daily survival wage labour which shouldn't bias vocational recommendations
+  const curLivLower = curLiv.toLowerCase();
+  const isGenericLabor = curLivLower.includes('agricultural labour') || curLivLower.includes('daily wage') || curLivLower.includes('coolie');
+
   const existingSkills = [
     ...extractSkillTokens(skillsStr),
-    ...extractSkillTokens(famOcc),
-    ...extractSkillTokens(curLiv),
+    ...(!isGenericLabor ? extractSkillTokens(curLiv) : []),
   ];
 
   return {
@@ -188,13 +239,13 @@ export function callRecordToProfile(call: CompletedCallRecord): ConfirmedProfile
       can_do_basic_math: true,
     },
     family_occupation: {
-      occupation: famOcc || 'Farming',
+      occupation: famOcc || 'Traditional Household Livelihood',
       is_traditional: famOcc.toLowerCase().includes('traditional') || famOcc.toLowerCase().includes('weaving'),
       transferable_skills: extractSkillTokens(famOcc),
       generations: 2,
     },
     current_livelihood: {
-      activity: curLiv || 'Agricultural Labour',
+      activity: curLiv || 'Local Livelihood',
       is_primary: true,
       income_stability: 'seasonal',
     },
@@ -202,7 +253,8 @@ export function callRecordToProfile(call: CompletedCallRecord): ConfirmedProfile
       existing_skills: existingSkills,
       informal_skills: extractSkillTokens(skillsStr),
       traditional_skills: extractSkillTokens(famOcc),
-      interests: [skillsStr, curLiv].filter(Boolean),
+      // Clean isolation: citizen's expressed vocational aspirations are kept unpolluted by survival wage labour
+      interests: skillsStr ? [skillsStr] : (!isGenericLabor && curLiv ? [curLiv] : []),
       has_prior_training: false,
     },
     mobility_constraints: {
@@ -216,7 +268,7 @@ export function callRecordToProfile(call: CompletedCallRecord): ConfirmedProfile
     employment_preference: empPref,
     local_economic_context: {
       nearby_markets: [ecoStr || `${district} town market`],
-      district_industries: ['Textile', 'Food Processing', 'Agriculture', 'Retail'],
+      district_industries: ['Textile', 'Food Processing', 'Retail', 'Capital Goods', 'Healthcare', 'Agriculture'],
       has_local_training_centers: true,
       transportation_access: 'good' as const,
     },
@@ -241,13 +293,20 @@ export async function getRecommendationsForCall(call: CompletedCallRecord): Prom
     getOpportunityData: async (dist: string, state: string, qpCodes: string[]) => {
       return qpCodes.map(qp => {
         const trade = NSQF_CATALOG_SEED.find(t => t.qp_code === qp);
-        const isRetailOrAgri = trade?.sector === 'Retail' || trade?.sector === 'Agriculture' || trade?.sector === 'Food Industry';
+        // Robust district opportunities across all supported NSQF sectors in Tamil Nadu
+        const isHighOpportunitySector = 
+          trade?.sector === 'Retail' || 
+          trade?.sector === 'Apparel' || 
+          trade?.sector === 'Food Industry' || 
+          trade?.sector === 'Capital Goods' ||
+          trade?.sector === 'Beauty & Wellness';
+        
         return {
           qp_code: qp,
-          opportunity_strength: (isRetailOrAgri ? 'high' : 'medium') as 'high' | 'medium' | 'low',
-          msme_count: isRetailOrAgri ? 42 : 18,
-          eshram_workers: isRetailOrAgri ? 320 : 110,
-          evidence: `${isRetailOrAgri ? 'Strong' : 'Steady'} economic activity & MSME cluster presence in ${dist}`,
+          opportunity_strength: (isHighOpportunitySector ? 'high' : 'medium') as 'high' | 'medium' | 'low',
+          msme_count: isHighOpportunitySector ? 48 : 22,
+          eshram_workers: isHighOpportunitySector ? 410 : 160,
+          evidence: `Robust MSME enterprise cluster and consumer market demand in ${dist} district`,
           source: 'e-Shram & Udyam District Profile',
           source_date: '2026-06-15',
         };
@@ -255,34 +314,60 @@ export async function getRecommendationsForCall(call: CompletedCallRecord): Prom
     },
   };
 
-  // Custom Vector Search Port using keyword and skill overlap
+  // Custom Vector Search Port using domain keywords, synonyms, and skill overlap
   const customVectorSearchPort = {
     findSimilarTrades: async (prof: ConfirmedProfile, eligibleQpCodes: string[], limit: number) => {
-      const allSkills = [
-        ...(prof.skills_and_interests?.existing_skills ?? []),
-        ...(prof.skills_and_interests?.interests ?? []),
-        ...(prof.family_occupation?.transferable_skills ?? []),
-      ].map(s => s.toLowerCase());
+      const citizenInterests = (prof.skills_and_interests?.interests ?? []).map(s => s.toLowerCase());
+      const citizenSkills = (prof.skills_and_interests?.existing_skills ?? []).map(s => s.toLowerCase());
+      const allCitizenTokens = Array.from(new Set([
+        ...citizenSkills,
+        ...citizenInterests.flatMap(i => i.replace(/[^\w\s]/g, ' ').split(/\s+/)).filter(w => w.length > 2),
+      ]));
 
       const scored = eligibleQpCodes.map(code => {
         const trade = NSQF_CATALOG_SEED.find(t => t.qp_code === code);
         if (!trade) return { ...NSQF_CATALOG_SEED[0], similarity: 0.5 };
 
-        let matchCount = 0;
-        const tradeText = `${trade.qp_name} ${trade.sector} ${trade.required_skills.join(' ')} ${trade.skills_acquired.join(' ')}`.toLowerCase();
+        const synonyms = (TRADE_SKILL_SYNONYMS[trade.qp_code] || []).map(s => s.toLowerCase());
+        const tradeKeywords = [
+          trade.qp_name.toLowerCase(),
+          trade.sector.toLowerCase(),
+          ...trade.required_skills.map(s => s.toLowerCase()),
+          ...trade.skills_acquired.map(s => s.toLowerCase()),
+          ...synonyms,
+        ];
 
-        for (const skill of allSkills) {
-          if (tradeText.includes(skill) || skill.split(' ').some(w => tradeText.includes(w))) {
-            matchCount += 2;
+        let matchCount = 0;
+
+        // 1. Direct interest phrase matching gets highest priority
+        for (const interest of citizenInterests) {
+          if (trade.qp_name.toLowerCase().includes(interest) || interest.includes(trade.qp_name.toLowerCase())) {
+            matchCount += 6;
+          } else if (synonyms.some(syn => interest.includes(syn) || syn.includes(interest))) {
+            matchCount += 5;
+          } else if (trade.sector.toLowerCase().includes(interest) || interest.includes(trade.sector.toLowerCase())) {
+            matchCount += 4;
           }
         }
 
-        // Boost if employment preference matches
-        if (prof.employment_preference === 'self' && trade.pathway_type === 'self_employment') {
-          matchCount += 1.5;
+        // 2. Token matching against trade keywords and synonyms
+        for (const token of allCitizenTokens) {
+          if (token.length <= 2) continue;
+          if (synonyms.includes(token)) {
+            matchCount += 3;
+          } else if (tradeKeywords.some(tk => tk.includes(token) || token.includes(tk))) {
+            matchCount += 1.5;
+          }
         }
 
-        const similarity = Math.min(0.96, Math.max(0.45, 0.50 + matchCount * 0.08));
+        // 3. Boost if employment preference matches pathway type
+        if (prof.employment_preference === 'self' && (trade.pathway_type === 'self_employment' || trade.pathway_type === 'home_enterprise')) {
+          matchCount += 2;
+        } else if (prof.employment_preference === 'wage' && trade.pathway_type === 'wage_employment') {
+          matchCount += 2;
+        }
+
+        const similarity = Math.min(0.98, Math.max(0.40, 0.45 + matchCount * 0.07));
         return { ...trade, similarity };
       });
 
@@ -351,7 +436,7 @@ export async function getAllOfficerCases(): Promise<CaseListItem[]> {
     const district = extractDistrict(call);
 
     callCases.push({
-      id: String(100 + idx),
+      id: call.case_id,
       case_id: call.case_id,
       district,
       state: 'Tamil Nadu',
@@ -364,13 +449,12 @@ export async function getAllOfficerCases(): Promise<CaseListItem[]> {
       pathway_type: topRec?.pathway_type || 'self_employment',
       employment_pref: (call.confirmed_fields?.employment_preference || '').toLowerCase().includes('wage') ? 'wage' : 'self',
       has_mobility: !(call.confirmed_fields?.mobility_constraints || '').toLowerCase().includes('local'),
-      sla_deadline: new Date(Date.now() + 2 * 86400000).toISOString(),
+      sla_deadline: new Date(new Date(call.completed_at || Date.now()).getTime() + 3 * 86400000).toISOString(),
       created_at: call.completed_at || new Date().toISOString(),
       consultant_required: topRec?.confidence === 'needs_officer_review',
     });
   }
 
-  // Prepend completed phone calls so real callers are always first on the officer docket
   return callCases;
 }
 
@@ -409,8 +493,169 @@ export async function getCaseDetail(caseIdOrId: string): Promise<CaseDetailData 
         completeness: Object.keys(fields).length >= 5 ? 0.95 : 0.75,
       },
       recommendations: recs,
+      citizen_selected_choice: matchedCall.citizen_selected_choice,
+      citizen_selected_course: matchedCall.citizen_selected_course,
+      citizen_confirmed: matchedCall.citizen_confirmed,
+      confirmed_via: matchedCall.confirmed_via,
+      confirmed_at: matchedCall.confirmed_at,
     };
   }
 
   return null;
+}
+
+/**
+ * Generates dynamic District Planning Intelligence metrics from actual citizen calls
+ */
+export async function getDistrictPlanningMetrics(): Promise<PlanningMetricsData> {
+  const completedCalls = loadCompletedCalls();
+  const totalBeneficiaries = completedCalls.length;
+  const completedProfiles = completedCalls.filter(
+    (c) => c.citizen_confirmed || Object.keys(c.confirmed_fields || {}).length >= 4
+  ).length;
+  const mobilityConstraints = completedCalls.filter((c) => {
+    const mob = (c.confirmed_fields?.mobility_constraints || '').toLowerCase();
+    return mob.includes('local') || mob.includes('disabilit') || mob.includes('care') || mob.includes('home');
+  }).length;
+  const midInterviewDropoffs = completedCalls.filter((c) => !c.citizen_confirmed).length;
+
+  const tradeFrequencies: Record<string, number> = {};
+  const empCounts = { 'Self-Employment': 0, 'Wage Employment': 0, 'Home-based Enterprise': 0 };
+  const skillGapCounts: Record<string, number> = {};
+  const monthCounts: Record<string, { cases: number; completed: number }> = {};
+
+  for (const call of completedCalls) {
+    const recs = await getRecommendationsForCall(call);
+    const top = recs[0];
+    if (top) {
+      tradeFrequencies[top.qp_name] = (tradeFrequencies[top.qp_name] || 0) + 1;
+      if (top.pathway_type === 'wage_employment') {
+        empCounts['Wage Employment']++;
+      } else if (top.pathway_type === 'home_enterprise') {
+        empCounts['Home-based Enterprise']++;
+      } else {
+        empCounts['Self-Employment']++;
+      }
+      for (const skill of top.skills_to_acquire || []) {
+        skillGapCounts[skill] = (skillGapCounts[skill] || 0) + 1;
+      }
+    }
+
+    const date = call.completed_at ? new Date(call.completed_at) : new Date();
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    if (!monthCounts[month]) {
+      monthCounts[month] = { cases: 0, completed: 0 };
+    }
+    monthCounts[month].cases++;
+    if (call.citizen_confirmed) {
+      monthCounts[month].completed++;
+    }
+  }
+
+  const tradeColors = ['#0B3064', '#144282', '#E05A1B', '#0A783C', '#475569', '#64748B'];
+  const topTrades = Object.entries(tradeFrequencies)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count], i) => ({
+      name,
+      count,
+      fill: tradeColors[i % tradeColors.length],
+    }));
+
+  const employmentSplit = [
+    { name: 'Self-Employment', value: empCounts['Self-Employment'], fill: '#E05A1B' },
+    { name: 'Wage Employment', value: empCounts['Wage Employment'], fill: '#0B3064' },
+    { name: 'Home-based Enterprise', value: empCounts['Home-based Enterprise'], fill: '#0A783C' },
+  ].filter((e) => e.value > 0);
+
+  const skillGaps = Object.entries(skillGapCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([skill, count]) => ({ skill, count }));
+
+  const monthlyTrend = Object.entries(monthCounts).map(([month, data]) => ({
+    month,
+    cases: data.cases,
+    completed: data.completed,
+  }));
+
+  const topTradeName = topTrades[0]?.name || 'Vocational Pathway';
+  const topTradeCount = topTrades[0]?.count || 0;
+  const insights: PlanningInsight[] = [
+    {
+      icon: 'School',
+      title: 'High-Demand Pathway Alignment',
+      body: `${topTradeCount} caller${topTradeCount !== 1 ? 's' : ''} recommended for ${topTradeName}. Coordinate with local ITIs to align training batches.`,
+      urgency: 'chakra',
+    },
+    {
+      icon: 'Building2',
+      title: 'Enterprise & Market Linkage',
+      body: `${empCounts['Self-Employment'] + empCounts['Home-based Enterprise']} beneficiaries opted for self or home-based enterprise. Prioritize PM-AJAY GIA capital subsidy linkage.`,
+      urgency: 'green',
+    },
+    {
+      icon: 'Accessibility',
+      title: 'Local Mobility Support',
+      body: `${mobilityConstraints} beneficiaries noted local travel constraints. Consider cluster-proximate training modules or home-based toolkits.`,
+      urgency: 'saffron',
+    },
+  ];
+
+  return {
+    totalBeneficiaries,
+    completedProfiles,
+    mobilityConstraints,
+    midInterviewDropoffs,
+    topTrades,
+    employmentSplit,
+    skillGaps,
+    monthlyTrend: monthlyTrend.length > 0 ? monthlyTrend : [{ month: 'Sep', cases: totalBeneficiaries, completed: completedProfiles }],
+    insights,
+  };
+}
+
+/**
+ * Returns all completed call records enriched with their NSQF top recommendation and officer status
+ */
+export async function getEnrichedCallRecords(): Promise<CallRecordItem[]> {
+  const calls = loadCompletedCalls();
+  const actions = loadOfficerActions();
+
+  const results: CallRecordItem[] = [];
+  for (const call of calls) {
+    const recs = await getRecommendationsForCall(call);
+    const top = recs[0];
+    const action = actions[call.case_id]?.action || 'pending';
+
+    results.push({
+      session_id: call.session_id,
+      case_id: call.case_id,
+      phone: call.phone,
+      channel: call.channel || 'ivr',
+      language: call.language || 'ta',
+      status: call.status || 'COMPLETED',
+      citizen_confirmed: Boolean(call.citizen_confirmed),
+      notification_status: call.notification_status || 'DISPATCHED',
+      completed_at: call.completed_at || new Date().toISOString(),
+      confirmed_fields: call.confirmed_fields || {},
+      turns_count: call.turns_count || call.transcript?.length || 0,
+      transcript: call.transcript || [],
+      confirmed_via: call.confirmed_via,
+      confirmed_at: call.confirmed_at,
+      officer_action: action,
+      top_recommendation: top
+        ? {
+            qp_code: top.qp_code,
+            qp_name: top.qp_name,
+            nsqf_level: top.nsqf_level,
+            pathway_type: top.pathway_type,
+            confidence: top.confidence,
+            topsis_score: top.topsis_score,
+            income_range: top.income_range,
+          }
+        : undefined,
+    });
+  }
+
+  return results;
 }

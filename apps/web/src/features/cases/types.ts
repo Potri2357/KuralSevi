@@ -63,4 +63,9 @@ export interface CaseDetailData {
     completeness: number;
   };
   recommendations: RecommendationDetail[];
+  citizen_selected_choice?: number;
+  citizen_selected_course?: string;
+  citizen_confirmed?: boolean;
+  confirmed_via?: string;
+  confirmed_at?: string;
 }

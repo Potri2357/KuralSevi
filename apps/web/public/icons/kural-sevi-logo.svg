@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B3064"/>
+      <stop offset="100%" stop-color="#144282"/>
+    </linearGradient>
+    <linearGradient id="tricolor" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E05A1B"/>
+      <stop offset="50%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#0A783C"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bg)"/>
+  <!-- Decorative Chakra ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="8"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4"/>
+  <!-- Microphone & Soundwave Motif -->
+  <path d="M256 140c-26.5 0-48 21.5-48 48v80c0 26.5 21.5 48 48 48s48-21.5 48-48v-80c0-26.5-21.5-48-48-48z" fill="#FFFFFF"/>
+  <path d="M336 256c0 44.2-35.8 80-80 80s-80-35.8-80-80h-24c0 53.5 40.7 97.5 92 103.4v44.6h-32v24h88v-24h-32v-44.6c51.3-5.9 92-49.9 92-103.4h-24z" fill="#FFFFFF"/>
+  <!-- Tri-color indicator bar -->
+  <rect x="156" y="440" width="200" height="12" rx="6" fill="url(#tricolor)"/>
+</svg>

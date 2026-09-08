@@ -26,11 +26,12 @@ router = APIRouter(prefix="/webhooks/twilio", tags=["Twilio IVR & WhatsApp"])
 logger = logging.getLogger(__name__)
 
 AFFIRMATIVE_KEYWORDS = [
-    "yes", "y", "1", "ok", "confirm", "confirmed", "correct", "true", "done",
-    "சரி", "ஆமாம்", "உண்மை", "சரிங்க", "உறுதி",
-    "അതെ", "ശരി", "ഉറപ്പ്", "ശരിയാണ്",
-    "हाँ", "हां", "सही", "सही है", "स्वीकार",
-    "అవును", "సరే", "నిజం", "ధృవీకరించబడింది"
+    "yes", "y", "1", "2", "3", "ok", "confirm", "confirmed", "correct", "true", "done",
+    "option 1", "option 2", "option 3", "course 1", "course 2", "course 3",
+    "சரி", "ஆமாம்", "உண்மை", "சரிங்க", "உறுதி", "ஒன்று", "இரண்டு", "மூன்று",
+    "அതെ", "ശരി", "ഉറപ്പ്", "ശരിയാണ്", "ഒന്ന്", "രണ്ട്", "മൂന്ന്",
+    "हाँ", "हां", "सही", "सही है", "स्वीकार", "एक", "दो", "तीन",
+    "అవును", "సరే", "నిజం", "ధృవీకరించబడింది", "ఒకటి", "రెండు", "మూడు"
 ]
 
 # Shared application coordinator instance
@@ -449,13 +450,29 @@ async def handle_twilio_whatsapp(
         except Exception as e:
             logger.error(f"Error transcribing WhatsApp audio: {e}", exc_info=True)
 
-    # Check if citizen is replying to confirm their application details
+    # Check if citizen is replying to confirm their application details or select a course
     user_lower = user_speech.lower().strip()
     if any(k in user_lower for k in AFFIRMATIVE_KEYWORDS):
-        confirmed_case = confirm_case_from_citizen(phone, channel="WHATSAPP")
+        confirmed_case = confirm_case_from_citizen(phone, channel="WHATSAPP", reply_text=user_lower)
         if confirmed_case:
             lang = confirmed_case.get("language", "ta")
-            ack_text = FIELD_LABELS.get(lang, FIELD_LABELS["ta"])["ack"]
+            course_name = confirmed_case.get("citizen_selected_course")
+            choice_num = confirmed_case.get("citizen_selected_choice", 1)
+            
+            if course_name:
+                if lang == "ta":
+                    ack_text = f"நன்றி! உங்கள் PM-AJAY பயிற்சி விருப்பம் '{course_name}' (முன்னுரிமை {choice_num} / Priority {choice_num}) பதிவு செய்யப்பட்டது. மாவட்ட நல அலுவலர் சரிபார்த்து ஆணை வழங்குவார்."
+                elif lang == "hi":
+                    ack_text = f"धन्यवाद! आपका पसंदीदा PM-AJAY कोर्स '{course_name}' (प्राथमिकता {choice_num} / Priority {choice_num}) दर्ज कर लिया गया है। जिला अधिकारी जल्द स्वीकृति आदेश जारी करेंगे।"
+                elif lang == "te":
+                    ack_text = f"ధన్యవాదాలు! మీ PM-AJAY కోర్సు ఎంపిక '{course_name}' (ప్రాధాన్యత {choice_num} / Priority {choice_num}) నమోదు చేయబడింది. జిల్లా సంక్షేమ అధికారి త్వరలో ఆమోదం తెలుపుతారు."
+                elif lang == "ml":
+                    ack_text = f"നന്ദി! നിങ്ങളുടെ PM-AJAY കോഴ്സ് മുൻഗണന '{course_name}' (മുൻഗണന {choice_num} / Priority {choice_num}) രേഖപ്പെടുത്തി. ജില്ലാ ഉദ്യോഗസ്ഥൻ ഉടൻ അനുമതി നൽകും."
+                else:
+                    ack_text = f"Thank you! Your PM-AJAY course choice '{course_name}' (Priority {choice_num}) has been recorded. District Welfare Officer will review and issue sanction order."
+            else:
+                ack_text = FIELD_LABELS.get(lang, FIELD_LABELS["ta"])["ack"]
+
             msg_resp = MessagingResponse()
             msg_resp.message(ack_text)
             return Response(content=str(msg_resp), media_type="application/xml")
@@ -486,17 +503,25 @@ async def handle_twilio_sms(
 ):
     """
     Twilio SMS Webhook.
-    Receives incoming citizen SMS replies (e.g. YES, 1, சரி, हाँ) and confirms their PM-AJAY case.
+    Receives incoming citizen SMS replies (e.g. YES, 1, 2, 3, சரி, हाँ) and confirms their PM-AJAY case.
     """
     phone = From
     user_text = (Body or "").lower().strip()
     logger.info(f"Received SMS from {phone}: '{user_text}'")
 
     if any(k in user_text for k in AFFIRMATIVE_KEYWORDS):
-        confirmed_case = confirm_case_from_citizen(phone, channel="SMS")
+        confirmed_case = confirm_case_from_citizen(phone, channel="SMS", reply_text=user_text)
         if confirmed_case:
             lang = confirmed_case.get("language", "ta")
-            ack_text = FIELD_LABELS.get(lang, FIELD_LABELS["ta"])["ack"]
+            course_name = confirmed_case.get("citizen_selected_course")
+            choice_num = confirmed_case.get("citizen_selected_choice", 1)
+            
+            if course_name:
+                short_course = course_name.split("-")[0].strip()[:36]
+                ack_text = f"PM-AJAY: Your choice '{short_course}' (Priority {choice_num}) recorded. District Welfare Officer will review and issue sanction order."
+            else:
+                ack_text = "PM-AJAY: Application confirmed. District Welfare Officer will contact you / விண்ணப்பம் உறுதி செய்யப்பட்டது."
+
             msg_resp = MessagingResponse()
             msg_resp.message(ack_text)
             return Response(content=str(msg_resp), media_type="application/xml")

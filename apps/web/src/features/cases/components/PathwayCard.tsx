@@ -34,7 +34,7 @@ export function PathwayCard({ recommendation: rec, isPrimary = false }: Props) {
                     : 'bg-slate-100 text-slate-700 border-slate-200'
                 )}
               >
-                Preference Rank #{rec.rank}
+                Priority #{rec.rank}
               </span>
               <ConfidenceBadge label={rec.confidence} size="sm" />
             </div>

@@ -1,11 +1,12 @@
 'use client';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/Badge';
 import { StepBeneficiaryInfo } from './StepBeneficiaryInfo';
 import { StepMandatedFields } from './StepMandatedFields';
 import { StepConsentSubmit } from './StepConsentSubmit';
-import { CheckCircle2, ChevronRight } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 
 import { IndicNamaste, IndicScroll, IndicCertificate } from '@/components/icons/indic';
 import type { BeneficiaryFormData, MandatedFieldsData } from '../types';
@@ -13,6 +14,7 @@ import type { BeneficiaryFormData, MandatedFieldsData } from '../types';
 export function AssistedEnrollmentWizard() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submittedCaseId, setSubmittedCaseId] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [form, setForm] = useState<BeneficiaryFormData>({
     district: 'Namakkal',
@@ -33,6 +35,16 @@ export function AssistedEnrollmentWizard() {
     employment_preference: 'either',
     local_economic_context: '',
   });
+
+  const toggleFullscreen = () => {
+    if (typeof document !== 'undefined') {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+      } else {
+        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+      }
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -97,12 +109,21 @@ export function AssistedEnrollmentWizard() {
             Assisted Field Enrollment
           </h1>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-0.5">
-            Field worker assisted intake for beneficiaries with language, phone, or literacy access barriers
+            Field worker assisted intake with dynamic vernacular localization and voice-guided 7 dimensions
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="chakra" className="px-3 py-1 text-xs">
-            Assisted Mode · Online
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+            title="Toggle Fullscreen for Gram Panchayat Tablet Stands"
+          >
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            <span>Kiosk Stand Mode</span>
+          </button>
+          <Badge variant="chakra" className="px-3 py-1 text-xs font-bold">
+            {form.language} · Step {step} of 3
           </Badge>
         </div>
       </div>
@@ -152,6 +173,7 @@ export function AssistedEnrollmentWizard() {
           onChange={setFields}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
+          language={form.language}
         />
       )}
       {step === 3 && (

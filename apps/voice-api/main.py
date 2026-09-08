@@ -4,21 +4,23 @@ FastAPI application entry point.
 """
 import logging
 import base64
+import json
 from typing import Optional
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers.twilio_router import router as twilio_router, handle_twilio_whatsapp, handle_twilio_sms
 from routers.whatsapp_router import router as meta_whatsapp_router
-from services.interview_coordinator import InterviewCoordinator, get_completed_calls_records
+from services.interview_coordinator import InterviewCoordinator, get_completed_calls_records, clear_completed_calls_records
 from services.field_normalizer import normalize_field_to_english
 from services.stt_service import transcribe_audio
 from services.tts_service import synthesize_speech
 from config import settings
 
 import collections
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -156,6 +158,13 @@ async def get_completed_calls():
     return {"count": len(records), "records": records}
 
 
+@app.api_route("/api/reset-data", methods=["POST", "GET"])
+async def reset_data():
+    """Erases all completed call records and resets state to start fresh."""
+    clear_completed_calls_records()
+    return {"status": "ok", "message": "All call records erased successfully"}
+
+
 def predict_top_trade(fields: dict) -> dict:
     text = " ".join(str(v) for v in (fields or {}).values()).lower()
     if any(k in text for k in ["tailor", "stitch", "sew", "garment", "cloth"]):
@@ -175,9 +184,72 @@ def predict_top_trade(fields: dict) -> dict:
     return {"code": "APP/Q0301", "name": "Tailor - Custom Garments", "nsqf": 4, "type": "Self-Employment", "confidence": "MEDIUM"}
 
 
-@app.api_route("/call-records", methods=["GET", "HEAD"], response_class=HTMLResponse)
-async def view_call_records_dashboard():
-    """Visual dashboard displaying structured completed call records, fields, and transcripts."""
+class DialRequest(BaseModel):
+    phone: str
+    language: Optional[str] = "ta"
+
+@app.post("/calls/dial")
+async def trigger_dial_call(req: DialRequest):
+    """Initiates an outbound phone call to a beneficiary via Twilio API."""
+    import urllib.request
+    import urllib.parse
+    import urllib.error
+    phone = req.phone.strip().replace(" ", "").replace("-", "")
+    if phone.startswith("0"):
+        phone = "+91" + phone[1:]
+    elif not phone.startswith("+"):
+        phone = "+91" + phone
+    
+    account_sid = settings.twilio_account_sid
+    auth_token = settings.twilio_auth_token
+    from_number = settings.twilio_phone_number
+    lang = req.language or "ta"
+    webhook_url = f"{settings.voice_api_url}/webhooks/twilio/interview-start?language={lang}"
+    cli_cmd = f"python3 scripts/trigger-outbound-call.py {phone} {lang}"
+
+    if not account_sid or not auth_token or not from_number:
+        return {"success": False, "error": "Twilio credentials not configured in voice-api environment.", "command": cli_cmd}
+
+    api_url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json"
+    credentials = f"{account_sid}:{auth_token}"
+    auth_header = f"Basic {base64.b64encode(credentials.encode('utf-8')).decode('utf-8')}"
+
+    post_data = urllib.parse.urlencode({
+        "To": phone,
+        "From": from_number,
+        "Url": webhook_url,
+        "Method": "POST",
+    }).encode("utf-8")
+
+    req_obj = urllib.request.Request(api_url, data=post_data, method="POST")
+    req_obj.add_header("Authorization", auth_header)
+    req_obj.add_header("Content-Type", "application/x-www-form-urlencoded")
+
+    try:
+        with urllib.request.urlopen(req_obj, timeout=15.0) as resp:
+            body = resp.read().decode("utf-8")
+            call_data = json.loads(body)
+            return {
+                "success": True,
+                "call_sid": call_data.get("sid"),
+                "status": call_data.get("status"),
+                "to": call_data.get("to"),
+                "command": cli_cmd
+            }
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8")
+        logger.error(f"Twilio dial error: {err_body}")
+        return {"success": False, "error": err_body, "command": cli_cmd}
+    except Exception as e:
+        logger.error(f"Dial exception: {e}")
+        return {"success": False, "error": str(e), "command": cli_cmd}
+
+
+@app.api_route("/call-records", methods=["GET", "HEAD"])
+async def view_call_records_dashboard(legacy: bool = False):
+    """Redirects to the Next.js Call Records Telephony Workstation UI at /officer/calls."""
+    if not legacy:
+        return RedirectResponse(url="http://localhost:3000/officer/calls", status_code=307)
     records = get_completed_calls_records()
 
     cards = []
@@ -375,6 +447,34 @@ async def process_browser_speech(
         "audio_base64": audio_b64,
         "audio_mime_type": "audio/wav",
     }
+
+
+class TTSRequest(BaseModel):
+    text: str
+    language: str = "ta"
+    speaker: Optional[str] = None
+
+
+@app.post("/api/voice/tts")
+async def tts_endpoint(req: TTSRequest):
+    """
+    Synthesize regional speech (Tamil, Hindi, Telugu, English) into natural high-fidelity audio.
+    """
+    tts_res = await synthesize_speech(
+        text=req.text,
+        language_code=req.language,
+        sarvam_api_key=settings.sarvam_api_key,
+        sarvam_tts_url=settings.sarvam_tts_url,
+        speaker_override=req.speaker,
+    )
+    if tts_res and tts_res.audio_bytes:
+        audio_b64 = base64.b64encode(tts_res.audio_bytes).decode("utf-8")
+        return {
+            "status": "success",
+            "audio_base64": audio_b64,
+            "audio_mime_type": f"audio/{tts_res.audio_format}",
+        }
+    return {"status": "failed", "error": "TTS synthesis failed"}
 
 
 @app.get("/health")

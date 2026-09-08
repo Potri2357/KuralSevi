@@ -30,6 +30,28 @@ export interface ScoredTrade extends NSQFTrade {
   opportunity_data?: DistrictOpportunityData;
 }
 
+// Domain skill keywords and vernacular synonyms for all 18 NSQF catalog trades
+export const TRADE_SKILL_SYNONYMS: Record<string, string[]> = {
+  'RAS/Q0104': ['retail', 'shop', 'shopkeeper', 'store', 'sales', 'salesman', 'grocery', 'maligai', 'business', 'vendor', 'selling', 'customer', 'cash', 'billing', 'kadai', 'kaday', 'kirana', 'footwear', 'chappal', 'trade', 'commercial', 'provisional', 'vegetable'],
+  'APP/Q0301': ['tailor', 'tailoring', 'stitching', 'sewing', 'garment', 'clothes', 'dress', 'cutting', 'embroidery', 'fashion', 'thaiyal', 'thayyal', 'cloth', 'apparel'],
+  'APP/Q0103': ['sewing', 'machine', 'stitching', 'garment', 'textile', 'tailoring', 'factory', 'operator'],
+  'TEX/Q4101': ['weaving', 'loom', 'powerloom', 'handloom', 'fabric', 'textile', 'thread', 'yarn', 'saree', 'operator'],
+  'HAN/Q0101': ['handloom', 'weaving', 'weaver', 'traditional', 'artisan', 'saree', 'loom', 'nesavu'],
+  'HAN/Q0301': ['printing', 'block', 'artisan', 'craft', 'dyeing', 'fabric', 'design', 'colour'],
+  'FIC/Q0201': ['pickle', 'oorkai', 'urugai', 'preservation', 'chutney', 'cooking', 'spices', 'food', 'achar'],
+  'FIC/Q0601': ['food', 'processing', 'cooking', 'bakery', 'catering', 'hotel', 'restaurant', 'canteen', 'tiffin', 'mess', 'snacks', 'sweet', 'samayal', 'cook', 'chef', 'kitchen'],
+  'FIC/Q5001': ['papad', 'appalam', 'vadai', 'snacks', 'ready-to-eat', 'food', 'cooking', 'chips', 'murukku'],
+  'AGR/Q4101': ['organic', 'compost', 'natural farming', 'vermicompost', 'biofertilizer', 'soil', 'pesticide-free', 'iyarkai', 'organic farming'],
+  'AGR/Q1201': ['nursery', 'plants', 'gardening', 'sapling', 'horticulture', 'grafting', 'greenhouse', 'garden', 'flower'],
+  'AHC/Q0401': ['livestock', 'dairy', 'cow', 'cattle', 'milk', 'goat', 'sheep', 'poultry', 'chicken', 'animal', 'veterinary', 'pashu', 'maadu', 'aadu', 'paal'],
+  'BWS/Q0201': ['beauty', 'beautician', 'parlour', 'parlor', 'makeup', 'skincare', 'hair', 'salon', 'facial', 'bridal', 'grooming'],
+  'BWS/Q0501': ['mehendi', 'mehndi', 'henna', 'art', 'bridal', 'design', 'maruthani'],
+  'ELE/Q3101': ['electrician', 'electrical', 'wiring', 'wireman', 'switch', 'motor', 'appliances', 'fan', 'light', 'current', 'electric'],
+  'ELE/Q6801': ['solar', 'panel', 'photovoltaic', 'renewable', 'inverter', 'green energy', 'installation', 'sun'],
+  'HSS/Q0601': ['health', 'aide', 'nurse', 'nursing', 'patient', 'elderly', 'hospital', 'caregiving', 'clinic', 'first aid', 'home care', 'maruthuvam'],
+  'AHC/Q1001': ['computer', 'csc', 'vle', 'digital', 'e-governance', 'online', 'typing', 'xerox', 'internet', 'browsing', 'entrepreneur', 'common service centre', 'sevai', 'e-sevai'],
+};
+
 // =============================================================================
 // AHP Criterion Scoring Functions
 // Each returns 0–1. Higher is always better.
@@ -39,56 +61,100 @@ function scoreExistingSkillMatch(
   trade: NSQFTrade,
   profile: ConfirmedProfile
 ): { score: number; matched: string[]; unmatched: string[] } {
-  const allBeneficiarySkills = [
+  const beneficiarySkills = [
     ...(profile.skills_and_interests?.existing_skills ?? []),
     ...(profile.skills_and_interests?.informal_skills ?? []),
     ...(profile.skills_and_interests?.traditional_skills ?? []),
-    ...(profile.family_occupation?.transferable_skills ?? []),
   ].map(s => s.toLowerCase());
 
+  const transferable = (profile.family_occupation?.transferable_skills ?? []).map(s => s.toLowerCase());
   const required = trade.required_skills.map(s => s.toLowerCase());
+  const synonyms = (TRADE_SKILL_SYNONYMS[trade.qp_code] || []).map(s => s.toLowerCase());
+  const acquired = trade.skills_acquired.map(s => s.toLowerCase());
+
   if (required.length === 0) return { score: 0.5, matched: [], unmatched: [] };
 
-  // Fuzzy match: check for substring overlap
-  const matched = required.filter(req =>
-    allBeneficiarySkills.some(bs => bs.includes(req) || req.includes(bs))
-  );
-  const score = matched.length / required.length;
+  // 1. Check direct or synonym match for required skills
+  const matchedRequired: string[] = [];
+  const unmatchedRequired: string[] = [];
+
+  for (const req of required) {
+    const isDirect = beneficiarySkills.some(bs => bs.includes(req) || req.includes(bs));
+    const isSynonym = synonyms.some(syn => beneficiarySkills.some(bs => bs.includes(syn) || syn.includes(bs)));
+    if (isDirect || isSynonym) {
+      matchedRequired.push(req);
+    } else {
+      unmatchedRequired.push(req);
+    }
+  }
+
+  // 2. Extra domain alignment from beneficiary skills
+  let domainMatches = 0;
+  for (const bs of beneficiarySkills) {
+    if (synonyms.some(syn => syn.includes(bs) || bs.includes(syn)) ||
+        acquired.some(acq => acq.includes(bs) || bs.includes(acq))) {
+      domainMatches++;
+    }
+  }
+
+  // 3. Modest family transferable skills bonus
+  let familyBonus = 0;
+  for (const fs of transferable) {
+    if (synonyms.some(syn => syn.includes(fs) || fs.includes(syn)) ||
+        required.some(r => r.includes(fs) || fs.includes(r))) {
+      familyBonus = 0.12;
+      break;
+    }
+  }
+
+  const baseRatio = matchedRequired.length / required.length;
+  const domainBonus = Math.min(0.4, domainMatches * 0.15);
+  const score = Math.min(1.0, Math.max(0.1, baseRatio * 0.6 + domainBonus + familyBonus));
 
   return {
     score,
-    matched: matched,
-    unmatched: required.filter(r => !matched.includes(r)),
+    matched: matchedRequired.length > 0 ? matchedRequired : (domainMatches > 0 ? [synonyms[0] || 'domain_skills'] : []),
+    unmatched: unmatchedRequired,
   };
 }
 
 function scoreSkillGapSize(trade: NSQFTrade, profile: ConfirmedProfile): number {
-  const required = trade.required_skills.length;
-  const allSkills = [
-    ...(profile.skills_and_interests?.existing_skills ?? []),
-    ...(profile.skills_and_interests?.informal_skills ?? []),
-    ...(profile.skills_and_interests?.traditional_skills ?? []),
-  ].map(s => s.toLowerCase());
-
-  const matched = trade.required_skills.filter(req =>
-    allSkills.some(bs => bs.includes(req.toLowerCase()) || req.toLowerCase().includes(bs))
-  ).length;
-
-  const gap = required - matched;
-  // Invert: smaller gap = higher score
-  return required === 0 ? 1.0 : 1 - (gap / Math.max(required, 1));
+  const { score } = scoreExistingSkillMatch(trade, profile);
+  // Higher existing skill match corresponds to smaller skill gap
+  return Math.min(1.0, Math.max(0.2, score));
 }
 
 function scoreBeneficiaryInterest(trade: NSQFTrade, profile: ConfirmedProfile): number {
-  if (!profile.skills_and_interests?.interests) return 0.3;
-
-  const interests = profile.skills_and_interests.interests.map(i => i.toLowerCase());
+  const rawInterests = profile.skills_and_interests?.interests || [];
+  const interests = rawInterests.map(i => i.toLowerCase());
   const tradeName = trade.qp_name.toLowerCase();
   const tradeSector = trade.sector.toLowerCase();
+  const synonyms = (TRADE_SKILL_SYNONYMS[trade.qp_code] || []).map(s => s.toLowerCase());
 
-  const hasInterest = interests.some(
-    i => tradeName.includes(i) || tradeSector.includes(i) || i.includes(tradeSector)
-  );
+  // Tokenize interest words
+  const interestWords = interests.flatMap(i => i.replace(/[^\w\s]/g, ' ').split(/\s+/)).filter(w => w.length > 2);
+
+  let interestMatchScore = 0.25; // Default baseline for non-matching trades
+
+  if (interests.length > 0) {
+    // Check direct phrase or substring match
+    const hasPhraseMatch = interests.some(
+      i => tradeName.includes(i) || i.includes(tradeName) ||
+           tradeSector.includes(i) || i.includes(tradeSector) ||
+           synonyms.some(syn => i.includes(syn) || syn.includes(i))
+    );
+
+    // Check individual word matches
+    const wordMatches = interestWords.filter(
+      w => tradeName.includes(w) || tradeSector.includes(w) || synonyms.includes(w)
+    );
+
+    if (hasPhraseMatch || wordMatches.length >= 2) {
+      interestMatchScore = 0.95;
+    } else if (wordMatches.length === 1) {
+      interestMatchScore = 0.75;
+    }
+  }
 
   // Employment preference alignment
   let preferenceScore = 0.5;
@@ -103,7 +169,7 @@ function scoreBeneficiaryInterest(trade: NSQFTrade, profile: ConfirmedProfile): 
     preferenceScore = 0.8;
   }
 
-  return (hasInterest ? 0.8 : 0.3) * 0.4 + preferenceScore * 0.6;
+  return interestMatchScore * 0.6 + preferenceScore * 0.4;
 }
 
 function scoreLocalDemand(

@@ -1,92 +1,8 @@
-import { CaseDetailView, type CaseDetailData } from '@/features/cases';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { CaseDetailView } from '@/features/cases';
 import { getCaseDetail } from '@/lib/recommendation-service';
-
-const SAMPLE_CASE_DATA: CaseDetailData = {
-  case_id: 'KS-2026-00142',
-  district: 'Namakkal',
-  state: 'Tamil Nadu',
-  language: 'Tamil',
-  gender: 'Female',
-  age_group: '18-30',
-  profile: {
-    educational_background: '8th Standard completed, can read and write Tamil',
-    family_occupation: 'Traditional handloom weaving family (3 generations)',
-    current_livelihood: 'Daily wage agricultural labour, seasonal · ~₹4,500/month',
-    skills_and_interests: 'Hand stitching, basic tailoring; interested in garment stitching and food processing',
-    mobility_constraints: 'Can travel up to 10km · Disability/hard to travel · Caregiving · Working',
-    employment_preference: 'Strongly prefers self-employment or home-based work',
-    local_economic_context: 'Textile cluster in Namakkal, weekly market, common service centre available',
-    completeness: 0.95,
-  },
-  recommendations: [
-    {
-      rank: 1,
-      qp_code: 'APP/Q0301',
-      qp_name: "Tailor – Women's and Men's Garment",
-      nsqf_level: 4,
-      pathway_type: 'self_employment',
-      matched_skills: ['Hand stitching', 'Basic stitching', 'Measurement taking'],
-      skills_to_acquire: ['Pattern making', 'Garment fitting', 'Machine embroidery'],
-      confidence: 'high',
-      topsis_score: 0.88,
-      explanation:
-        'Recommended because you already have hand stitching and basic tailoring skills, prefer self-employment, and are near the Namakkal garment cluster (8km).',
-      opportunity: {
-        strength: 'high',
-        source: 'e-Shram & Udyam District Data',
-        date: 'June 2026',
-        evidence: '45 garment and apparel MSMEs active in Namakkal district',
-      },
-      income_range: '₹8,000 – ₹25,000/month',
-      travel_feasible: true,
-      training_hours: 300,
-    },
-    {
-      rank: 2,
-      qp_code: 'FIC/Q5001',
-      qp_name: 'Papad and Ready-to-Eat Products Maker',
-      nsqf_level: 2,
-      pathway_type: 'home_enterprise',
-      matched_skills: ['Traditional cooking', 'Food packaging'],
-      skills_to_acquire: ['Standardized recipes', 'Hygiene standards', 'Local distribution'],
-      confidence: 'high',
-      topsis_score: 0.79,
-      explanation:
-        'Recommended as an optimal home-based enterprise compatible with caregiving duties with steady demand in Namakkal weekly market.',
-      opportunity: {
-        strength: 'medium',
-        source: 'District Industrial Profile',
-        date: 'March 2026',
-        evidence: 'Growing self-help group food enterprises in district',
-      },
-      income_range: '₹4,000 – ₹15,000/month',
-      travel_feasible: true,
-      training_hours: 80,
-    },
-    {
-      rank: 3,
-      qp_code: 'HAN/Q0101',
-      qp_name: 'Handloom Weaver',
-      nsqf_level: 3,
-      pathway_type: 'home_enterprise',
-      matched_skills: ['Traditional weaving knowledge', 'Artistic sense'],
-      skills_to_acquire: ['Handloom operation', 'Natural dyeing', 'Design replication'],
-      confidence: 'medium',
-      topsis_score: 0.65,
-      explanation:
-        "Aligns with your family's 3-generation weaving tradition. Medium confidence due to yarn supply fluctuations; recommended with cooperative linkage.",
-      opportunity: {
-        strength: 'medium',
-        source: 'e-Shram District Data',
-        date: 'March 2026',
-        evidence: '14 handloom cooperative societies active in district',
-      },
-      income_range: '₹6,000 – ₹20,000/month',
-      travel_feasible: true,
-      training_hours: 180,
-    },
-  ],
-};
 
 export const dynamic = 'force-dynamic';
 
@@ -103,8 +19,22 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     console.error(`Error loading live case detail for ${targetId}:`, err);
   }
 
-  // Benchmark fallback
-  const caseId = targetId === '1' ? 'KS-2026-00142' : targetId.length > 5 && targetId.startsWith('KS-') ? targetId : `KS-2026-${targetId.padStart(5, '0')}`;
-  const caseData = { ...SAMPLE_CASE_DATA, case_id: caseId };
-  return <CaseDetailView caseData={caseData} />;
+  return (
+    <div className="max-w-3xl mx-auto py-16 px-4 text-center">
+      <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 mx-auto mb-4">
+        <AlertCircle className="w-8 h-8" />
+      </div>
+      <h1 className="text-2xl font-bold text-[#0B3064] mb-2 font-display">Case Not Found</h1>
+      <p className="text-slate-600 mb-6 text-sm">
+        No case record found for identifier <code className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-800">{targetId}</code>.
+      </p>
+      <Link
+        href="/officer/cases"
+        className="inline-flex items-center gap-2 bg-[#0B3064] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#144282] transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Return to Case Queue</span>
+      </Link>
+    </div>
+  );
 }

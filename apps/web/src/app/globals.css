@@ -73,7 +73,11 @@ h1, h2, h3, h4, .font-display {
 }
 
 .font-sans {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans) !important;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
 }
 
 
@@ -107,5 +111,27 @@ h1, h2, h3, h4, .font-display {
   }
   .interactive-tap:active {
     transform: scale(0.98);
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    background-image: none !important;
+    color: black !important;
+  }
+  nav, header, aside, .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .glass-card {
+    background: white !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
   }
 }

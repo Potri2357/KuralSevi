@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -10,26 +10,62 @@ import {
   Download,
   Settings,
   AlertTriangle,
+  CheckCircle2,
   Menu,
   X,
   PhoneCall,
 } from 'lucide-react';
 
-import { IndicEar } from '@/components/icons/indic';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { href: '/officer', label: 'Overview', icon: LayoutDashboard, exact: true },
-  { href: '/officer/cases', label: 'Queue', icon: Inbox, badge: '23' },
-  { href: '/officer/planning', label: 'Planning', icon: BarChart3 },
-  { href: '/officer/beneficiary/new', label: 'Intake', icon: UserPlus },
-  { href: '/officer/export', label: 'Export', icon: Download },
-  { href: '/admin', label: 'Admin', icon: Settings },
-];
 
 export function TopNav() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [counts, setCounts] = useState<{ total: number; pending: number; slaBreached: number } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadDocketStats() {
+      try {
+        const res = await fetch('/api/cases', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const cases = data.cases || [];
+          const total = cases.length;
+          const pending = cases.filter((c: any) => c.officer_action === 'pending').length;
+          const slaBreached = cases.filter(
+            (c: any) => c.officer_action === 'pending' && new Date(c.sla_deadline) < new Date()
+          ).length;
+          if (isMounted) {
+            setCounts({ total, pending, slaBreached });
+          }
+        }
+      } catch (err) {
+        // silent fallback
+      }
+    }
+
+    loadDocketStats();
+    // Fast refresh for live call updates
+    const timer = setInterval(loadDocketStats, 4000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [pathname]);
+
+  const queueBadge = counts !== null ? (counts.pending > 0 ? String(counts.pending) : '0') : '0';
+  const slaCount = counts !== null ? counts.slaBreached : 0;
+
+  const navItems = [
+    { href: '/officer', label: 'Overview', icon: LayoutDashboard, exact: true },
+    { href: '/officer/cases', label: 'Queue', icon: Inbox, badge: queueBadge },
+    { href: '/officer/calls', label: 'Calls', icon: PhoneCall },
+    { href: '/officer/planning', label: 'Planning', icon: BarChart3 },
+    { href: '/officer/beneficiary/new', label: 'Intake', icon: UserPlus },
+    { href: '/officer/export', label: 'Export', icon: Download },
+    { href: '/admin', label: 'Admin', icon: Settings },
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.05)] transition-all">
@@ -63,7 +99,7 @@ export function TopNav() {
             </Link>
           </div>
 
-          {/* Desktop Navigation Tabs: Clean underline indicator & dark pill badges */}
+          {/* Desktop Navigation Tabs: Clean underline indicator & dynamic pill badges */}
           <nav
             className="hidden md:flex items-center gap-6 lg:gap-8 h-full"
             aria-label="Main Navigation"
@@ -85,11 +121,16 @@ export function TopNav() {
                 >
                   <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-[#0B3064]' : 'text-slate-400')} />
                   <span>{item.label}</span>
-                  {item.badge && (
+                  {item.badge !== undefined && (
                     <span
-                      className="text-xs px-2 py-0.5 rounded-full font-bold bg-[#0B3064] text-white ml-0.5"
+                      className={cn(
+                        "text-xs px-2 py-0.5 rounded-full font-bold ml-0.5 transition-colors",
+                        item.badge === '0'
+                          ? "bg-slate-200 text-slate-700"
+                          : "bg-[#0B3064] text-white"
+                      )}
                     >
-                      {item.badge === '23' ? '12' : item.badge}
+                      {item.badge}
                     </span>
                   )}
                 </Link>
@@ -97,28 +138,26 @@ export function TopNav() {
             })}
           </nav>
 
-          {/* Right Actions: 2 SLA Alert Pill + Avatar N */}
+          {/* Right Actions: Dynamic SLA Alert Pill + Avatar N */}
           <div className="flex items-center gap-3 shrink-0">
-            {/* Call Records Dashboard */}
-            <a
-              href="http://localhost:8000/call-records"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#0B3064] bg-[#EAF1FB] hover:bg-[#D9E6F7] border border-[#BACEEB] px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
-              title="Open Call Records & Verified Transcripts Dashboard"
-            >
-              <PhoneCall className="w-3.5 h-3.5 text-[#0B3064] shrink-0" />
-              <span>Call Records</span>
-            </a>
 
-            {/* SLA Alert Badge */}
+            {/* SLA Alert Badge (Live status from real case deadlines) */}
             <Link
               href="/officer/cases?filter=sla_breached"
-              className="flex items-center gap-1.5 text-xs font-bold text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2] px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
-              title="2 cases breach statutory SLA today"
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]",
+                slaCount > 0
+                  ? "text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2]"
+                  : "text-[#0A783C] bg-[#EDF9F1] hover:bg-[#DDF4E4] border border-[#BBE8CB]"
+              )}
+              title={slaCount > 0 ? `${slaCount} case${slaCount > 1 ? 's' : ''} breach statutory SLA today` : "All cases within statutory SLA deadline"}
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-[#E05A1B] shrink-0" />
-              <span>2 SLA</span>
+              {slaCount > 0 ? (
+                <AlertTriangle className="w-3.5 h-3.5 text-[#E05A1B] shrink-0 animate-pulse" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#0A783C] shrink-0" />
+              )}
+              <span>{slaCount} SLA</span>
             </Link>
 
             {/* Officer Avatar Button */}
@@ -155,8 +194,13 @@ export function TopNav() {
                   <Icon className={cn('w-4 h-4', active ? 'text-[#0B3064]' : 'text-slate-400')} />
                   <span>{item.label}</span>
                 </div>
-                {item.badge && (
-                  <span className="text-xs bg-[#FFF4ED] text-[#C24810] border border-[#FDD8C2] px-2 py-0.5 rounded-full font-bold">
+                {item.badge !== undefined && (
+                  <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full font-bold border",
+                    item.badge === '0'
+                      ? "bg-slate-100 text-slate-600 border-slate-200"
+                      : "bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]"
+                  )}>
                     {item.badge}
                   </span>
                 )}

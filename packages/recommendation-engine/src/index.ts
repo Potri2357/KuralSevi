@@ -200,7 +200,7 @@ export async function runRecommendationEngine(
 // Re-export individual stages for testing
 export { applyHardFilters } from './stage1-hard-filter';
 export { findSimilarTrades, generateEmbedding, buildSkillsText } from './stage2-pgvector-search';
-export { rankPathways } from './stage3-ahp-topsis';
+export { rankPathways, TRADE_SKILL_SYNONYMS } from './stage3-ahp-topsis';
 export { computeConfidence } from './confidence';
 export { generateExplanation } from './explanation';
 export * from './ports';

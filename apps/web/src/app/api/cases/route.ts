@@ -1,108 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getAllOfficerCases } from '@/lib/recommendation-service';
-import type { CaseListItem } from '@/features/cases/types';
-
-const BENCHMARK_CASES: CaseListItem[] = [
-  {
-    id: '1',
-    case_id: 'KS-2026-00142',
-    district: 'Namakkal',
-    state: 'Tamil Nadu',
-    confidence: 'high',
-    officer_action: 'pending',
-    days_pending: 1,
-    top_trade: 'Tailoring',
-    qp_code: 'APP/Q0301',
-    nsqf_level: 4,
-    pathway_type: 'self_employment',
-    employment_pref: 'self',
-    has_mobility: false,
-    sla_deadline: new Date(Date.now() + 2 * 86400000).toISOString(),
-    created_at: new Date().toISOString(),
-    consultant_required: false,
-  },
-  {
-    id: '2',
-    case_id: 'KS-2026-00141',
-    district: 'Tiruppur',
-    state: 'Tamil Nadu',
-    confidence: 'medium',
-    officer_action: 'pending',
-    days_pending: 2,
-    top_trade: 'Food Processing Entrepreneur',
-    qp_code: 'FIC/Q0601',
-    nsqf_level: 4,
-    pathway_type: 'self_employment',
-    employment_pref: 'self',
-    has_mobility: false,
-    sla_deadline: new Date(Date.now() + 1 * 86400000).toISOString(),
-    created_at: new Date().toISOString(),
-    consultant_required: false,
-  },
-  {
-    id: '3',
-    case_id: 'KS-2026-00140',
-    district: 'Salem',
-    state: 'Tamil Nadu',
-    confidence: 'needs_officer_review',
-    officer_action: 'pending',
-    days_pending: 3,
-    top_trade: 'Weaving Machine Operator',
-    qp_code: 'TEX/Q4101',
-    nsqf_level: 4,
-    pathway_type: 'wage_employment',
-    employment_pref: 'wage',
-    has_mobility: true,
-    sla_deadline: new Date(Date.now() - 1 * 86400000).toISOString(),
-    created_at: new Date().toISOString(),
-    consultant_required: true,
-  },
-  {
-    id: '4',
-    case_id: 'KS-2026-00139',
-    district: 'Coimbatore',
-    state: 'Tamil Nadu',
-    confidence: 'high',
-    officer_action: 'approved',
-    days_pending: 0,
-    top_trade: 'Beauty Therapist',
-    qp_code: 'BWS/Q0201',
-    nsqf_level: 4,
-    pathway_type: 'self_employment',
-    employment_pref: 'self',
-    has_mobility: false,
-    sla_deadline: new Date(Date.now() + 3 * 86400000).toISOString(),
-    created_at: new Date().toISOString(),
-    consultant_required: false,
-  },
-  {
-    id: '5',
-    case_id: 'KS-2026-00138',
-    district: 'Namakkal',
-    state: 'Tamil Nadu',
-    confidence: 'medium',
-    officer_action: 'pending',
-    days_pending: 4,
-    top_trade: 'Handicraft Weaver',
-    qp_code: 'HAN/Q0101',
-    nsqf_level: 3,
-    pathway_type: 'home_enterprise',
-    employment_pref: 'either',
-    has_mobility: true,
-    sla_deadline: new Date(Date.now() - 4 * 86400000).toISOString(),
-    created_at: new Date().toISOString(),
-    consultant_required: false,
-  },
-];
 
 export async function GET() {
   try {
     const liveCallCases = await getAllOfficerCases();
-    // Prepend live call cases from telephony to the docket
-    const merged = [...liveCallCases, ...BENCHMARK_CASES];
-    return NextResponse.json({ cases: merged, count: merged.length, liveCallsCount: liveCallCases.length });
+    return NextResponse.json({
+      cases: liveCallCases,
+      count: liveCallCases.length,
+      liveCallsCount: liveCallCases.length,
+    });
   } catch (err: any) {
     console.error('Error fetching officer cases:', err);
-    return NextResponse.json({ cases: BENCHMARK_CASES, count: BENCHMARK_CASES.length, error: err?.message }, { status: 200 });
+    return NextResponse.json(
+      { cases: [], count: 0, error: err?.message },
+      { status: 500 }
+    );
   }
 }

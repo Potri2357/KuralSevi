@@ -87,7 +87,7 @@ class GeminiInterviewDriver:
     def __init__(self, api_key: str, model: str = "gemini-2.5-flash", mock_mode: bool = False):
         self.mock_mode = mock_mode
         self.candidate_models = [settings.gemini_model or "gemini-2.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
-        self.fastest_provider: str = "groq"
+        self.fastest_provider: str = "gemini"
         self._last_probe: float = 0.0
         if not mock_mode:
             genai.configure(api_key=api_key)
@@ -118,7 +118,7 @@ class GeminiInterviewDriver:
                 if r.status_code == 200:
                     return "groq", time.perf_counter() - t0
                 elif r.status_code == 429:
-                    circuit_breaker.trip("groq", "429 Rate Limit", cooldown=20.0)
+                    circuit_breaker.trip("groq", "429 Rate Limit", cooldown=60.0)
             except Exception as e:
                 if isinstance(e, (httpx.ConnectError, httpx.NetworkError)) or "Connection reset" in str(e):
                     circuit_breaker.trip("groq", "Connection Reset / Blocked", cooldown=60.0)
@@ -138,8 +138,10 @@ class GeminiInterviewDriver:
                 )
                 if r.status_code == 200:
                     return "openrouter", time.perf_counter() - t0
+                elif r.status_code in (401, 402, 403):
+                    circuit_breaker.trip("openrouter", f"HTTP {r.status_code} Auth/Credits Exhausted", cooldown=3600.0)
                 elif r.status_code == 429:
-                    circuit_breaker.trip("openrouter", "429 Rate Limit", cooldown=20.0)
+                    circuit_breaker.trip("openrouter", "429 Rate Limit", cooldown=60.0)
             except Exception as e:
                 logger.warning(f"OpenRouter probe failed: {e}")
             return "openrouter", 999.0
@@ -165,7 +167,7 @@ class GeminiInterviewDriver:
             self.fastest_provider = valid[0][0]
             logger.info(f"[AI HEALTH PROBE] Fastest available AI: {self.fastest_provider.upper()} ({valid[0][1]:.3f}s)")
         else:
-            self.fastest_provider = "groq" if settings.groq_api_key else "gemini"
+            self.fastest_provider = "gemini"
             logger.info(f"[AI HEALTH PROBE] Fallback fastest provider: {self.fastest_provider}")
         return self.fastest_provider
 
@@ -233,12 +235,12 @@ class GeminiInterviewDriver:
         last_err = None
         history = getattr(session, "conversation_history", [])
 
-        # Use current healthy provider without firing redundant dummy probe requests during active turns
-        ordered_providers = ["groq", "openrouter", "gemini"]
-        if getattr(self, "fastest_provider", "groq") == "openrouter":
-            ordered_providers = ["openrouter", "groq", "gemini"]
-        elif getattr(self, "fastest_provider", "groq") == "gemini":
-            ordered_providers = ["gemini", "openrouter", "groq"]
+        # Gemini 2.5 Flash is primary ultra-low latency (<0.8s) sovereign provider with high active quota
+        ordered_providers = ["gemini", "groq", "openrouter"]
+        if getattr(self, "fastest_provider", "gemini") == "groq" and circuit_breaker.is_available("groq"):
+            ordered_providers = ["groq", "gemini", "openrouter"]
+        elif getattr(self, "fastest_provider", "gemini") == "openrouter" and circuit_breaker.is_available("openrouter"):
+            ordered_providers = ["openrouter", "gemini", "groq"]
 
         for prov in ordered_providers:
             if raw_text:
@@ -406,8 +408,11 @@ class GeminiInterviewDriver:
                 content = data["choices"][0]["message"]["content"]
                 logger.info(f"OpenRouter fallback succeeded using model {chosen_model}")
                 return content
+            elif resp.status_code in (401, 402, 403):
+                circuit_breaker.trip("openrouter", f"HTTP {resp.status_code} Credits / Payment Required", cooldown=3600.0)
+                return None
             elif resp.status_code == 429:
-                circuit_breaker.trip("openrouter", "429 Rate Limit", cooldown=15.0)
+                circuit_breaker.trip("openrouter", "429 Rate Limit", cooldown=60.0)
                 return None
             else:
                 logger.warning(f"OpenRouter API error ({resp.status_code}): {resp.text}")

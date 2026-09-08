@@ -58,7 +58,14 @@ export function DistrictPlanningView({ data }: Props) {
           value={data.completedProfiles}
           accent="green"
           icon={<CheckCircle2 className="w-5 h-5 text-[#0A783C]" />}
-          trend={{ value: 24, label: 'vs last cycle' }}
+          trend={
+            data.totalBeneficiaries > 0
+              ? {
+                  value: Math.round((data.completedProfiles / data.totalBeneficiaries) * 100),
+                  label: 'completion rate',
+                }
+              : undefined
+          }
         />
         <StatCard
           id="plan-mobility"

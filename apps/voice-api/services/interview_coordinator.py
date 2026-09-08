@@ -65,15 +65,126 @@ def get_completed_calls_records() -> list[dict]:
         sanitized.append(r_copy)
     return sanitized
 
-def confirm_case_from_citizen(phone: str, channel: str = "SMS") -> Optional[dict]:
+CATALOG_COURSES = [
+    {
+        "rank": 1,
+        "qp_code": "LSS/Q2301",
+        "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
+        "nsqf_level": 4,
+        "keywords": ["செருப்பு", "பாதணி", "தோல்", "சப்பல்", "காலணி", "footwear", "shoe", "shoes", "chappal", "leather", "जूता", "चप्पल", "பாதரக்ஷలు"],
+        "duration_hours": 240,
+    },
+    {
+        "rank": 2,
+        "qp_code": "AGR/Q4301",
+        "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "nsqf_level": 3,
+        "keywords": ["poultry", "farmer", "chicken", "farm", "கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "broiler", "விவசாயம்", "முட்டை"],
+        "duration_hours": 160,
+    },
+    {
+        "rank": 3,
+        "qp_code": "RAS/Q0104",
+        "qp_name": "Retail Sales Associate / Shopkeeper",
+        "nsqf_level": 3,
+        "keywords": ["retail", "shop", "grocery", "store", "vendor", "மளிகை", "கடை", "வியாபாரம்", "kirana", "மல்லிகை", "கடைக்காரர்"],
+        "duration_hours": 120,
+    },
+    {
+        "rank": 4,
+        "qp_code": "AGR/Q4101",
+        "qp_name": "Dairy Farmer & Milk Processing Operator",
+        "nsqf_level": 3,
+        "keywords": ["பால்", "மாடு", "ஆடு", "dairy", "milk", "cattle", "பண்ணை", "கறவை"],
+        "duration_hours": 150,
+    },
+    {
+        "rank": 5,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Tailor - Garment Construction",
+        "nsqf_level": 4,
+        "keywords": ["tailor", "stitching", "garment", "sewing", "தையல்", "ஆடை", "துணி", "dress"],
+        "duration_hours": 300,
+    },
+    {
+        "rank": 6,
+        "qp_code": "ASC/Q1401",
+        "qp_name": "Automotive Service Technician (Two-Wheeler)",
+        "nsqf_level": 4,
+        "keywords": ["mechanic", "bike", "auto", "மெக்கானிக்", "பைக்", "வண்டி", "டூவீலர்", "workshop"],
+        "duration_hours": 240,
+    },
+    {
+        "rank": 7,
+        "qp_code": "BWS/Q0201",
+        "qp_name": "Beauty Therapist & Salon Stylist",
+        "nsqf_level": 4,
+        "keywords": ["beauty", "parlour", "salon", "therapy", "makeup", "அழகு", "சலூன்", "skin"],
+        "duration_hours": 300,
+    },
+    {
+        "rank": 8,
+        "qp_code": "ELE/Q3104",
+        "qp_name": "Field Technician - Home Appliances & Wiring",
+        "nsqf_level": 4,
+        "keywords": ["electric", "appliance", "technician", "repair", "motor", "மின்சாரம்", "mechanic", "வயரிங்"],
+        "duration_hours": 240,
+    },
+    {
+        "rank": 9,
+        "qp_code": "FIC/Q0201",
+        "qp_name": "Food Catering & Pickle Making Technician",
+        "nsqf_level": 3,
+        "keywords": ["food", "pickle", "cooking", "catering", "உணவு", "ஊறுகாய்", "சமையல்", "ஹோட்டல்", "சாப்பாடு"],
+        "duration_hours": 150,
+    },
+    {
+        "rank": 10,
+        "qp_code": "MEP/Q0101",
+        "qp_name": "Micro-Enterprise & Rural Store Operator",
+        "nsqf_level": 4,
+        "keywords": ["business", "enterprise", "தொழில்", "சொந்த", "வியாபாரம்", "பிசினஸ்", "முதலீடு"],
+        "duration_hours": 180,
+    },
+]
+
+def compute_top_recommended_courses(confirmed_fields: dict, transcript: Optional[list] = None) -> list[dict]:
+    """Scores NSQF trade catalog against citizen profile fields AND full conversation transcript for genuine personalized recommendations."""
+    parts = [str(v).lower() for v in confirmed_fields.values()]
+    if transcript:
+        for t in transcript:
+            if isinstance(t, dict):
+                user_say = t.get("user") or ""
+                if user_say:
+                    parts.append(user_say.lower())
+    text_corpus = " ".join(parts)
+    
+    scored = []
+    for c in CATALOG_COURSES:
+        score = 0
+        for kw in c["keywords"]:
+            if kw.lower() in text_corpus:
+                score += 10
+        scored.append((score, c))
+    
+    # Sort descending by score, maintaining catalog order as secondary key
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top3 = [dict(x[1]) for x in scored[:3]]
+    for idx, item in enumerate(top3, 1):
+        item["rank"] = idx
+    return top3
+
+def confirm_case_from_citizen(phone: str, channel: str = "SMS", reply_text: str = "") -> Optional[dict]:
     """
     Two-way feedback loop: Promotes a completed case to BENEFICIARY_CONFIRMED
-    when the citizen replies YES / சரி / हाँ via SMS or WhatsApp.
+    when the citizen replies YES / சரி / அல்லது 1, 2, 3 via SMS or WhatsApp.
+    Captures citizen's selected course preference if 1, 2, or 3 is provided.
     """
     clean_phone = phone.replace("whatsapp:", "").strip()
     clean_digits = "".join(c for c in clean_phone if c.isdigit())
+    text_lower = (reply_text or "").lower().strip()
     
-    for rec in _completed_calls_records:
+    for rec in reversed(_completed_calls_records):
         rec_phone = rec.get("phone", "").replace("whatsapp:", "").strip()
         rec_digits = "".join(c for c in rec_phone if c.isdigit())
         
@@ -83,10 +194,34 @@ def confirm_case_from_citizen(phone: str, channel: str = "SMS") -> Optional[dict
             rec["citizen_confirmed"] = True
             rec["confirmed_via"] = channel.upper()
             rec["confirmed_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+            # Determine citizen course choice (1, 2, 3 or default top course)
+            choice_num = 1
+            if "3" in text_lower or "three" in text_lower or "மூன்று" in text_lower:
+                choice_num = 3
+            elif "2" in text_lower or "two" in text_lower or "இரண்டு" in text_lower:
+                choice_num = 2
+            elif "1" in text_lower or "one" in text_lower or "ஒன்று" in text_lower:
+                choice_num = 1
+
+            courses = rec.get("recommended_courses") or compute_top_recommended_courses(rec.get("confirmed_fields", {}))
+            selected_course = courses[choice_num - 1]["qp_name"] if len(courses) >= choice_num else "NSQF Vocational Track"
+            
+            rec["citizen_selected_choice"] = choice_num
+            rec["citizen_selected_course"] = selected_course
+            rec["recommended_courses"] = courses
+
             _save_persisted_records()
-            logger.info(f"Case {rec.get('case_id')} marked as BENEFICIARY_CONFIRMED via {channel} by {phone}")
+            logger.info(f"Case {rec.get('case_id')} marked as BENEFICIARY_CONFIRMED (Choice {choice_num}: {selected_course}) via {channel} by {phone}")
             return rec
     return None
+
+def clear_completed_calls_records():
+    """Erases all completed call records from memory and disk for fresh start."""
+    global _completed_calls_records
+    _completed_calls_records = []
+    _save_persisted_records()
+    logger.info("Erased all completed call records.")
 
 @dataclass
 class CoordinatorTurnResult:
@@ -135,9 +270,8 @@ def _get_static_bytes(filename: str) -> Optional[bytes]:
 
 def _infer_semantic_fields_fast(user_speech: str, language_code: str) -> Dict[str, str]:
     """
-    Fast semantic co-inference across rural livelihood fields.
-    Extracts multi-field answers (e.g. Farming implies both family trade and current work)
-    in pure English to prevent AI repetition and ensure dashboard data is cleanly standardized.
+    Fast semantic helper across rural livelihood domains.
+    Provides candidate mappings without prematurely completing unasked questions.
     """
     text = (user_speech or "").lower().strip()
     extracted = {}
@@ -151,69 +285,34 @@ def _infer_semantic_fields_fast(user_speech: str, language_code: str) -> Dict[st
     ]
     if any(k in text for k in farming_tokens):
         extracted["family_occupation"] = "Agriculture / Farming"
-        extracted["current_livelihood"] = "Agricultural labour / Farming"
+
+    # Poultry
+    poultry_tokens = ["கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "broiler", "poultry", "chicken", "farm"]
+    if any(k in text for k in poultry_tokens):
+        extracted["skills_and_interests"] = "Small Poultry Farming"
 
     # Weaving / Handloom
     weaving_tokens = ["நெசவு", "கைத்தறி", "చేనేత", "మగ్గం", "बुनकर", "हथकरघा", "നെയ്ത്ത്"]
     if any(k in text for k in weaving_tokens):
         extracted["family_occupation"] = "Weaving / Handloom"
-        extracted["current_livelihood"] = "Weaving trade"
 
     # Cooking / Catering / Hotel
     cooking_tokens = [
         "பிரியாணி", "சமையல்", "ஹோட்டல்", "சாப்பாடு", "மாஸ்டர்", "கேட்டரிங்",
-        "പാചക", "ബിരിയാണി", "ഹോട്ടൽ", "ഷെഫ്", "ഭക്ഷണ",
-        "रसोई", "खाना", "होटल", "बावर्ची", "कुक", "बिरयानी",
-        "వంట", "హోటల్", "బిర్యానీ", "భోజనం"
+        "പാചക", "ബിരിയാണി", "ഹോട്ടൽ", "खाना", "होटल", "रसोई", "వంట"
     ]
     if any(k in text for k in cooking_tokens):
         extracted["skills_and_interests"] = "Cooking & Catering"
 
-    # Driving / Transport
-    driving_tokens = [
-        "டிரைவர்", "வண்டி", "ஆட்டோ", "கார்", "ஓட்டுநர்", "லாரி", "டிராக்டர்",
-        "ഡ്രൈവർ", "ഓട്ടോ", "കാർ", "ലോറി", "ട്രാക്ടർ",
-        "ड्राइवर", "गाड़ी", "ऑटो", "कार", "ट्रक", "चालक", "ट्रैक्टर",
-        "డ్రైవర్", "ఆటో", "కారు", "లారీ", "ట్రాక్టర్"
-    ]
-    if any(k in text for k in driving_tokens):
-        extracted["skills_and_interests"] = "Driving & Commercial Transport"
-
-    # Vegetable / Produce Selling
-    vegetable_tokens = ["காய்கறி", "பழம்", "சந்தை", "सब्जी", "కూరగాయలు", "పച്ചக்கறி"]
-    if any(k in text for k in vegetable_tokens) and any(j in text for j in ["கடை", "விற்பனை", "வியாபாரம்", "दुकान", "షాపు", "കച്ചവടം"]):
-        extracted["skills_and_interests"] = "Vegetable & Retail Selling"
-        extracted["employment_preference"] = "Self-Employment (Own Shop / Enterprise)"
-        extracted["mobility_constraints"] = "Local area / Prefers establishing local enterprise"
+    # Footwear / Leather Goods
+    footwear_tokens = ["செருப்பு", "பாதணி", "சப்பல்", "காலணி", "தோல்", "footwear", "chappal", "shoe", "leather", "shoes", "जूता", "चप्पल", "పాదరక్షలు"]
+    if any(k in text for k in footwear_tokens):
+        extracted["skills_and_interests"] = "Footwear & Leather Goods Specialist"
 
     # Grocery / Kirana
     grocery_tokens = ["மளிகை", "கிராணா", "किराना", "కిరాణా", "പലചരക്ക്"]
     if any(k in text for k in grocery_tokens):
         extracted["skills_and_interests"] = "Grocery Store / Retail Trade"
-        extracted["employment_preference"] = "Self-Employment (Own Shop / Enterprise)"
-        extracted["mobility_constraints"] = "Local area / Prefers establishing local enterprise"
-
-    # Self employment / Shop / Business
-    business_tokens = [
-        "கடை", "சொந்த", "வியாபாரம்", "தொழில்", "பிசினஸ்",
-        "கட", "ബിസിനസ്", "സ്ഥാപനം", "കച്ചവടം", "സ്വന്തമായി",
-        "दुकान", "व्यापार", "बिजनेस", "खुद का काम", "दुकान शुरू",
-        "దుకాణం", "షాపు", "సొంత వ్యాపారం", "బిజినెస్", "సొంతంగా"
-    ]
-    if any(k in text for k in business_tokens):
-        extracted["employment_preference"] = "Self-Employment (Own Shop / Enterprise)"
-        if "mobility_constraints" not in extracted:
-            extracted["mobility_constraints"] = "Local area / Prefers establishing local enterprise"
-
-    # Village commerce / Local market
-    market_tokens = [
-        "சந்தை", "டவுன்", "கடைங்க", "அங்காடி",
-        "ചന്ത", "അങ്ങാടി", "മാക്കറ്റ്", "മാർക്കറ്റ്",
-        "बाजार", "मंडी", "दुकानें",
-        "సంత", "మార్కెట్", "దుకాణాలు"
-    ]
-    if any(k in text for k in market_tokens):
-        extracted["local_economic_context"] = "Local Village Market / Commerce"
 
     return extracted
 
@@ -738,15 +837,15 @@ class InterviewCoordinator:
                 session.fields[current_field].value = normalize_field_to_english(current_field, user_speech.strip(), lang)
                 session.fields[current_field].raw_transcript = user_speech.strip()
 
-            # 2. Fast Multi-Field Semantic Co-Inference & Auto-Confirmation
-            # Automatically marks correlated fields (e.g. farming marks family_occ and current_work)
+            # 2. Fast Multi-Field Semantic Co-Inference
+            # Populates candidate values without prematurely marking unasked dimensions as confirmed
             inferred = _infer_semantic_fields_fast(user_speech, lang)
             for inf_key, inf_val in inferred.items():
-                if inf_key in session.fields:
-                    session.fields[inf_key].status = "confirmed"
+                if inf_key in session.fields and session.fields[inf_key].status != "confirmed":
                     session.fields[inf_key].value = normalize_field_to_english(inf_key, inf_val, lang)
+                    # Keep status as 'pending' so advance_to_next_field asks the citizen!
 
-            # Advance to next uncollected field (skips already-confirmed/inferred fields!)
+            # Advance to next uncollected field
             session.advance_to_next_field()
             next_field = session.current_field
 
@@ -793,6 +892,9 @@ class InterviewCoordinator:
                     "turns_count": len(getattr(session, "transcript_turns", [])),
                     "transcript": getattr(session, "transcript_turns", []),
                 }
+                top_courses = compute_top_recommended_courses(confirmed_dict, getattr(session, "transcript_turns", []))
+                record["recommended_courses"] = top_courses
+
                 _completed_calls_records.insert(0, record)
                 if len(_completed_calls_records) > 100:
                     _completed_calls_records.pop()
@@ -805,6 +907,7 @@ class InterviewCoordinator:
                     case_id=case_id,
                     confirmed_fields=confirmed_dict,
                     caller_name=getattr(session, "caller_name", None),
+                    recommended_courses=top_courses,
                 ))
 
                 if key in self._active_sessions:

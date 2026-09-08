@@ -42,6 +42,16 @@ export const metadata: Metadata = {
   description: 'AI-driven voice assistant for livelihood mapping and NSQF-aligned skilling recommendations for SC communities under PM-AJAY GIA.',
   keywords: ['PM-AJAY', 'NSQF', 'livelihood', 'skilling', 'SC communities', 'GIA', 'Tamil Nadu', 'Voice AI'],
   robots: { index: false, follow: false },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Kural Sevi',
+  },
+  icons: {
+    icon: '/icons/kural-sevi-logo.svg',
+    apple: '/icons/kural-sevi-logo.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -153,23 +153,43 @@ export function MotionGraph({
 
   // Compute coordinate geometry
   const geometry = useMemo(() => {
-    const values = pointsData.map((p) => p.value);
+    // If only 1 data point provided, synthesize a 2-point flat baseline so sparkline renders smoothly without NaN
+    const pts =
+      pointsData.length === 1
+        ? [
+            { label: 'Start', value: pointsData[0].value },
+            { label: pointsData[0].label || 'Current', value: pointsData[0].value },
+          ]
+        : pointsData.length === 0
+        ? [
+            { label: 'Start', value: 0 },
+            { label: 'Current', value: 0 },
+          ]
+        : pointsData;
+
+    const values = pts.map((p) => (isNaN(p.value) ? 0 : p.value));
     const minVal = Math.min(...values);
     const maxVal = Math.max(...values);
     const range = maxVal - minVal || 1;
 
     const availableHeight = VIEW_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+    const divisor = Math.max(1, pts.length - 1);
 
-    const coords = pointsData.map((pt, index) => {
-      const x = (index / (pointsData.length - 1)) * VIEW_WIDTH;
+    const coords = pts.map((pt, index) => {
+      const rawX = (index / divisor) * VIEW_WIDTH;
+      const x = isNaN(rawX) ? 0 : rawX;
       // Invert Y for SVG coordinates
-      const y = PADDING_TOP + availableHeight - ((pt.value - minVal) / range) * availableHeight;
+      const rawY =
+        PADDING_TOP +
+        availableHeight -
+        (((isNaN(pt.value) ? 0 : pt.value) - minVal) / range) * availableHeight;
+      const y = isNaN(rawY) ? PADDING_TOP + availableHeight / 2 : rawY;
       return { x, y, data: pt };
     });
 
     const linePath = buildCurvedPath(coords);
-    const lastCoord = coords[coords.length - 1];
-    const firstCoord = coords[0];
+    const lastCoord = coords[coords.length - 1] || { x: VIEW_WIDTH, y: VIEW_HEIGHT / 2, data: { value: 0, label: '' } };
+    const firstCoord = coords[0] || { x: 0, y: VIEW_HEIGHT / 2, data: { value: 0, label: '' } };
 
     // Close path along bottom edge for gradient area fill
     const areaPath = `${linePath} L ${lastCoord.x},${VIEW_HEIGHT} L ${firstCoord.x},${VIEW_HEIGHT} Z`;
@@ -177,15 +197,19 @@ export function MotionGraph({
     return { coords, linePath, areaPath, lastCoord };
   }, [pointsData, VIEW_HEIGHT]);
 
+  const fallbackCoord = { x: 0, y: VIEW_HEIGHT / 2, data: { value: 0, label: '' } };
   // Active point when hovering, or default to the latest point
-  const activeCoord = hoverIndex !== null ? geometry.coords[hoverIndex] : geometry.lastCoord;
+  const activeCoord =
+    (hoverIndex !== null ? geometry.coords[hoverIndex] : geometry.lastCoord) ||
+    geometry.coords[0] ||
+    fallbackCoord;
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || geometry.coords.length <= 1) return;
     const rect = containerRef.current.getBoundingClientRect();
     const relativeX = e.clientX - rect.left;
     const clampedRatio = Math.max(0, Math.min(1, relativeX / rect.width));
-    const targetIndex = Math.round(clampedRatio * (pointsData.length - 1));
+    const targetIndex = Math.round(clampedRatio * (geometry.coords.length - 1));
     setHoverIndex(targetIndex);
   };
 
@@ -264,7 +288,7 @@ export function MotionGraph({
         />
 
         {/* Interactive Scrubbing Guideline (Visible strictly within graph bounds) */}
-        {hoverIndex !== null && (
+        {hoverIndex !== null && !isNaN(activeCoord.x) && (
           <line
             x1={activeCoord.x}
             y1={0}
@@ -277,14 +301,16 @@ export function MotionGraph({
         )}
 
         {/* Live / Interactive Pulsing Dot */}
-        <g transform={`translate(${activeCoord.x}, ${activeCoord.y})`}>
-          {/* Animated radar sonar ripple */}
-          <circle r="6" fill={style.dotRing} className="animate-ping opacity-60" />
-          {/* Outer halo */}
-          <circle r="4" fill="white" stroke={style.stroke} strokeWidth="2" />
-          {/* Center core */}
-          <circle r="2" fill={style.dot} />
-        </g>
+        {!isNaN(activeCoord.x) && !isNaN(activeCoord.y) && (
+          <g transform={`translate(${activeCoord.x}, ${activeCoord.y})`}>
+            {/* Animated radar sonar ripple */}
+            <circle r="6" fill={style.dotRing} className="animate-ping opacity-60" />
+            {/* Outer halo */}
+            <circle r="4" fill="white" stroke={style.stroke} strokeWidth="2" />
+            {/* Center core */}
+            <circle r="2" fill={style.dot} />
+          </g>
+        )}
       </svg>
 
       {/* Internal Floating HUD Badge Tooltip (Positioned strictly inside graph) */}

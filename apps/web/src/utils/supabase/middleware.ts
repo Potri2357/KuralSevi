@@ -33,8 +33,12 @@ export const updateSession = async (request: NextRequest) => {
     },
   );
 
-  // refreshing the auth token
-  await supabase.auth.getUser();
+  // refreshing the auth token safely without blocking requests if unreachable
+  try {
+    await supabase.auth.getUser();
+  } catch (error) {
+    // Silently ignore auth refresh error when offline or remote instance is unreachable
+  }
 
   return supabaseResponse;
 };
