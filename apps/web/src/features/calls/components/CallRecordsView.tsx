@@ -84,7 +84,7 @@ export function CallRecordsView({ initialCalls }: Props) {
   const [isDialModalOpen, setIsDialModalOpen] = useState(false);
   const [dialModalTab, setDialModalTab] = useState<'single' | 'bulk'>('single');
   const [dialPhone, setDialPhone] = useState('+919342900638');
-  const [dialLanguage, setDialLanguage] = useState('ta');
+  const [dialLanguage, setDialLanguage] = useState('en');
   const [isDialing, setIsDialing] = useState(false);
   const [dialResult, setDialResult] = useState<{
     success: boolean;
@@ -1198,34 +1198,12 @@ export function CallRecordsView({ initialCalls }: Props) {
                   </div>
                 </div>
 
-                {/* Language Selection */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Vernacular Interview Language
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { code: 'ta', name: 'Tamil', native: 'தமிழ்' },
-                      { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
-                      { code: 'te', name: 'Telugu', native: 'తెలుగు' },
-                      { code: 'ml', name: 'Malayalam', native: 'മലയാളം' },
-                    ].map((lang) => (
-                      <button
-                        key={lang.code}
-                        type="button"
-                        onClick={() => setDialLanguage(lang.code)}
-                        className={cn(
-                          'p-2.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
-                          dialLanguage === lang.code
-                            ? 'bg-[#EAF1FB] border-[#0B3064] text-[#0B3064] shadow-xs ring-1 ring-[#0B3064]'
-                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300'
-                        )}
-                      >
-                        <span>{lang.name}</span>
-                        <span className="text-slate-500 font-normal">{lang.native}</span>
-                      </button>
-                    ))}
-                  </div>
+                {/* Auto-Language Detection Notice */}
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#F0F5FD] border border-[#C5D8F6] text-xs text-slate-700">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+                  <p className="leading-snug">
+                    <strong className="text-[#0B3064] font-bold">Dynamic Language Auto-Switch:</strong> The call starts with an English greeting and automatically switches to Tamil, Hindi, Telugu, or Malayalam as the beneficiary speaks.
+                  </p>
                 </div>
 
                 {/* Dial Result Banner */}

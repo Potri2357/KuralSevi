@@ -30,7 +30,7 @@ function getEnvVar(key: string, defaultValue = ''): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    let { phone, language = 'ta' } = body;
+    let { phone, language = 'en' } = body;
 
     if (!phone || typeof phone !== 'string') {
       return NextResponse.json(
