@@ -18,6 +18,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 from typing import Optional
 
 from services.interview_coordinator import InterviewCoordinator, CoordinatorTurnResult, confirm_case_from_citizen
+from services.interview_fsm import InterviewState
 from services.notification_service import FIELD_LABELS
 from services.stt_service import transcribe_audio
 from config import settings
@@ -147,15 +148,16 @@ def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
         response.hangup()
         return response
 
+    is_course_selection = getattr(turn_result, "state", None) == InterviewState.COURSE_SELECTION
     gather = Gather(
         input="speech",
         action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn?language={lang_code}",
         method="POST",
         language=lang_tag,
         speech_timeout="auto",
-        timeout=6,
+        timeout=8 if is_course_selection else 6,
         action_on_empty_result=True,
-        barge_in=True,
+        barge_in=False if is_course_selection else True,
     )
     if turn_result.audio_bytes:
         audio_id = _cache_audio(turn_result.audio_bytes)

@@ -17,6 +17,7 @@ class InterviewState(str, Enum):
     CONSENT_CAPTURED = "consent_captured"
     FIELD_COLLECTION = "field_collection"
     CONFIRMATION = "confirmation"
+    COURSE_SELECTION = "course_selection"
     COMPLETED = "completed"
     ABANDONED = "abandoned"
     DROPPED = "dropped"
@@ -64,6 +65,9 @@ class InterviewSession:
     caller_place: Optional[str] = None
     identity_asked: bool = False
     identity_confirmed: bool = False
+    recommended_courses: list[dict] = field(default_factory=list)
+    citizen_selected_course: Optional[str] = None
+    citizen_selected_choice: Optional[int] = None
     
     @property
     def current_field(self) -> Optional[str]:
@@ -194,6 +198,14 @@ class InterviewFSM:
             s.dropped_at = kwargs.get("dropped_at")
             s.state = InterviewState.DROPPED
         
+        elif event == "course_selection_started":
+            s.state = InterviewState.COURSE_SELECTION
+
+        elif event == "course_selected":
+            s.citizen_selected_course = kwargs.get("selected_course")
+            s.citizen_selected_choice = kwargs.get("choice_idx")
+            s.state = InterviewState.COMPLETED
+
         elif event == "call_resumed":
             s.resume_from_last_confirmed()
             if s.consent_given:
@@ -208,6 +220,13 @@ class InterviewFSM:
         """Returns context for the LLM to generate the next question."""
         if self.session.state == InterviewState.CONSENT_PENDING:
             return {"action": "ask_consent", "language": self.session.language_code}
+        
+        if self.session.state == InterviewState.COURSE_SELECTION:
+            return {
+                "action": "select_course",
+                "language": self.session.language_code,
+                "recommended_courses": self.session.recommended_courses,
+            }
         
         if self.session.state == InterviewState.FIELD_COLLECTION:
             field_name = self.session.current_field

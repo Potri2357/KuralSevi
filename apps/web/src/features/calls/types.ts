@@ -44,6 +44,10 @@ export interface CallRecordItem {
   confirmed_via?: string;
   confirmed_at?: string;
   top_recommendation?: CallRecommendationSummary;
+  recommended_courses?: any[];
+  citizen_selected_course?: string;
+  citizen_selected_choice?: number;
+  beneficiary_name?: string;
   officer_action?: 'pending' | 'approved' | 'modified' | 'rejected';
 }
 

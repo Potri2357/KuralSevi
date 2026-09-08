@@ -70,6 +70,10 @@ CATALOG_COURSES = [
         "rank": 1,
         "qp_code": "LSS/Q2301",
         "qp_name": "Footwear & Leather Goods Specialist / Shopkeeper",
+        "ta_name": "தோல் மற்றும் காலணி தயாரிப்பு பயிற்சி",
+        "hi_name": "चमड़ा और जूता निर्माण प्रशिक्षण",
+        "ml_name": "ലെതർ, പാദരക്ഷാ നിർമ്മാണ പരിശീലനം",
+        "te_name": "పాదరక్షలు మరియు లెదర్ వస్తువుల తయారీ శిక్షణ",
         "nsqf_level": 4,
         "keywords": ["செருப்பு", "பாதணி", "தோல்", "சப்பல்", "காலணி", "footwear", "shoe", "shoes", "chappal", "leather", "जूता", "चप्पल", "பாதரக்ஷలు"],
         "duration_hours": 240,
@@ -78,6 +82,10 @@ CATALOG_COURSES = [
         "rank": 2,
         "qp_code": "AGR/Q4301",
         "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
+        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
+        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
+        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
         "nsqf_level": 3,
         "keywords": ["poultry", "farmer", "chicken", "farm", "கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "broiler", "விவசாயம்", "முட்டை"],
         "duration_hours": 160,
@@ -86,6 +94,10 @@ CATALOG_COURSES = [
         "rank": 3,
         "qp_code": "RAS/Q0104",
         "qp_name": "Retail Sales Associate / Shopkeeper",
+        "ta_name": "மளிகை மற்றும் சில்லறை விற்பனைக் கடை பயிற்சி",
+        "hi_name": "किराना दुकान और खुदरा बिक्री प्रशिक्षण",
+        "ml_name": "റീട്ടെയിൽ വിൽപന, പലചരക്ക് കട പരിശീലനം",
+        "te_name": "కిరాణా దుకాణం మరియు రిటైల్ అమ్మకాల శిక్షణ",
         "nsqf_level": 3,
         "keywords": ["retail", "shop", "grocery", "store", "vendor", "மளிகை", "கடை", "வியாபாரம்", "kirana", "மல்லிகை", "கடைக்காரர்"],
         "duration_hours": 120,
@@ -94,6 +106,10 @@ CATALOG_COURSES = [
         "rank": 4,
         "qp_code": "AGR/Q4101",
         "qp_name": "Dairy Farmer & Milk Processing Operator",
+        "ta_name": "கால்நடை வளர்ப்பு மற்றும் பால் பண்ணை பயிற்சி",
+        "hi_name": "डेयरी फार्मिंग और दुग्ध व्यवसाय प्रशिक्षण",
+        "ml_name": "ക്ഷീരകർഷക, പാൽ സംസ്കരണ പരിശീലനം",
+        "te_name": "పాడి పరిశ్రమ మరియు పాల వ్యాపార శిక్షణ",
         "nsqf_level": 3,
         "keywords": ["பால்", "மாடு", "ஆடு", "dairy", "milk", "cattle", "பண்ணை", "கறவை"],
         "duration_hours": 150,
@@ -102,6 +118,10 @@ CATALOG_COURSES = [
         "rank": 5,
         "qp_code": "APP/Q0301",
         "qp_name": "Tailor - Garment Construction",
+        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
+        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
+        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
+        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
         "nsqf_level": 4,
         "keywords": ["tailor", "stitching", "garment", "sewing", "தையல்", "ஆடை", "துணி", "dress"],
         "duration_hours": 300,
@@ -110,6 +130,10 @@ CATALOG_COURSES = [
         "rank": 6,
         "qp_code": "ASC/Q1401",
         "qp_name": "Automotive Service Technician (Two-Wheeler)",
+        "ta_name": "டூவீலர் மெக்கானிக் பயிற்சி",
+        "hi_name": "दोपहिया वाहन मैकेनिक प्रशिक्षण",
+        "ml_name": "ടൂവീലർ മെക്കാനിക്ക് പരിശീലനം",
+        "te_name": "టూవీలర్ మెకానిక్ శిక్షణ",
         "nsqf_level": 4,
         "keywords": ["mechanic", "bike", "auto", "மெக்கானிக்", "பைக்", "வண்டி", "டூவீலர்", "workshop"],
         "duration_hours": 240,
@@ -118,6 +142,10 @@ CATALOG_COURSES = [
         "rank": 7,
         "qp_code": "BWS/Q0201",
         "qp_name": "Beauty Therapist & Salon Stylist",
+        "ta_name": "அழகுக்கலை மற்றும் சலூன் பயிற்சி",
+        "hi_name": "ब्यूटी पार्लर और सैलून प्रशिक्षण",
+        "ml_name": "ബ്യൂട്ടി പാർലർ, സലൂൺ പരിശീലനം",
+        "te_name": "బ్యూటీ పార్లర్ మరియు సెలూన్ శిక్షణ",
         "nsqf_level": 4,
         "keywords": ["beauty", "parlour", "salon", "therapy", "makeup", "அழகு", "சலூன்", "skin"],
         "duration_hours": 300,
@@ -126,6 +154,10 @@ CATALOG_COURSES = [
         "rank": 8,
         "qp_code": "ELE/Q3104",
         "qp_name": "Field Technician - Home Appliances & Wiring",
+        "ta_name": "வீட்டு உபயோக மின்சாதனங்கள் பழுதுநீக்கும் பயிற்சி",
+        "hi_name": "घरेलू बिजली उपकरण मरम्मत प्रशिक्षण",
+        "ml_name": "ഇലക്ട്രിക്കൽ റിപ്പയറിംഗ് പരിശീലനം",
+        "te_name": "గృహోపకరణాల ఎలక్ట్రికల్ మరమ్మతు శిక్షణ",
         "nsqf_level": 4,
         "keywords": ["electric", "appliance", "technician", "repair", "motor", "மின்சாரம்", "mechanic", "வயரிங்"],
         "duration_hours": 240,
@@ -134,6 +166,10 @@ CATALOG_COURSES = [
         "rank": 9,
         "qp_code": "FIC/Q0201",
         "qp_name": "Food Catering & Pickle Making Technician",
+        "ta_name": "உணவு தயாரிப்பு மற்றும் கேட்டரிங் பயிற்சி",
+        "hi_name": "खाद्य प्रसंस्करण और कैटरिंग प्रशिक्षण",
+        "ml_name": "ഭക്ഷണ നിർമ്മാണവും കാറ്ററിംഗും",
+        "te_name": "ఫుడ్ కేటరింగ్ మరియు పచ్చళ్ల తయారీ శిక్షణ",
         "nsqf_level": 3,
         "keywords": ["food", "pickle", "cooking", "catering", "உணவு", "ஊறுகாய்", "சமையல்", "ஹோட்டல்", "சாப்பாடு"],
         "duration_hours": 150,
@@ -142,11 +178,22 @@ CATALOG_COURSES = [
         "rank": 10,
         "qp_code": "MEP/Q0101",
         "qp_name": "Micro-Enterprise & Rural Store Operator",
+        "ta_name": "கிராமப்புற சிறுதொழில் மற்றும் சுயதொழில் பயிற்சி",
+        "hi_name": "ग्रामीण लघु उद्योग और स्वरोजगार प्रशिक्षण",
+        "ml_name": "ചെറുകിട സംരംഭവും സ്വയംതൊഴിലും",
+        "te_name": "చిన్న వ్యాపారం మరియు స్వయం ఉపాధి శిక్షణ",
         "nsqf_level": 4,
         "keywords": ["business", "enterprise", "தொழில்", "சொந்த", "வியாபாரம்", "பிசினஸ்", "முதலீடு"],
         "duration_hours": 180,
     },
 ]
+
+def get_localized_course_name(course: dict, lang: str = "ta") -> str:
+    """Returns the natural conversational course name for the given language."""
+    key = f"{lang}_name"
+    if key in course and course[key]:
+        return course[key]
+    return course.get("ta_name") or course.get("qp_name", "பயிற்சி").split("-")[0].strip()
 
 def compute_top_recommended_courses(confirmed_fields: dict, transcript: Optional[list] = None) -> list[dict]:
     """Scores NSQF trade catalog against citizen profile fields AND full conversation transcript for genuine personalized recommendations."""
@@ -719,6 +766,152 @@ class InterviewCoordinator:
                     language_code=lang,
                 )
 
+        # ── Turn: Interactive Course Selection Response ──────────────────────────
+        if session.state == InterviewState.COURSE_SELECTION:
+            session.turn_count = getattr(session, "turn_count", 0) + 1
+            courses = getattr(session, "recommended_courses", []) or compute_top_recommended_courses(
+                {k: f.value for k, f in session.fields.items() if f.status == "confirmed"},
+                getattr(session, "transcript_turns", [])
+            )
+
+            # If user said nothing / empty audio on course question, reprompt warmly
+            if not user_speech:
+                if lang == "ml":
+                    reprompt_course = "ഹലോ, ശുപാർശ ചെയ്ത രണ്ട് കോഴ്സുകളിൽ ഏതിലാണ് താല്പര്യമെന്ന് പറയാമോ?"
+                elif lang == "hi":
+                    reprompt_course = "नमस्ते, अनुशंसित दो पाठ्यक्रमों में से आपकी किसमें रुचि है, कृपया बताइए?"
+                elif lang == "te":
+                    reprompt_course = "హలో అండీ, సిఫార్సు చేసిన రెండు కోర్సులలో మీకు ఏది ఇష్టమో చెబుతారా?"
+                else:
+                    reprompt_course = "ஹலோங்க, பரிந்துரைக்கப்பட்ட இரண்டு பயிற்சிகளில் உங்களுக்கு எதில் விருப்பம்னு சொல்லுங்க?"
+
+                reprompt_audio = await self._synthesize_safe(reprompt_course, lang, speaker=speaker)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=reprompt_course,
+                    audio_bytes=reprompt_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=None,
+                    language_code=lang,
+                )
+
+            # Determine citizen course choice (1, 2, 3 or matched course keywords)
+            choice_idx = 0
+            c1_keywords = courses[0].get("keywords", []) if len(courses) >= 1 else []
+            c2_keywords = courses[1].get("keywords", []) if len(courses) >= 2 else []
+            c3_keywords = courses[2].get("keywords", []) if len(courses) >= 3 else []
+
+            if any(w in user_lower for w in ["3", "three", "மூன்று", "மூணாவது", "மூணு", "மூன்றாவது", "மூன்றாம்", "तीसरा", "മൂന്ന്", "మూడు", "third"]):
+                choice_idx = 2 if len(courses) >= 3 else 0
+            elif any(w in user_lower for w in ["2", "two", "இரண்டு", "ரெண்டாவது", "இரண்டாவது", "ரெண்டு", "இரண்டாம்", "ரெண்டாம்", "दूसरा", "രണ്ട്", "రెండు", "second"]):
+                choice_idx = 1 if len(courses) >= 2 else 0
+            elif any(w in user_lower for w in ["1", "one", "ஒன்று", "முதல்", "முதலாவது", "முதலாம்", "ஒன்னு", "पहला", "ഒന്ന്", "ఒకటి", "first"]):
+                choice_idx = 0
+            elif any(kw.lower() in user_lower for kw in c2_keywords):
+                choice_idx = 1 if len(courses) >= 2 else 0
+            elif any(kw.lower() in user_lower for kw in c3_keywords):
+                choice_idx = 2 if len(courses) >= 3 else 0
+            elif any(kw.lower() in user_lower for kw in c1_keywords):
+                choice_idx = 0
+            else:
+                # Default to top recommendation if affirmative / general
+                choice_idx = 0
+
+            selected_course_dict = courses[choice_idx] if len(courses) > choice_idx else courses[0]
+            selected_course_name = selected_course_dict["qp_name"]
+            selected_course_local = get_localized_course_name(selected_course_dict, lang)
+
+            session.citizen_selected_course = selected_course_name
+            session.citizen_selected_choice = choice_idx + 1
+            session.state = InterviewState.COMPLETED
+            fsm.transition("course_selected", selected_course=selected_course_name, choice_idx=choice_idx + 1)
+            case_id = session.session_id[:12].upper()
+
+            confirmed_dict = {
+                k: normalize_field_to_english(k, f.value or f.raw_transcript or "Recorded", lang)
+                for k, f in session.fields.items()
+                if f.status == "confirmed"
+            }
+
+            # Warm celebratory wrap-up text acknowledging selected course
+            if lang == "ml":
+                wrap_text = f"വളരെ സന്തോഷം! നിങ്ങൾ തിരഞ്ഞെടുത്ത {selected_course_local} വിജയകരമായി രേഖപ്പെടുത്തി. പൂർണ്ണ വിവരങ്ങൾ വാട്ട്‌സ്ആപ്പിലും അയച്ചിട്ടുണ്ട്. നന്ദി, ശുഭദിനം!"
+            elif lang == "hi":
+                wrap_text = f"बहुत बढ़िया! आपके पसंदीदा {selected_course_local} का चयन सफलतापूर्वक दर्ज हो गया है। पूरा विवरण व्हाट्सएप पर भेज दिया गया है। धन्यवाद!"
+            elif lang == "te":
+                wrap_text = f"చాలా మంచిది అండీ! మీరు ఎంచుకున్న {selected_course_local} వివరాలు విజయవంతంగా నమోదయ్యాయి. పూర్తి వివరాలు వాట్సాప్‌లో పంపాము. ధన్యవాదాలు!"
+            else:
+                c_clean = selected_course_local.replace(" பயிற்சி", "") if selected_course_local.endswith(" பயிற்சி") else selected_course_local
+                wrap_text = f"ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான {c_clean} பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!"
+
+            wrap_audio = await self._synthesize_safe(wrap_text, lang, speaker=speaker)
+
+            # Record turn in conversation history and transcript FIRST
+            if not hasattr(session, "conversation_history"):
+                session.conversation_history = []
+            session.conversation_history.append({"role": "user", "content": user_speech})
+            session.conversation_history.append({"role": "assistant", "content": wrap_text})
+
+            if not hasattr(session, "transcript_turns"):
+                session.transcript_turns = []
+            session.transcript_turns.append({
+                "user": user_speech,
+                "assistant": wrap_text,
+                "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
+            })
+
+            record = {
+                "session_id": session.session_id,
+                "case_id": case_id,
+                "phone": phone,
+                "channel": channel,
+                "language": lang,
+                "status": "BENEFICIARY_CONFIRMED",
+                "citizen_confirmed": True,
+                "confirmed_via": "VOICE_CALL",
+                "confirmed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "notification_status": "DISPATCHED",
+                "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "confirmed_fields": confirmed_dict,
+                "turns_count": len(session.transcript_turns),
+                "transcript": list(session.transcript_turns),
+                "recommended_courses": courses,
+                "citizen_selected_choice": choice_idx + 1,
+                "citizen_selected_course": selected_course_name,
+            }
+
+            _completed_calls_records.insert(0, record)
+            if len(_completed_calls_records) > 100:
+                _completed_calls_records.pop()
+            _save_persisted_records()
+
+            # Asynchronously dispatch post-call bilingual confirmation (WhatsApp + SMS) with pre-confirmed course
+            asyncio.create_task(self.notification_service.dispatch_bilingual_confirmation(
+                phone=phone,
+                language_code=lang,
+                case_id=case_id,
+                confirmed_fields=confirmed_dict,
+                caller_name=getattr(session, "caller_name", None),
+                recommended_courses=courses,
+                selected_course=selected_course_name,
+            ))
+
+            if key in self._active_sessions:
+                del self._active_sessions[key]
+
+            return CoordinatorTurnResult(
+                session_id=session.session_id,
+                spoken_response=wrap_text,
+                audio_bytes=wrap_audio,
+                state=InterviewState.COMPLETED,
+                is_completed=True,
+                case_id=case_id,
+                current_field=None,
+                language_code=lang,
+            )
+
         # ── Turn 2: Identity Response Fast-Path ──────────────────────────────────
         if session.state == InterviewState.FIELD_COLLECTION and getattr(session, "identity_asked", False) and not getattr(session, "identity_confirmed", False):
             session.identity_confirmed = True
@@ -856,70 +1049,50 @@ class InterviewCoordinator:
 
             # Check if all fields are completed
             if session.all_fields_collected or not next_field:
-                session.state = InterviewState.COMPLETED
-                if lang == "ml":
-                    wrap_text = "വളരെ നന്ദി! നിങ്ങളുടെ എല്ലാ വിവരങ്ങളും വിജയകരമായി രേഖപ്പെടുത്തിയിട്ടുണ്ട്. ശുഭദിനം!"
-                    wrap_audio = _get_static_bytes("q_wrapup_v2_ml.wav")
-                elif lang == "hi":
-                    wrap_text = "बहुत-बहुत धन्यवाद! आपकी सभी जानकारी सफलतापूर्वक दर्ज कर ली गई है। आपका दिन शुभ हो!"
-                    wrap_audio = _get_static_bytes("q_wrapup_v2_hi.wav")
-                elif lang == "te":
-                    wrap_text = "చాలా ధన్యవాదాలు అండీ! మీ వివరాలన్నీ విజయవంతంగా నమోదు చేయబడ్డాయి. శుభదినం!"
-                    wrap_audio = _get_static_bytes("q_wrapup_v2_te.wav")
-                else:
-                    wrap_text = "ரொம்ப சந்தோஷம்ங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. வாழ்த்துகள்ங்க!"
-                    wrap_audio = _get_static_bytes("q_wrapup_v2.wav") or _get_static_bytes("q_wrapup.wav")
-
-                wrap_audio = wrap_audio or await self._synthesize_safe(wrap_text, lang, speaker=speaker)
-                case_id = session.session_id[:12].upper()
-
                 confirmed_dict = {
                     k: normalize_field_to_english(k, f.value or f.raw_transcript or "Recorded", lang)
                     for k, f in session.fields.items()
                     if f.status == "confirmed"
                 }
-                record = {
-                    "session_id": session.session_id,
-                    "case_id": case_id,
-                    "phone": phone,
-                    "channel": channel,
-                    "language": lang,
-                    "status": "COMPLETED",
-                    "citizen_confirmed": False,
-                    "notification_status": "DISPATCHED",
-                    "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-                    "confirmed_fields": confirmed_dict,
-                    "turns_count": len(getattr(session, "transcript_turns", [])),
-                    "transcript": getattr(session, "transcript_turns", []),
-                }
                 top_courses = compute_top_recommended_courses(confirmed_dict, getattr(session, "transcript_turns", []))
-                record["recommended_courses"] = top_courses
+                session.recommended_courses = top_courses
+                session.state = InterviewState.COURSE_SELECTION
+                fsm.transition("course_selection_started")
 
-                _completed_calls_records.insert(0, record)
-                if len(_completed_calls_records) > 100:
-                    _completed_calls_records.pop()
-                _save_persisted_records()
+                c1_local = get_localized_course_name(top_courses[0], lang) if len(top_courses) >= 1 else "தொழில் பயிற்சி"
+                c2_local = get_localized_course_name(top_courses[1], lang) if len(top_courses) >= 2 else "சுயதொழில் பயிற்சி"
 
-                # Asynchronously dispatch post-call bilingual confirmation (WhatsApp + SMS)
-                asyncio.create_task(self.notification_service.dispatch_bilingual_confirmation(
-                    phone=phone,
-                    language_code=lang,
-                    case_id=case_id,
-                    confirmed_fields=confirmed_dict,
-                    caller_name=getattr(session, "caller_name", None),
-                    recommended_courses=top_courses,
-                ))
+                if lang == "ml":
+                    ask_course_text = f"വളരെ നന്ദി! നിങ്ങളുടെ എല്ലാ വിവരങ്ങളും വിജയകരമായി രേഖപ്പെടുത്തിയിട്ടുണ്ട്. നിങ്ങളുടെ താല്പര്യപ്രകാരം രണ്ട് മികച്ച കോഴ്സുകൾ ശുപാർശ ചെയ്യുന്നു: ഒന്ന്, {c1_local}. രണ്ട്, {c2_local}. ഇതിൽ ഏതിലാണ് നിങ്ങൾക്ക് കൂടുതൽ താല്പര്യം?"
+                elif lang == "hi":
+                    ask_course_text = f"बहुत-बहुत धन्यवाद! आपकी सभी जानकारी सफलतापूर्वक दर्ज कर ली गई है। आपके लिए दो बेहतरीन पाठ्यक्रम हैं: पहला, {c1_local}, और दूसरा, {c2_local}। इनमें से आपकी किसमें अधिक रुचि है?"
+                elif lang == "te":
+                    ask_course_text = f"చాలా ధన్యవాదాలు అండీ! మీ వివరాలన్నీ విజయవంతంగా నమోదయ్యాయి. మీ కోసం రెండు ఉత్తమ కోర్సులు ఉన్నాయి: ఒకటి, {c1_local}, రెండు, {c2_local}. వీటిలో మీకు దేనిపై ఎక్కువ ఆసక్తి ఉంది?"
+                else:
+                    ask_course_text = f"மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க விருப்பத்தின்படி இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, {c1_local}. இரண்டு, {c2_local}. இந்த பயிற்சிகளில் உங்களுக்கு எதில் அதிக ஆர்வம் உள்ளது?"
 
-                if key in self._active_sessions:
-                    del self._active_sessions[key]
+                ask_audio = await self._synthesize_safe(ask_course_text, lang, speaker=speaker)
+
+                if not hasattr(session, "conversation_history"):
+                    session.conversation_history = []
+                session.conversation_history.append({"role": "user", "content": user_speech})
+                session.conversation_history.append({"role": "assistant", "content": ask_course_text})
+
+                if not hasattr(session, "transcript_turns"):
+                    session.transcript_turns = []
+                session.transcript_turns.append({
+                    "user": user_speech,
+                    "assistant": ask_course_text,
+                    "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
+                })
 
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
-                    spoken_response=wrap_text,
-                    audio_bytes=wrap_audio,
-                    state=InterviewState.COMPLETED,
-                    is_completed=True,
-                    case_id=case_id,
+                    spoken_response=ask_course_text,
+                    audio_bytes=ask_audio,
+                    state=InterviewState.COURSE_SELECTION,
+                    is_completed=False,
+                    case_id=None,
                     current_field=None,
                     language_code=lang,
                 )
@@ -1056,11 +1229,6 @@ class InterviewCoordinator:
         """Safely generates TTS audio with static cache and network retries."""
         if settings.enable_mock_tts or not text:
             return None
-
-        # Fast path: Pre-rendered static prompt for instant zero-latency playback
-        static_consent = _get_static_bytes(f"consent_{language_code}.wav")
-        if static_consent:
-            return static_consent
 
         try:
             tts_res: TTSResult = await synthesize_speech(

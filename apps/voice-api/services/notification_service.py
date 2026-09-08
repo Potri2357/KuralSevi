@@ -63,9 +63,9 @@ FIELD_LABELS = {
         "mobility_constraints": "कार्य क्षेत्र सीमा",
         "employment_preference": "रोज़गार प्राथमिकता",
         "local_economic_context": "स्थानीय बाजार",
-        "courses_header": "आपके लिए अनुशंसित PM-AJAY कोर्स:",
-        "choice_prompt": "अपना पसंदीदा कोर्स चुनने के लिए 1, 2, या 3 लिखकर भेजें। (या पुष्टि के लिए 'YES' लिखें)।",
-        "cta": "यदि यह विवरण सही है तो 'YES' या कोर्स संख्या (1, 2, 3) लिखकर भेजें।",
+        "courses_header": "आपके लिए अनुशंसित कौशल कोर्स:",
+        "choice_prompt": "अपना पसंदीदा कोर्स चुनने के लिए 1, 2, या 3 लिखकर भेजें (या पुष्टि के लिए 'YES' लिखें)।",
+        "cta": "यदि यह विवरण सही है तो 'YES' या कोर्स नंबर (1, 2, 3) लिखकर भेजें।",
         "ack": "धन्यवाद! आपका PM-AJAY आवेदन और कोर्स चयन सफलतापूर्वक सत्यापित कर दिया गया है। जिला अधिकारी जल्द संपर्क करेंगे।",
     },
     "te": {
@@ -80,9 +80,9 @@ FIELD_LABELS = {
         "mobility_constraints": "ప్రయాణ పరిధి",
         "employment_preference": "ఉపాధి ప్రాధాన్యత",
         "local_economic_context": "స్థానిక మార్కెట్",
-        "courses_header": "మీ కోసం సిఫార్సు చేయబడిన PM-AJAY కోర్సులు:",
-        "choice_prompt": "మీకు నచ్చిన కోర్సు ఎంచుకోవడానికి 1, 2, లేదా 3 అని సమాధానం ఇవ్వండి. (లేదా ధృవీకరించడానికి 'YES' అని పంపండి).",
-        "cta": "ఈ వివరాలు సరైనవయితే 'YES' లేదా కోర్సు సంఖ్య (1, 2, 3) అని సమాధానం ఇవ్వండి.",
+        "courses_header": "మీ కోసం సిఫార్సు చేయబడిన కోర్సులు:",
+        "choice_prompt": "మీకు నచ్చిన కోర్సును ఎంచుకోవడానికి 1, 2 లేదా 3 అని రిప్లై ఇవ్వండి (లేదా నిర్ధారించడానికి 'YES' అని పంపండి).",
+        "cta": "ఈ వివరాలు సరైనవయితే 'YES' లేదా కోర్సు నంబర్ (1, 2, 3) అని రిప్లై ఇవ్వండి.",
         "ack": "ధన్యవాదాలు! మీ PM-AJAY దరఖాస్తు మరియు కోర్సు ఎంపిక విజయవంతంగా నిర్ధారించబడింది. జిల్లా సంక్షేమ అధికారి త్వరలో సంప్రదిస్తారు.",
     }
 }
@@ -98,36 +98,77 @@ ENGLISH_FIELD_LABELS = {
     "local_economic_context": "Local Economic Context",
 }
 
+
 def _translate_value_to_vernacular(english_val: str, lang: str) -> str:
-    """Helper to convert standardized English values into native vernacular phrases."""
-    val_lower = english_val.lower()
-    
-    if "agriculture" in val_lower or "farming" in val_lower:
-        return {"ta": "விவசாயம்", "ml": "കൃഷി", "hi": "कृषि / खेती", "te": "వ్యవసాయం"}.get(lang, english_val)
-    if "10th" in val_lower or "class 10" in val_lower:
-        return {"ta": "10-ஆம் வகுப்பு முடித்தது", "ml": "പത്താം ക്ലാസ്", "hi": "10वीं कक्षा उत्तीर्ण", "te": "10వ తరగతి"}.get(lang, english_val)
-    if "12th" in val_lower or "class 12" in val_lower:
-        return {"ta": "12-ஆம் வகுப்பு முடித்தது", "ml": "പന്ത്രണ്ടാം ക്ലാസ്", "hi": "12वीं कक्षा उत्तीर्ण", "te": "12వ తరగతి"}.get(lang, english_val)
-    if "no formal" in val_lower or "literate" in val_lower:
-        return {"ta": "பள்ளிக்கல்வி இல்லை / எழுத்தறிவு", "ml": "സ്കൂൾ വിദ്യാഭ്യാസമില്ല", "hi": "साक्षर / अनौपचारिक", "te": "అక్షరాస్యుడు"}.get(lang, english_val)
-    if "self-employment" in val_lower or "own shop" in val_lower:
-        return {"ta": "சுயதொழில் (சொந்த கடை / தொழில்)", "ml": "സ്വന്തം സംരംഭം / കട", "hi": "स्वरोज़गार (खुद की दुकान)", "te": "స్వయం ఉపాధి (సొంత దుకాణం)"}.get(lang, english_val)
-    if "wage" in val_lower or "salary" in val_lower:
-        return {"ta": "மாத ஊதிய வேலை", "ml": "മാസ ശമ്പളമുള്ള ജോലി", "hi": "मासिक वेतन वाली नौकरी", "te": "నెల జీతం ఉద్యోగం"}.get(lang, english_val)
-    if "local area" in val_lower or "local enterprise" in val_lower or "local only" in val_lower:
-        return {"ta": "உள்ளூர் / சொந்த ஊரில் தொழில்", "ml": "സ്വന്തം നാട്ടിൽ ജോലി", "hi": "स्थानीय क्षेत्र / गांव", "te": "స్థానిక ప్రాంతం"}.get(lang, english_val)
-    if "nearby town" in val_lower or "travel" in val_lower:
-        return {"ta": "அருகிலுள்ள நகரங்களுக்குச் செல்லலாம்", "ml": "അടുത്തുള്ള പട്ടണങ്ങളിൽ പോകാം", "hi": "पास के शहरों में जा सकते हैं", "te": "సమీప పట్టణాలకు వెళ్లవచ్చు"}.get(lang, english_val)
-    if "market" in val_lower or "commerce" in val_lower:
-        return {"ta": "உள்ளூர் கிராம சந்தை & வர்த்தகம்", "ml": "പ്രദേശിക ചന്ത & വ്യാപാരം", "hi": "स्थानीय ग्रामीण बाजार", "te": "స్థానిక సంత మరియు వ్యాపారం"}.get(lang, english_val)
-    if "driving" in val_lower:
-        return {"ta": "ஓட்டுநர் / வாகன இயக்கம்", "ml": "ഡ്രൈവിംഗ്", "hi": "ड्राइविंग / वाहन संचालन", "te": "డ్రైవింగ్"}.get(lang, english_val)
-    if "cooking" in val_lower or "chef" in val_lower:
-        return {"ta": "சமையல் மற்றும் கேட்டரிங்", "ml": "പാചകം / ഹോട്ടൽ ജോലി", "hi": "खाना बनाना / कैटरिंग", "te": "వంటకం"}.get(lang, english_val)
-    if "vegetable" in val_lower:
-        return {"ta": "காய்கறி விற்பனை", "ml": "பச்சക്കറി കച്ചവടം", "hi": "सब्जी विक्रेता", "te": "కూరగాయల వ్యాపారం"}.get(lang, english_val)
-    if "grocery" in val_lower:
-        return {"ta": "மளிகைக் கடை", "ml": "പലചരക്ക് കട", "hi": "किराना दुकान", "te": "కిరాణా దుకాణం"}.get(lang, english_val)
+    """Helper to convert standardized English values into natural native vernacular phrases."""
+    if not english_val or str(english_val).strip().lower() in ("known value", "recorded", "none"):
+        return {"ta": "பதிவு செய்யப்பட்டது", "ml": "രേഖപ്പെടുത്തി", "hi": "दर्ज किया गया", "te": "నమోదు చేయబడింది"}.get(lang, "Recorded")
+
+    val_lower = str(english_val).lower()
+
+    # Trades & Skills
+    if "tailor" in val_lower or "stitch" in val_lower or "garment" in val_lower:
+        return {"ta": "தையல் மற்றும் ஆடை வடிவமைப்பு", "ml": "ടെയ്‌ലറിംഗ് / വസ്ത്ര നിർമ്മാണം", "hi": "सिलाई एवं वस्त्र निर्माण", "te": "టైలరింగ్ / దుస్తుల తయారీ"}.get(lang, english_val)
+    if "mechanic" in val_lower or "auto" in val_lower or "two-wheeler" in val_lower or "bike" in val_lower:
+        return {"ta": "டூவீலர் மெக்கானிக் / பைக் பழுதுநீக்கம்", "ml": "ടൂവീലർ മെക്കാനിക്ക്", "hi": "दोपहिया वाहन मैकेनिक", "te": "టూవీలర్ మెకానిక్"}.get(lang, english_val)
+    if "leather" in val_lower or "shoe" in val_lower or "footwear" in val_lower or "chappal" in val_lower:
+        return {"ta": "தோல் மற்றும் காலணி தயாரிப்பு", "ml": "ലെതർ, പാദരക്ഷാ നിർമ്മാണം", "hi": "चमड़ा एवं जूता निर्माण", "te": "లెదర్ మరియు పాదరక్షల తయారీ"}.get(lang, english_val)
+    if "poultry" in val_lower or "chicken" in val_lower or "broiler" in val_lower:
+        return {"ta": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை", "ml": "കോഴി വളർത്തൽ", "hi": "मुर्गी पालन व्यवसाय", "te": "కోళ్ల పెంపకం"}.get(lang, english_val)
+    if "dairy" in val_lower or "milk" in val_lower or "cattle" in val_lower or "livestock" in val_lower:
+        return {"ta": "கால்நடை வளர்ப்பு & பால் பண்ணை", "ml": "ക്ഷീരകർഷകനും പാൽ സംസ്കരണവും", "hi": "डेयरी फार्मिंग एवं पशुपालन", "te": "పాడి పరిశ్రమ మరియు పశుపోషణ"}.get(lang, english_val)
+    if "beauty" in val_lower or "salon" in val_lower or "parlour" in val_lower or "hair" in val_lower:
+        return {"ta": "அழகுக்கலை & சலூன் பயிற்சி", "ml": "ബ്യൂട്ടി പാർലർ & സലൂൺ", "hi": "ब्यूटी पार्लर एवं सैलून", "te": "బ్యూటీ పార్లర్ మరియు సెలూన్"}.get(lang, english_val)
+    if "electric" in val_lower or "appliance" in val_lower or "wiring" in val_lower:
+        return {"ta": "வீட்டு மின்சாதனங்கள் பழுதுநீக்கம்", "ml": "ഇലക്ട്രിക്കൽ വയറിംഗ് & റിപ്പയർ", "hi": "घरेलू बिजली उपकरण मरम्मत", "te": "ఎలక్ట్రికల్ గృహోపకరణాల మరమ్మతులు"}.get(lang, english_val)
+    if "catering" in val_lower or "food" in val_lower or "cooking" in val_lower or "pickle" in val_lower:
+        return {"ta": "உணவு தயாரிப்பு, கேட்டரிங் & ஊறுகாய்", "ml": "ഭക്ഷണ നിർമ്മാണവും കാറ്ററിംഗും", "hi": "खाद्य प्रसंस्करण एवं कैटरिंग", "te": "ఫుడ్ కేటరింగ్ మరియు తయారీ"}.get(lang, english_val)
+    if "agriculture" in val_lower or "farming" in val_lower or "crop" in val_lower:
+        return {"ta": "விவசாயம் / வேளாண்மை", "ml": "കൃഷി", "hi": "कृषि / खेती", "te": "వ్యవసాయం"}.get(lang, english_val)
+    if "daily wage" in val_lower or "coolie" in val_lower or "labour" in val_lower:
+        return {"ta": "தினக்கூலி வேலை", "ml": "ദിവസവേതന ജോലി", "hi": "दैनिक मजदूरी", "te": "దినసరి కూలీ"}.get(lang, english_val)
+    if "weaving" in val_lower or "handloom" in val_lower or "loom" in val_lower:
+        return {"ta": "நெசவு மற்றும் கைத்தறி வேலை", "ml": "നെയ്ത്ത് ജോലി", "hi": "बुनकरी एवं हथकरघा", "te": "చేనేత వృత్తి"}.get(lang, english_val)
+    if "driver" in val_lower or "driving" in val_lower:
+        return {"ta": "ஓட்டுநர் (டிரைவர்)", "ml": "ഡ്രൈവിംഗ്", "hi": "ड्राइविंग / वाहन चालक", "te": "డ్రైవింగ్"}.get(lang, english_val)
+    if "grocery" in val_lower or "kirana" in val_lower or "retail" in val_lower or "shopkeeper" in val_lower:
+        return {"ta": "மளிகை மற்றும் சில்லறை விற்பனை கடை", "ml": "പലചരക്ക് കട", "hi": "किराना एवं खुदरा दुकान", "te": "కిరాణా మరియు రిటైల్ దుకాణం"}.get(lang, english_val)
+    if "vegetable" in val_lower or "fruit" in val_lower:
+        return {"ta": "காய்கறி மற்றும் பழங்கள் விற்பனை", "ml": "പച്ചക്കറി കച്ചവടം", "hi": "सब्जी एवं फल विक्रेता", "te": "కూరగాయల వ్యాపారం"}.get(lang, english_val)
+
+    # Education
+    if "12th" in val_lower or "class 12" in val_lower or "higher secondary" in val_lower:
+        return {"ta": "12-ஆம் வகுப்பு முடித்தது", "ml": "പന്ത്രണ്ടാം ക്ലാസ്", "hi": "12वीं कक्षा उत्तीर्ण", "te": "12వ తరగతి ఉత్తీర్ణత"}.get(lang, english_val)
+    if "10th" in val_lower or "class 10" in val_lower or "sslc" in val_lower or "secondary" in val_lower:
+        return {"ta": "10-ஆம் வகுப்பு முடித்தது", "ml": "പത്താം ക്ലാസ്", "hi": "10वीं कक्षा उत्तीर्ण", "te": "10వ తరగతి ఉత్తీర్ణత"}.get(lang, english_val)
+    if "graduate" in val_lower or "degree" in val_lower or "college" in val_lower:
+        return {"ta": "பட்டப்படிப்பு / கல்லூரி", "ml": "ബിരുദം", "hi": "स्नातक / कॉलेज", "te": "డిగ్రీ / గ్రాడ్యుయేట్"}.get(lang, english_val)
+    if "8th" in val_lower or "middle" in val_lower:
+        return {"ta": "8-ஆம் வகுப்பு வரை", "ml": "എട്ടാം ക്ലാസ്", "hi": "8वीं कक्षा तक", "te": "8వ తరగతి వరకు"}.get(lang, english_val)
+    if "5th" in val_lower or "primary" in val_lower:
+        return {"ta": "தொடக்கக் கல்வி (5-ஆம் வகுப்பு வரை)", "ml": "പ്രൈമറി വിദ്യാഭ്യാസം", "hi": "प्राथमिक शिक्षा (5वीं तक)", "te": "ప్రాథమిక విద్య"}.get(lang, english_val)
+    if "no formal" in val_lower or "literate" in val_lower or "illiterate" in val_lower:
+        return {"ta": "பள்ளிக்கல்வி இல்லை / எழுத்தறிவு", "ml": "സ്കൂൾ വിദ്യാഭ്യാസമില്ല", "hi": "साक्षर / अनौपचारिक", "te": "అక్షరాస్యుడు / బడికి వెళ్లలేదు"}.get(lang, english_val)
+
+    # Mobility Constraints
+    if "local only" in val_lower or "cannot travel" in val_lower or "within village" in val_lower or "local area" in val_lower:
+        return {"ta": "உள்ளூர் / சொந்த ஊருக்குள் மட்டுமே", "ml": "സ്വന്തം നാട്ടിൽ മാത്രം", "hi": "केवल स्थानीय क्षेत्र / गांव में", "te": "సొంత ఊర్లో మాత్రమే"}.get(lang, english_val)
+    if "nearby town" in val_lower or "nearby" in val_lower or "travel" in val_lower or "district" in val_lower:
+        return {"ta": "அருகிலுள்ள நகரங்களுக்குச் செல்லலாம்", "ml": "അടുത്തുള്ള പട്ടണങ്ങളിൽ പോകാം", "hi": "आस-पास के शहरों तक जा सकते हैं", "te": "సమీప పట్టణాల వరకు వెళ్లగలరు"}.get(lang, english_val)
+    if "no constraint" in val_lower or "anywhere" in val_lower:
+        return {"ta": "எங்கு வேண்டுமானாலும் பயணம் செய்யலாம்", "ml": "യാത്രാ തടസ്സങ്ങളില്ല", "hi": "कहीं भी यात्रा कर सकते हैं", "te": "ఎక్కడికైనా ప్రయాణించవచ్చు"}.get(lang, english_val)
+
+    # Employment Preference
+    if "self-employment" in val_lower or "own shop" in val_lower or "business" in val_lower or "enterprise" in val_lower:
+        return {"ta": "சுயதொழில் (சொந்த கடை / தொழில் நிறுவனம்)", "ml": "സ്വയംതൊഴിൽ (സ്വന്തം സംരംഭം)", "hi": "स्वरोज़गार (खुद की दुकान / व्यवसाय)", "te": "స్వయం ఉపాధి (సొంత వ్యాపారం / దుకాణం)"}.get(lang, english_val)
+    if "wage" in val_lower or "salary" in val_lower or "job" in val_lower or "monthly" in val_lower:
+        return {"ta": "மாத ஊதிய வேலை (நிறுவன பணி)", "ml": "മാസ ശമ്പളമുള്ള ജോലി", "hi": "मासिक वेतन वाली नौकरी", "te": "నెల జీతం ఉద్యోగం"}.get(lang, english_val)
+
+    # Local Economic Context
+    if "market" in val_lower or "bazaar" in val_lower or "commerce" in val_lower or "santhai" in val_lower:
+        return {"ta": "வாரச்சந்தை மற்றும் கிராம வணிகக் கடைகள்", "ml": "പ്രദേശിക ചന്ത & വ്യാപാരം", "hi": "साप्ताहिक ग्रामीण हाट एवं बाजार", "te": "వారపు సంత మరియు స్థానిక వ్యాపారం"}.get(lang, english_val)
+    if "mill" in val_lower or "factory" in val_lower or "industrial" in val_lower:
+        return {"ta": "அருகிலுள்ள ஆலைகள் / தொழிற்சாலை சூழல்", "ml": "ഫാക്ടറി / വ്യവസായ മേഖല", "hi": "आस-पास के कारखाने / मिल", "te": "సమీప మిల్లులు / కర్మాగారాలు"}.get(lang, english_val)
 
     return english_val
 
@@ -150,9 +191,10 @@ class NotificationService:
         case_id: str,
         confirmed_fields: Dict[str, str],
         caller_name: Optional[str] = None,
-        recommended_courses: Optional[list] = None
+        recommended_courses: Optional[list] = None,
+        selected_course: Optional[str] = None,
     ) -> str:
-        """Generates clean formatted WhatsApp message (zero emojis) containing Spoken + English + Top Courses."""
+        """Generates clean formatted WhatsApp message containing Spoken Vernacular + English Profile + Selected/Top Courses."""
         lang = language_code if language_code in FIELD_LABELS else "ta"
         labels = FIELD_LABELS[lang]
         name = caller_name or "Beneficiary"
@@ -167,48 +209,109 @@ class NotificationService:
             f"*{labels['fields_header']}*",
         ]
 
-        # Key Intake Summary (Spoken native language)
-        summary_keys = [
-            "educational_background", "current_livelihood", "skills_and_interests",
-            "employment_preference", "mobility_constraints"
+        # ALL 7 PS-Mandated Intake Summary Fields in Vernacular
+        all_ordered_fields = [
+            ("educational_background", "கல்வித் தகுதி"),
+            ("family_occupation", "குடும்பத் தொழில்"),
+            ("current_livelihood", "தற்போதைய வேலை"),
+            ("skills_and_interests", "தொழில் ஆர்வம் & திறன்"),
+            ("mobility_constraints", "வேலை பயண வரம்பு"),
+            ("employment_preference", "வேலை விருப்பம்"),
+            ("local_economic_context", "உள்ளூர் வர்த்தக சூழல்"),
         ]
-        for fn in summary_keys:
-            if fn in confirmed_fields:
-                eng_val = confirmed_fields[fn]
+
+        for fn, fallback_lbl in all_ordered_fields:
+            if fn in confirmed_fields and confirmed_fields[fn]:
+                eng_val = str(confirmed_fields[fn])
                 native_val = _translate_value_to_vernacular(eng_val, lang)
-                lbl = labels.get(fn, fn.replace("_", " ").title())
-                lines.append(f"- *{lbl}:* {native_val}")
+                lbl = labels.get(fn, fallback_lbl)
+                lines.append(f"• *{lbl}:* {native_val}")
 
-        # Top 3 Recommended NSQF Courses
-        courses = recommended_courses or []
-        if courses:
-            c_hdr = labels.get("courses_header", "Recommended Courses:")
-            c_prompt = labels.get("choice_prompt", "Reply with 1, 2, or 3 to choose your preferred course.")
-            lines.extend([
-                "",
-                f"*{c_hdr}*",
-            ])
-            for i, c in enumerate(courses[:3], 1):
-                c_name = c.get("qp_name", f"Course {i}").split("-")[0].strip()
-                nsqf_lvl = c.get("nsqf_level", 3)
-                lines.append(f"{i}. *{c_name}* (NSQF Level {nsqf_lvl})")
-
-            lines.extend([
-                "",
-                f"*{c_prompt}*",
-            ])
-
-        cta = labels["cta"]
+        # English Administrative Verification Block
         lines.extend([
-            "--------------------------------------------------",
-            f"*{cta}*",
-            "*Reply 1, 2, or 3 to select your course, or reply 'YES' to confirm.*"
+            "",
+            "*Official Administrative Record (English):*",
         ])
+        for fn, _ in all_ordered_fields:
+            if fn in confirmed_fields and confirmed_fields[fn]:
+                eng_val = str(confirmed_fields[fn])
+                eng_lbl = ENGLISH_FIELD_LABELS.get(fn, fn.replace("_", " ").title())
+                lines.append(f"• {eng_lbl}: {eng_val}")
+
+        # Course Information Section
+        if selected_course:
+            selected_hdr = {
+                "ta": "உங்களால் தேர்ந்தெடுக்கப்பட்ட பயிற்சி:",
+                "hi": "आपके द्वारा चुना गया PM-AJAY कौशल कोर्स:",
+                "ml": "നിങ്ങൾ തിരഞ്ഞെടുത്ത PM-AJAY കോഴ്സ്:",
+                "te": "మీరు ఎంచుకున్న PM-AJAY కోర్సు:",
+            }.get(lang, "Selected PM-AJAY Vocational Course:")
+
+            lines.extend([
+                "",
+                f"*{selected_hdr}*",
+                f"🎯 *{selected_course}*",
+            ])
+
+            # Try to enrich with duration / level from recommended_courses if available
+            if recommended_courses:
+                for rc in recommended_courses:
+                    if rc.get("qp_name", "").strip().lower() == selected_course.strip().lower() or selected_course in rc.get("qp_name", ""):
+                        lines.append(f"• QP Code: {rc.get('qp_code', 'N/A')} | NSQF Level: {rc.get('nsqf_level', 4)}")
+                        if rc.get("duration_hours"):
+                            lines.append(f"• Training Duration: {rc.get('duration_hours')} Hours")
+                        break
+
+            status_text = {
+                "ta": "• *விண்ணப்ப நிலை:* குரல் அழைப்பு மூலம் வெற்றிகரமாக உறுதி செய்யப்பட்டுள்ளது (BENEFICIARY_CONFIRMED)",
+                "hi": "• *आवेदन स्थिति:* वॉइस कॉल के माध्यम से सत्यापित (BENEFICIARY_CONFIRMED)",
+                "ml": "• *അപേക്ഷാ നില:* വോയ്‌സ് കോൾ വഴി സ്ഥിരീകരിച്ചു (BENEFICIARY_CONFIRMED)",
+                "te": "• *దరఖాస్తు స్థితి:* వాయిస్ కాల్ ద్వారా నిర్ధారించబడింది (BENEFICIARY_CONFIRMED)",
+            }.get(lang, "• *Application Status:* Confirmed via Voice Call (BENEFICIARY_CONFIRMED)")
+
+            officer_text = {
+                "ta": "அடுத்த 3 வேலை நாட்களில் உங்கள் மாவட்ட சமூக நல அலுவலர் நேரடி சரிபார்ப்பிற்கு உங்களைத் தொடர்புகொள்வார்.",
+                "hi": "अगले 3 कार्यदिवसों में जिला कल्याण अधिकारी आपसे संपर्क करेंगे।",
+                "ml": "അടുത്ത 3 प्रവൃത്തി ദിവസങ്ങൾക്കുള്ളിൽ ജില്ലാ ഓഫീസർ ബന്ധപ്പെടും.",
+                "te": "వచ్చే 3 పనిదినాల్లో జిల్లా సంక్షేమ అధికారి మిమ్మల్ని సంప్రదిస్తారు.",
+            }.get(lang, "District Welfare Officer will contact you within 3 working days.")
+
+            lines.extend([
+                status_text,
+                "--------------------------------------------------",
+                officer_text,
+            ])
+        else:
+            # Top 3 Recommended NSQF Courses
+            courses = recommended_courses or []
+            if courses:
+                c_hdr = labels.get("courses_header", "Recommended Courses:")
+                c_prompt = labels.get("choice_prompt", "Reply with 1, 2, or 3 to choose your preferred course.")
+                lines.extend([
+                    "",
+                    f"*{c_hdr}*",
+                ])
+                for i, c in enumerate(courses[:3], 1):
+                    c_name = c.get("qp_name", f"Course {i}").split("-")[0].strip()
+                    nsqf_lvl = c.get("nsqf_level", 3)
+                    duration = f" ({c.get('duration_hours')} hrs)" if c.get("duration_hours") else ""
+                    lines.append(f"{i}. *{c_name}* (NSQF Level {nsqf_lvl}{duration})")
+
+                lines.extend([
+                    "",
+                    f"*{c_prompt}*",
+                ])
+
+            cta = labels.get("cta", "Reply with 1, 2, 3 or YES")
+            lines.extend([
+                "--------------------------------------------------",
+                f"*{cta}*",
+                "*Reply 1, 2, or 3 to select your course, or reply 'YES' to confirm.*"
+            ])
 
         msg = "\n".join(lines)
-        # Twilio WhatsApp has a strict 1600 character ceiling. Keep message under 1450 chars.
-        if len(msg) > 1450:
-            msg = msg[:1440] + "\n..."
+        if len(msg) > 1500:
+            msg = msg[:1480] + "\n..."
         return msg
 
     def build_bilingual_sms_message(
@@ -218,34 +321,41 @@ class NotificationService:
         case_id: str,
         confirmed_fields: Dict[str, str],
         caller_name: Optional[str] = None,
-        recommended_courses: Optional[list] = None
+        recommended_courses: Optional[list] = None,
+        selected_course: Optional[str] = None,
     ) -> str:
         """
         Generates cleanly aligned, professional SMS with zero emojis.
-        Properly aligned with line breaks for mobile screens and readable course names.
+        Uses real profile fields and real course selections.
         """
         cid = (case_id or "N/A")[:8]
-        courses = recommended_courses or []
-        
-        lines = [f"PM-AJAY Ref: {cid}", ""]
-        if courses and len(courses) >= 2:
-            lines.append("Recommended Courses:")
-            for idx, c in enumerate(courses[:3], 1):
-                name = c.get("qp_name", f"Course {idx}").split("-")[0].strip()
-                if len(name) > 38:
-                    name = name[:36].rstrip() + "..."
-                lines.append(f"{idx}. {name}")
-            lines.append("")
-            options_str = "1, 2, or 3" if len(courses) >= 3 else "1 or 2"
-            lines.append(f"Reply {options_str} to choose your course, or reply YES to confirm.")
+        name = (caller_name or "Beneficiary")[:20]
+        edu = confirmed_fields.get("educational_background", "Recorded")[:25]
+        livelihood = confirmed_fields.get("current_livelihood", confirmed_fields.get("family_occupation", "Recorded"))[:25]
+        skills = confirmed_fields.get("skills_and_interests", "General")[:25]
+
+        lines = [
+            f"PM-AJAY Ref: {cid}",
+            f"Beneficiary: {name}",
+            f"Edu: {edu}",
+            f"Work: {livelihood}",
+            f"Skill: {skills}",
+        ]
+
+        if selected_course:
+            lines.append(f"Chosen Course: {selected_course[:30]}")
+            lines.append("Status: CONFIRMED via Voice Call.")
+            lines.append("Officer will contact within 3 days.")
         else:
-            edu = confirmed_fields.get("educational_background", "Recorded")[:30]
-            job = confirmed_fields.get("employment_preference", confirmed_fields.get("current_livelihood", "Recorded"))[:30]
-            lines.append("Profile Details:")
-            lines.append(f"- Education: {edu}")
-            lines.append(f"- Preference: {job}")
-            lines.append("")
-            lines.append("Reply YES to confirm your application.")
+            courses = recommended_courses or []
+            if courses and len(courses) >= 2:
+                lines.append("Top Courses:")
+                for idx, c in enumerate(courses[:2], 1):
+                    c_name = c.get("qp_name", f"Course {idx}").split("-")[0].strip()[:24]
+                    lines.append(f"{idx}. {c_name}")
+                lines.append("Reply 1, 2 or YES to confirm.")
+            else:
+                lines.append("Status: Recorded. Reply YES to confirm.")
 
         return "\n".join(lines)
 
@@ -257,20 +367,33 @@ class NotificationService:
         confirmed_fields: Dict[str, str],
         caller_name: Optional[str] = None,
         recommended_courses: Optional[list] = None,
+        selected_course: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Dispatches bilingual confirmation through BOTH WhatsApp and SMS concurrently.
-        Includes top 3 recommended courses and prompts citizen for input.
+        Includes top recommended courses or verified citizen selection.
         """
         target_phone = phone.strip()
         if not target_phone.startswith("+"):
             target_phone = f"+91{target_phone}" if len(target_phone) == 10 else f"+{target_phone}"
 
         wa_text = self.build_bilingual_whatsapp_message(
-            target_phone, language_code, case_id, confirmed_fields, caller_name, recommended_courses
+            phone=target_phone,
+            language_code=language_code,
+            case_id=case_id,
+            confirmed_fields=confirmed_fields,
+            caller_name=caller_name,
+            recommended_courses=recommended_courses,
+            selected_course=selected_course,
         )
         sms_text = self.build_bilingual_sms_message(
-            target_phone, language_code, case_id, confirmed_fields, caller_name, recommended_courses
+            phone=target_phone,
+            language_code=language_code,
+            case_id=case_id,
+            confirmed_fields=confirmed_fields,
+            caller_name=caller_name,
+            recommended_courses=recommended_courses,
+            selected_course=selected_course,
         )
 
         wa_from = self.twilio_whatsapp_number

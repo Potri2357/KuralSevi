@@ -15,10 +15,15 @@ import {
   RefreshCw,
   Globe,
   FileText,
+  BookOpen,
+  GraduationCap,
+  Briefcase,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import type { CallRecordItem } from '../types';
+import { buildRealDataWhatsAppMessage } from '@/lib/notification-formatter';
 
 interface WhatsAppCourseModalProps {
   isOpen: boolean;
@@ -39,7 +44,9 @@ export function WhatsAppCourseModal({
   const [phone, setPhone] = useState<string>('+91');
   const [beneficiaryName, setBeneficiaryName] = useState<string>('Beneficiary');
   const [language, setLanguage] = useState<'ta' | 'hi' | 'te' | 'en'>('ta');
+  const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [customNote, setCustomNote] = useState<string>('');
+  const [showPreview, setShowPreview] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [dispatchResult, setDispatchResult] = useState<{
@@ -56,18 +63,25 @@ export function WhatsAppCourseModal({
       setPhone(initialCall.phone || '+91');
       setLanguage((initialCall.language as any) || 'ta');
       setBeneficiaryName(
-        (initialCall as any).beneficiary_name ||
+        initialCall.beneficiary_name ||
           (initialCall.case_id ? `Citizen (${initialCall.case_id})` : 'Beneficiary')
       );
+      setSelectedCourse(initialCall.citizen_selected_course || '');
     } else if (allCalls.length > 0 && !selectedCallId) {
       const first = allCalls[0];
       setSelectedCallId(first.case_id);
       setPhone(first.phone || '+91');
       setLanguage((first.language as any) || 'ta');
-      setBeneficiaryName((first as any).beneficiary_name || 'Beneficiary');
+      setBeneficiaryName(first.beneficiary_name || 'Beneficiary');
+      setSelectedCourse(first.citizen_selected_course || '');
     }
     setDispatchResult(null);
   }, [initialCall, isOpen]);
+
+  // Current selected call item with real confirmed fields & recommendations
+  const currentCall = useMemo(() => {
+    return allCalls.find((c) => c.case_id === selectedCallId) || initialCall || null;
+  }, [allCalls, selectedCallId, initialCall]);
 
   // Handle selecting an existing beneficiary call record
   const handleSelectCall = (caseId: string) => {
@@ -77,92 +91,37 @@ export function WhatsAppCourseModal({
     if (found) {
       setPhone(found.phone || '+91');
       setLanguage((found.language as any) || 'ta');
-      setBeneficiaryName((found as any).beneficiary_name || `Citizen (${found.case_id})`);
+      setBeneficiaryName(found.beneficiary_name || `Citizen (${found.case_id})`);
+      setSelectedCourse(found.citizen_selected_course || '');
+    } else {
+      setSelectedCourse('');
     }
   };
 
-  // Clean, official message without emojis
+  // Determine if this call has real intake data
+  const hasRealIntakeData = useMemo(() => {
+    if (!currentCall?.confirmed_fields) return false;
+    return Object.values(currentCall.confirmed_fields).some(
+      (v) => v && !['none', 'n/a'].includes(String(v).toLowerCase().trim())
+    );
+  }, [currentCall]);
+
+  // Clean, official message generated from real data
   const cleanMessage = useMemo(() => {
     const caseId = selectedCallId || 'WA-' + phone.replace(/\D/g, '').slice(-4);
-
-    if (language === 'ta') {
-      return [
-        '*அரசு PM-AJAY வாழ்வாதார மற்றும் திறன் பயிற்சி பதிவு (Kural Sevi Intake)*',
-        '--------------------------------------------------',
-        `மனு எண் (Case ID): ${caseId}`,
-        `பயனாளி: ${beneficiaryName}`,
-        `தொலைபேசி: ${phone}`,
-        '',
-        'வணக்கம்! தமிழ்நாடு அரசு PM-AJAY திட்டத்தின் கீழ் இலவச தொழில் திறன் பயிற்சி பாடநெறிகள், மாதாந்திர உதவித்தொகை (ரூ. 1,500/மாதம்) மற்றும் வாழ்வாதார மானியங்களைப் பெற உங்களை வரவேற்கிறோம்.',
-        '',
-        'பதிவை தொடங்க:',
-        '1. உங்கள் கல்வி தகுதி, தற்போதைய வேலை மற்றும் விருப்பமான தொழில் பயிற்சி பற்றி ஒரு குரல் பதிவு (Voice Note) அல்லது செய்தியை உடனே இங்கு அனுப்பவும்.',
-        '2. அல்லது "START" அல்லது "சரி" என்று உடனே பதில் அனுப்பவும்.',
-        customNote ? `\nகுறிப்பு: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - தமிழ்நாடு அரசு PM-AJAY தொலைபேசி மற்றும் வாட்ஸ்அப் பதிவு சேவை_',
-      ]
-        .filter(Boolean)
-        .join('\n');
-    } else if (language === 'hi') {
-      return [
-        '*सरकारी पीएम-अजय (PM-AJAY) आजीविका एवं कौशल प्रशिक्षण पंजीकरण (Kural Sevi)*',
-        '--------------------------------------------------',
-        `केस आईडी (Case ID): ${caseId}`,
-        `लाभार्थी: ${beneficiaryName}`,
-        `फोन: ${phone}`,
-        '',
-        'नमस्ते! केंद्र एवं राज्य सरकार की पीएम-अजय योजना के तहत मुफ़्त कौशल प्रशिक्षण पाठ्यक्रम, मासिक वजीफा (रु. 1,500/माह) और आजीविका सहायता हेतु आपका स्वागत है।',
-        '',
-        'पंजीकरण शुरू करने के लिए:',
-        '1. अपनी शिक्षा, वर्तमान कार्य और पसंदीदा कौशल पाठ्यक्रम के बारे में वॉइस नोट (Voice Note) या संदेश भेजें।',
-        '2. या तुरंत "START" या "हाँ" लिखकर उत्तर दें।',
-        customNote ? `\nनोट: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - पीएम-अजय टेलीफोनी एवं व्हाट्सएप पंजीकरण सेवा_',
-      ]
-        .filter(Boolean)
-        .join('\n');
-    } else if (language === 'te') {
-      return [
-        '*ప్రభుత్వ PM-AJAY జీవనోపాధి మరియు నైపుణ్య శిక్షణ నమోదు (Kural Sevi)*',
-        '--------------------------------------------------',
-        `కేస్ ఐడీ (Case ID): ${caseId}`,
-        `లబ్ధిదారు: ${beneficiaryName}`,
-        `ఫోన్: ${phone}`,
-        '',
-        'నమస్కారం! ప్రభుత్వ PM-AJAY పథకం కింద ఉచిత వృత్తి నైపుణ్య కోర్సులు, నెలవారీ స్టైపెండ్ (రూ. 1,500/నెలకు) మరియు ఉపాధి మార్గదర్శకత్వం కొరకు ఆహ్వానిస్తున్నాము.',
-        '',
-        'నమోదు ప్రారంభించడానికి:',
-        '1. మీ విద్యార్హత, ప్రస్తుత పని మరియు ఆసక్తి ఉన్న వృత్తి కోర్సు గురించి వాయిస్ నోట్ (Voice Note) లేదా సందేశం పంపండి.',
-        '2. లేదా వెంటనే "START" అని రిప్లై ఇవ్వండి.',
-        customNote ? `\nగమనిక: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - PM-AJAY టెలిఫోనీ & వాట్సాప్ నమోదు వేదిక_',
-      ]
-        .filter(Boolean)
-        .join('\n');
-    } else {
-      return [
-        '*Government PM-AJAY Livelihood & Skill Course Intake (Kural Sevi)*',
-        '--------------------------------------------------',
-        `Case ID: ${caseId}`,
-        `Beneficiary: ${beneficiaryName}`,
-        `Phone: ${phone}`,
-        '',
-        'Greetings! Welcome to the government PM-AJAY initiative for free vocational skill training courses, monthly DBT stipend (Rs. 1,500/month), and livelihood support.',
-        '',
-        'To begin your enrollment:',
-        '1. Reply with a Voice Note or message sharing your education, current occupation, and desired vocational training trade.',
-        '2. Or simply reply "START" or "YES" to this message.',
-        customNote ? `\nOfficer Note: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - Government PM-AJAY Telephony & WhatsApp Automated Intake Platform_',
-      ]
-        .filter(Boolean)
-        .join('\n');
-    }
-  }, [selectedCallId, phone, beneficiaryName, language, customNote]);
+    return buildRealDataWhatsAppMessage({
+      phone,
+      language,
+      caseId,
+      beneficiaryName,
+      confirmedFields: currentCall?.confirmed_fields,
+      recommendedCourses: currentCall?.recommended_courses,
+      selectedCourse: selectedCourse || currentCall?.citizen_selected_course,
+      customNote,
+      isConfirmedStatus:
+        currentCall?.citizen_confirmed || currentCall?.status === 'BENEFICIARY_CONFIRMED',
+    });
+  }, [selectedCallId, phone, language, beneficiaryName, currentCall, selectedCourse, customNote]);
 
   // Web direct link
   const directWaLink = useMemo(() => {
@@ -190,6 +149,9 @@ export function WhatsAppCourseModal({
           mode: 'intake',
           caseId: selectedCallId,
           beneficiaryName,
+          confirmed_fields: currentCall?.confirmed_fields,
+          recommended_courses: currentCall?.recommended_courses,
+          selected_course: selectedCourse || currentCall?.citizen_selected_course,
           customNote,
         }),
       });
@@ -225,22 +187,22 @@ export function WhatsAppCourseModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in-50 duration-200">
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden transition-all transform animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden transition-all transform animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="bg-linear-to-r from-[#075E54] to-[#128C7E] p-5 text-white flex items-center justify-between shadow-md">
+        <div className="bg-linear-to-r from-[#075E54] to-[#128C7E] p-5 text-white flex items-center justify-between shadow-md shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-white border border-white/20 shadow-inner">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-extrabold tracking-tight">
-                Initialise Call Record / Voice Intake
+                Dispatch Real PM-AJAY Confirmation
               </h3>
               <p className="text-xs text-emerald-100 font-medium mt-0.5">
-                Dispatch PM-AJAY voice intake & course notification to citizen via WhatsApp
+                Bilingual WhatsApp receipt with real verified beneficiary profile & course choices
               </p>
             </div>
           </div>
@@ -254,8 +216,8 @@ export function WhatsAppCourseModal({
           </button>
         </div>
 
-        {/* Modal Form Content */}
-        <div className="p-5 sm:p-6 space-y-4">
+        {/* Modal Form Content (Scrollable) */}
+        <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 text-slate-800">
           {/* Select Existing Call Record */}
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
@@ -270,10 +232,57 @@ export function WhatsAppCourseModal({
               {allCalls.map((c) => (
                 <option key={c.case_id} value={c.case_id}>
                   {c.phone} — Case {c.case_id} ({c.channel?.toUpperCase() || 'IVR'})
+                  {c.citizen_selected_course ? ` [Selected: ${c.citizen_selected_course.slice(0, 20)}...]` : ''}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* Real Confirmed Data Highlight Banner */}
+          {hasRealIntakeData && currentCall && (
+            <div className="p-3.5 rounded-xl bg-emerald-50/90 border border-emerald-200 text-xs text-emerald-950 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 font-extrabold text-emerald-800 text-[11px] uppercase tracking-wide">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Verified Voice Intake Data Connected
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/70 text-emerald-900">
+                  {currentCall.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-emerald-200/60">
+                <div>
+                  <span className="text-emerald-700 font-medium">Education: </span>
+                  <span className="font-bold text-emerald-900">
+                    {currentCall.confirmed_fields?.educational_background || 'Recorded'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-emerald-700 font-medium">Current Work: </span>
+                  <span className="font-bold text-emerald-900">
+                    {currentCall.confirmed_fields?.current_livelihood || currentCall.confirmed_fields?.family_occupation || 'Recorded'}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-emerald-700 font-medium">Skills / Trade: </span>
+                  <span className="font-bold text-emerald-900">
+                    {currentCall.confirmed_fields?.skills_and_interests || 'General'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Citizen Voice Selection Callout */}
+              {currentCall.citizen_selected_course && (
+                <div className="p-2 bg-white/80 rounded-lg border border-emerald-300 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <div className="text-[11px]">
+                    <span className="text-slate-600">Citizen Voice Call Selection: </span>
+                    <strong className="text-emerald-950 font-bold">{currentCall.citizen_selected_course}</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Citizen Phone & Language */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -295,7 +304,7 @@ export function WhatsAppCourseModal({
 
             <div>
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-                Intake Language:
+                Receipt Language:
               </label>
               <div className="relative">
                 <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -307,33 +316,62 @@ export function WhatsAppCourseModal({
                   <option value="ta">தமிழ் (Tamil)</option>
                   <option value="hi">हिन्दी (Hindi)</option>
                   <option value="te">తెలుగు (Telugu)</option>
-                  <option value="en">English (Official)</option>
+                  <option value="en">English (Official Administrative)</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Beneficiary Name */}
-          <div>
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              Beneficiary Name (Optional):
-            </label>
-            <div className="relative">
-              <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={beneficiaryName}
-                onChange={(e) => setBeneficiaryName(e.target.value)}
-                placeholder="e.g. Priya S"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075E54] min-h-[42px]"
-              />
+          {/* Beneficiary Name & Course Target */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                Beneficiary Name:
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={beneficiaryName}
+                  onChange={(e) => setBeneficiaryName(e.target.value)}
+                  placeholder="e.g. Priya S"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075E54] min-h-[42px]"
+                />
+              </div>
+            </div>
+
+            {/* Course Selector (if recommendations exist) */}
+            <div>
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                Course Notification Focus:
+              </label>
+              <div className="relative">
+                <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <select
+                  value={selectedCourse}
+                  onChange={(e) => setSelectedCourse(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075E54] min-h-[42px] cursor-pointer"
+                >
+                  {currentCall?.citizen_selected_course && (
+                    <option value={currentCall.citizen_selected_course}>
+                      🎯 Citizen Choice: {currentCall.citizen_selected_course}
+                    </option>
+                  )}
+                  <option value="">-- All Top 3 Recommended Courses --</option>
+                  {currentCall?.recommended_courses?.map((rc: any) => (
+                    <option key={rc.qp_code} value={rc.qp_name}>
+                      {rc.qp_name} (NSQF {rc.nsqf_level})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Optional Officer Note */}
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              Additional Officer Note (Optional):
+              Officer Directive / Additional Note (Optional):
             </label>
             <div className="relative">
               <FileText className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -341,10 +379,35 @@ export function WhatsAppCourseModal({
                 rows={2}
                 value={customNote}
                 onChange={(e) => setCustomNote(e.target.value)}
-                placeholder="e.g. Please bring Aadhaar card to the block office on Monday."
+                placeholder="e.g. Please bring Aadhaar card and bank passbook to the block office on Monday."
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075E54] resize-none"
               />
             </div>
+          </div>
+
+          {/* Live Message Preview Accordion */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex items-center justify-between w-full text-xs font-bold text-slate-700 uppercase tracking-wider py-1 hover:text-[#075E54] cursor-pointer"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-[#075E54]" />
+                Live WhatsApp Message Preview (Real Data)
+              </span>
+              <span className="text-[11px] text-slate-400 font-normal">
+                {showPreview ? 'Hide Preview' : 'Show Preview'}
+              </span>
+            </button>
+
+            {showPreview && (
+              <div className="mt-2 bg-[#EFEAE2] p-3 rounded-xl border border-slate-300/80 shadow-inner">
+                <div className="bg-white rounded-lg p-3 shadow-xs border border-slate-200/80 text-[11px] text-slate-900 leading-relaxed font-sans whitespace-pre-wrap max-h-56 overflow-y-auto">
+                  {cleanMessage}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Result / Status Banner */}
@@ -365,7 +428,7 @@ export function WhatsAppCourseModal({
               <div className="flex-1">
                 <p className="font-bold">
                   {dispatchResult.success
-                    ? 'Call Record Initialized & Dispatched!'
+                    ? 'Receipt Successfully Dispatched!'
                     : 'Dispatch Notice'}
                 </p>
                 <p className="text-[11px] mt-0.5">
@@ -378,7 +441,7 @@ export function WhatsAppCourseModal({
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 font-bold text-[#075E54] hover:underline mt-1.5 text-[11px]"
                   >
-                    <span>Open directly in WhatsApp Web / App</span>
+                    <span>Open directly in WhatsApp Web / Mobile</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 )}
@@ -388,7 +451,7 @@ export function WhatsAppCourseModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-slate-50 border-t border-slate-200 p-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="bg-slate-50 border-t border-slate-200 p-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <button
             type="button"
             onClick={handleCopyText}
@@ -397,12 +460,12 @@ export function WhatsAppCourseModal({
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-[#0A783C]" />
-                <span className="text-[#0A783C]">Copied Message!</span>
+                <span className="text-[#0A783C]">Copied Real Receipt!</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-slate-400" />
-                <span>Copy Text</span>
+                <span>Copy Message Text</span>
               </>
             )}
           </button>
@@ -429,12 +492,12 @@ export function WhatsAppCourseModal({
               {isSubmitting ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Initialising...</span>
+                  <span>Dispatching...</span>
                 </>
               ) : (
                 <>
                   <Send className="w-3.5 h-3.5" />
-                  <span>Initialise Call Record</span>
+                  <span>Dispatch Real Receipt</span>
                 </>
               )}
             </Button>

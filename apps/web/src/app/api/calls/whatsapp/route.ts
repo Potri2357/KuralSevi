@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { saveCompletedCall } from '@/lib/recommendation-service';
+import { saveCompletedCall, loadCompletedCalls } from '@/lib/recommendation-service';
+import { buildRealDataWhatsAppMessage } from '@/lib/notification-formatter';
 
 function getEnvVar(key: string, defaultValue = ''): string {
   if (process.env[key]) return process.env[key]!;
@@ -27,27 +28,18 @@ function getEnvVar(key: string, defaultValue = ''): string {
   return defaultValue;
 }
 
-interface CoursePayload {
-  qp_code: string;
-  qp_name: string;
-  nsqf_level?: number;
-  duration?: string;
-  stipend?: string;
-  income_range?: string;
-  sector?: string;
-  training_center?: string;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     let {
       phone,
       language = 'ta',
-      mode = 'course',
-      course,
+      mode = 'intake',
       caseId,
       beneficiaryName = 'Beneficiary',
+      confirmed_fields,
+      recommended_courses,
+      selected_course,
       customNote = '',
     } = body;
 
@@ -67,92 +59,49 @@ export async function POST(req: NextRequest) {
     }
 
     const digitsOnly = cleanPhone.replace(/\D/g, '');
-    const generatedCaseId = caseId || `WA-${digitsOnly.slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
 
-    // Selected or default course
-    const selectedCourse: CoursePayload = course || {
-      qp_code: 'APP/Q0301',
-      qp_name: "Tailor - Women's & Men's Garment",
-      nsqf_level: 4,
-      duration: '300 Hours (3 Months)',
-      stipend: '₹1,500/month DBT under PM-AJAY',
-      income_range: '₹15,000 - ₹25,000/month',
-      sector: 'Apparel',
-      training_center: 'District PM-AJAY Skill Development Center / NSDC Partner',
-    };
+    // Look up existing call record in completed_calls.json if caseId provided
+    const allCalls = loadCompletedCalls();
+    const existingRecord = caseId
+      ? allCalls.find((c) => c.case_id === caseId || c.phone === cleanPhone)
+      : allCalls.find((c) => c.phone === cleanPhone);
 
-    // Clean text WhatsApp message without any emojis
-    let waMessage = '';
+    const generatedCaseId =
+      caseId ||
+      existingRecord?.case_id ||
+      `WA-${digitsOnly.slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
 
-    if (language === 'ta') {
-      waMessage = [
-        '*அரசு PM-AJAY வாழ்வாதார மற்றும் திறன் பயிற்சி பதிவு (Kural Sevi Intake)*',
-        '--------------------------------------------------',
-        `மனு எண் (Case ID): ${generatedCaseId}`,
-        `பயனாளி: ${beneficiaryName}`,
-        `தொலைபேசி: ${cleanPhone}`,
-        '',
-        'வணக்கம்! தமிழ்நாடு அரசு PM-AJAY திட்டத்தின் கீழ் இலவச தொழில் திறன் பயிற்சி பாடநெறிகள், மாதாந்திர உதவித்தொகை (ரூ. 1,500/மாதம்) மற்றும் வாழ்வாதார மானியங்களைப் பெற உங்களை வரவேற்கிறோம்.',
-        '',
-        'பதிவை தொடங்க:',
-        '1. உங்கள் கல்வி தகுதி, தற்போதைய வேலை மற்றும் விருப்பமான தொழில் பயிற்சி பற்றி ஒரு குரல் பதிவு (Voice Note) அல்லது செய்தியை உடனே இங்கு அனுப்பவும்.',
-        '2. அல்லது "START" அல்லது "சரி" என்று உடனே பதில் அனுப்பவும்.',
-        customNote ? `\nகுறிப்பு: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - தமிழ்நாடு அரசு PM-AJAY தொலைபேசி மற்றும் வாட்ஸ்அப் பதிவு சேவை_',
-      ].filter(Boolean).join('\n');
-    } else if (language === 'hi') {
-      waMessage = [
-        '*सरकारी पीएम-अजय (PM-AJAY) आजीविका एवं कौशल प्रशिक्षण पंजीकरण (Kural Sevi)*',
-        '--------------------------------------------------',
-        `केस आईडी (Case ID): ${generatedCaseId}`,
-        `लाभार्थी: ${beneficiaryName}`,
-        `फोन: ${cleanPhone}`,
-        '',
-        'नमस्ते! केंद्र एवं राज्य सरकार की पीएम-अजय योजना के तहत मुफ़्त कौशल प्रशिक्षण पाठ्यक्रम, मासिक वजीफा (रु. 1,500/माह) और आजीविका सहायता हेतु आपका स्वागत है।',
-        '',
-        'पंजीकरण शुरू करने के लिए:',
-        '1. अपनी शिक्षा, वर्तमान कार्य और पसंदीदा कौशल पाठ्यक्रम के बारे में वॉइस नोट (Voice Note) या संदेश भेजें।',
-        '2. या तुरंत "START" या "हाँ" लिखकर उत्तर दें।',
-        customNote ? `\nनोट: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - पीएम-अजय टेलीफोनी एवं व्हाट्सएप पंजीकरण सेवा_',
-      ].filter(Boolean).join('\n');
-    } else if (language === 'te') {
-      waMessage = [
-        '*ప్రభుత్వ PM-AJAY జీవనోపాధి మరియు నైపుణ్య శిక్షణ నమోదు (Kural Sevi)*',
-        '--------------------------------------------------',
-        `కేస్ ఐడీ (Case ID): ${generatedCaseId}`,
-        `లబ్ధిదారు: ${beneficiaryName}`,
-        `ఫోన్: ${cleanPhone}`,
-        '',
-        'నమస్కారం! ప్రభుత్వ PM-AJAY పథకం కింద ఉచిత వృత్తి నైపుణ్య కోర్సులు, నెలవారీ స్టైపెండ్ (రూ. 1,500/నెలకు) మరియు ఉపాధి మార్గదర్శకత్వం కొరకు ఆహ్వానిస్తున్నాము.',
-        '',
-        'నమోదు ప్రారంభించడానికి:',
-        '1. మీ విద్యార్హత, ప్రస్తుత పని మరియు ఆసక్తి ఉన్న వృత్తి కోర్సు గురించి వాయిస్ నోట్ (Voice Note) లేదా సందేశం పంపండి.',
-        '2. లేదా వెంటనే "START" అని రిప్లై ఇవ్వండి.',
-        customNote ? `\nగమనిక: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - PM-AJAY టెలిఫోనీ & వాట్సాప్ నమోదు వేదిక_',
-      ].filter(Boolean).join('\n');
-    } else {
-      waMessage = [
-        '*Government PM-AJAY Livelihood & Skill Course Intake (Kural Sevi)*',
-        '--------------------------------------------------',
-        `Case ID: ${generatedCaseId}`,
-        `Beneficiary: ${beneficiaryName}`,
-        `Phone: ${cleanPhone}`,
-        '',
-        'Greetings! Welcome to the government PM-AJAY initiative for free vocational skill training courses, monthly DBT stipend (Rs. 1,500/month), and livelihood support.',
-        '',
-        'To begin your enrollment:',
-        '1. Reply with a Voice Note or message sharing your education, current occupation, and desired vocational training trade.',
-        '2. Or simply reply "START" or "YES" to this message.',
-        customNote ? `\nOfficer Note: ${customNote}` : '',
-        '--------------------------------------------------',
-        '_Kural Sevi - Government PM-AJAY Telephony & WhatsApp Automated Intake Platform_',
-      ].filter(Boolean).join('\n');
-    }
+    // Extract real data from existing record if not explicitly in request
+    const activeFields =
+      confirmed_fields || existingRecord?.confirmed_fields || {};
+    const activeCourses =
+      recommended_courses || existingRecord?.recommended_courses || [];
+    const activeSelectedCourse =
+      selected_course ||
+      existingRecord?.citizen_selected_course ||
+      (activeCourses.length > 0 && mode === 'single_course' ? activeCourses[0]?.qp_name : undefined);
+
+    const activeLanguage = language || existingRecord?.language || 'ta';
+    const activeName =
+      beneficiaryName !== 'Beneficiary'
+        ? beneficiaryName
+        : (existingRecord as any)?.beneficiary_name ||
+          (existingRecord?.case_id ? `Citizen (${existingRecord.case_id})` : 'Beneficiary');
+
+    // Build real-data bilingual WhatsApp message
+    const waMessage = buildRealDataWhatsAppMessage({
+      phone: cleanPhone,
+      language: activeLanguage,
+      caseId: generatedCaseId,
+      beneficiaryName: activeName,
+      confirmedFields: activeFields,
+      recommendedCourses: activeCourses,
+      selectedCourse: activeSelectedCourse,
+      customNote,
+      isConfirmedStatus:
+        existingRecord?.citizen_confirmed ||
+        existingRecord?.status === 'BENEFICIARY_CONFIRMED',
+    });
 
     // Direct wa.me link for browser / desktop 1-click fallback
     const waLink = `https://wa.me/${digitsOnly}?text=${encodeURIComponent(waMessage)}`;
@@ -168,7 +117,7 @@ export async function POST(req: NextRequest) {
     let twilioResult: any = null;
     let twilioDispatched = false;
 
-    if (accountSid && authToken) {
+    if (accountSid && authToken && !accountSid.includes('dummy')) {
       try {
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
         const authHeader = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
@@ -189,59 +138,91 @@ export async function POST(req: NextRequest) {
         twilioResult = await twilioRes.json();
         if (twilioRes.ok) {
           twilioDispatched = true;
+        } else {
+          console.warn('Twilio WhatsApp response:', twilioResult);
         }
       } catch (err: any) {
         console.warn('Twilio WhatsApp dispatch notice:', err?.message);
       }
     }
 
-    // Persist as a completed / active Call Record in completed_calls.json
-    const newRecord = {
-      session_id: `wa-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
-      case_id: generatedCaseId,
-      phone: cleanPhone,
-      channel: 'whatsapp',
-      language,
-      status: 'COURSE_DISPATCHED',
-      citizen_confirmed: false,
-      notification_status: twilioDispatched ? 'WHATSAPP_DISPATCHED' : 'WHATSAPP_READY',
-      completed_at: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
-      confirmed_fields: {
-        skills_and_interests: selectedCourse.qp_name,
-        employment_preference: selectedCourse.sector || 'Skill Development Course',
-        local_economic_context: selectedCourse.qp_code,
-      },
-      turns_count: 1,
-      transcript: [
+    // Persist or Update completed call record
+    let finalRecord: any;
+
+    if (existingRecord) {
+      // Update existing record preserving all prior turn history and scores
+      const existingTranscript = existingRecord.transcript || [];
+      const updatedTranscript = [
+        ...existingTranscript,
         {
-          user: `WhatsApp Course Outreach: ${selectedCourse.qp_name}`,
-          assistant: `Dispatched NSQF course details (${selectedCourse.qp_code}) to ${cleanPhone}`,
+          user: `Officer Action: Dispatched Real WhatsApp Confirmation Receipt`,
+          assistant: activeSelectedCourse
+            ? `Dispatched official receipt for confirmed course: ${activeSelectedCourse}`
+            : `Dispatched official receipt with top ${activeCourses.length || 3} recommended courses`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
-      ],
-      confirmed_via: 'WhatsApp',
-      confirmed_at: twilioDispatched ? new Date().toISOString() : undefined,
-    };
+      ];
 
-    saveCompletedCall(newRecord);
+      finalRecord = {
+        ...existingRecord,
+        notification_status: twilioDispatched ? 'WHATSAPP_DISPATCHED' : 'WHATSAPP_READY',
+        confirmed_via: existingRecord.confirmed_via || 'WhatsApp',
+        transcript: updatedTranscript,
+        turns_count: updatedTranscript.length,
+      };
+
+      if (activeSelectedCourse && !finalRecord.citizen_selected_course) {
+        finalRecord.citizen_selected_course = activeSelectedCourse;
+      }
+
+      saveCompletedCall(finalRecord);
+    } else {
+      // New call session record created from portal
+      finalRecord = {
+        session_id: `wa-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+        case_id: generatedCaseId,
+        phone: cleanPhone,
+        channel: 'whatsapp',
+        language: activeLanguage,
+        status: activeSelectedCourse ? 'BENEFICIARY_CONFIRMED' : 'RECEIPT_DISPATCHED',
+        citizen_confirmed: !!activeSelectedCourse,
+        notification_status: twilioDispatched ? 'WHATSAPP_DISPATCHED' : 'WHATSAPP_READY',
+        completed_at: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
+        confirmed_fields: activeFields,
+        recommended_courses: activeCourses,
+        citizen_selected_course: activeSelectedCourse,
+        turns_count: 1,
+        transcript: [
+          {
+            user: `WhatsApp Confirmation Outreach to ${activeName}`,
+            assistant: `Dispatched official PM-AJAY notification receipt to ${cleanPhone}`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+        ],
+        confirmed_via: 'WhatsApp',
+        confirmed_at: twilioDispatched ? new Date().toISOString() : undefined,
+      };
+
+      saveCompletedCall(finalRecord);
+    }
 
     return NextResponse.json({
       success: true,
       message: twilioDispatched
-        ? `WhatsApp message successfully dispatched to ${cleanPhone}.`
-        : `WhatsApp course notification prepared for ${cleanPhone}. You can also open directly in WhatsApp Web.`,
+        ? `Official PM-AJAY WhatsApp receipt successfully dispatched to ${cleanPhone}.`
+        : `WhatsApp confirmation receipt prepared for ${cleanPhone}. You can also open directly in WhatsApp Web.`,
       twilio_dispatched: twilioDispatched,
       twilio_sid: twilioResult?.sid,
       wa_link: waLink,
       case_id: generatedCaseId,
       phone: cleanPhone,
       message_preview: waMessage,
-      record: newRecord,
+      record: finalRecord,
     });
   } catch (err: any) {
     console.error('Error in /api/calls/whatsapp:', err);
     return NextResponse.json(
-      { success: false, error: err?.message || 'Failed to dispatch WhatsApp course message.' },
+      { success: false, error: err?.message || 'Failed to dispatch WhatsApp message.' },
       { status: 500 }
     );
   }
