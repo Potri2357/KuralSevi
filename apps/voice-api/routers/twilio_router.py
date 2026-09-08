@@ -74,6 +74,14 @@ GATHER_LANG_MAP = {
     "en": "en-IN",
 }
 
+TWILIO_SAY_VOICE_MAP = {
+    "ta-IN": "Google.ta-IN-Standard-A",
+    "te-IN": "Google.te-IN-Standard-A",
+    "ml-IN": "Google.ml-IN-Standard-A",
+    "hi-IN": "Polly.Aditi",
+    "en-IN": "Polly.Kajal-Neural",
+}
+
 # ── Audio Streaming Endpoint for Twilio <Play> ──────────────────────────────────
 
 @router.api_route("/audio/{audio_id}.wav", methods=["GET", "HEAD", "POST"])
@@ -135,7 +143,8 @@ def _play_or_say(response: VoiceResponse, turn_result: CoordinatorTurnResult, lo
         response.play(audio_url)
     else:
         logger.warning(f"No audio {log_label}, falling back to <Say> ({lang_tag})")
-        response.say(turn_result.spoken_response[:300], language=lang_tag)
+        say_voice = TWILIO_SAY_VOICE_MAP.get(lang_tag, "Polly.Aditi")
+        response.say(turn_result.spoken_response[:300], language=lang_tag, voice=say_voice)
 
 
 def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
@@ -145,6 +154,7 @@ def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
     lang_tag = GATHER_LANG_MAP.get(lang_code, "en-IN")
     if turn_result.is_completed:
         _play_or_say(response, turn_result, log_label="(completion)")
+        response.pause(length=1)
         response.hangup()
         return response
 
@@ -155,6 +165,7 @@ def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
         method="POST",
         language=lang_tag,
         speech_timeout="auto",
+        speech_model="experimental_conversations",
         timeout=8 if is_course_selection else 6,
         action_on_empty_result=True,
         barge_in=False if is_course_selection else True,
@@ -166,7 +177,8 @@ def _build_gather_response(turn_result: CoordinatorTurnResult) -> VoiceResponse:
         gather.play(audio_url)
     else:
         logger.warning(f"No audio (turn), speaking interview question via native <Gather><Say> ({lang_tag})")
-        gather.say(turn_result.spoken_response[:300], language=lang_tag)
+        say_voice = TWILIO_SAY_VOICE_MAP.get(lang_tag, "Polly.Aditi")
+        gather.say(turn_result.spoken_response[:300], language=lang_tag, voice=say_voice)
 
     response.append(gather)
     # Safety redirect: if Gather still gets nothing, re-prompt
@@ -233,17 +245,20 @@ async def start_interview(
     consent_url = f"{settings.voice_api_url}/webhooks/twilio/audio/{consent_filename}"
     lang_tag = GATHER_LANG_MAP.get(language, "en-IN")
 
+    # 1. Guaranteed full playback of initial greeting — prevents line noise / pickup click from prematurely cutting off audio
+    response.play(consent_url)
+
+    # 2. Gather caller confirmation and language choice immediately following greeting (1s endpointing for snappy response)
     gather = Gather(
         input="speech",
         action=f"{settings.voice_api_url}/webhooks/twilio/interview-turn?language={language}",
         method="POST",
         language=lang_tag,
-        speech_timeout="auto",
+        speech_timeout=1,
+        speech_model="experimental_conversations",
         timeout=6,
         action_on_empty_result=True,
-        barge_in=True,
     )
-    gather.play(consent_url)
     response.append(gather)
     # Redirect fallback if no speech detected within timeout — explicit POST
     response.redirect(f"{settings.voice_api_url}/webhooks/twilio/interview-turn?CallSid={CallSid}&timeout=true&language={language}", method="POST")

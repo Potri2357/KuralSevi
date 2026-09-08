@@ -141,12 +141,16 @@ async def synthesize_speech(
         logger.info(f"[AUDIO CACHE HIT] Served pre-rendered audio in 0.001ms for: {text[:50]!r}")
         return TTSResult(audio_bytes=cached_audio, audio_format="wav")
 
-    # Fast circuit breaker check: if Sarvam is cooling down from 429, skip immediately (0ms delay)
+    # Fast circuit breaker check: if Sarvam is cooling down, route directly to neural edge-tts (0ms delay)
     if not circuit_breaker.is_available("sarvam_tts"):
         logger.info(
             f"[CIRCUIT BREAKER] Skipping Sarvam TTS (cooling down for {circuit_breaker.get_remaining_cooldown('sarvam_tts'):.0f}s). "
-            "Falling back directly to native telephony voice."
+            f"Routing directly to neural edge-tts for ({language_code})."
         )
+        edge_audio = await _synthesize_edge_tts(text, language_code)
+        if edge_audio:
+            put_cached_audio(text, language_code, speaker, edge_audio)
+            return TTSResult(audio_bytes=edge_audio, audio_format="wav")
         return None
 
     if mock_mode:
@@ -189,6 +193,8 @@ async def synthesize_speech(
                     return base64.b64decode(audio_b64)
             elif resp.status_code == 429:
                 circuit_breaker.trip("sarvam_tts", "429 Rate Limit", cooldown=15.0)
+            elif resp.status_code in (402, 403):
+                circuit_breaker.trip("sarvam_tts", f"{resp.status_code} Payment Required / Forbidden", cooldown=3600.0)
             else:
                 logger.warning(f"Sarvam TTS error ({resp.status_code}): {resp.text[:120]}")
         except Exception as e:
@@ -301,6 +307,7 @@ def _sanitize_for_tts(text: str, language_code: str) -> str:
         "ml": "ക്ഷമിക്കണം, വീണ്ടും പറയാമോ?",
         "hi": "माफ़ कीजिए, कृपया दोबारा बोलें।",
         "te": "క్షమించండి, మళ్ళీ చెప్పండి.",
+        "en": "Sorry, could you please repeat that?",
     }
 
     # Strip JSON/EXTRACT artifacts (including partial tokens like 'EXT', 'EXTRAC')
@@ -314,7 +321,15 @@ def _sanitize_for_tts(text: str, language_code: str) -> str:
     text = re.sub(r'\{[^}]*\}', '', text, flags=re.DOTALL).strip()
     # Remove trailing English parentheticals: " (Information about ...)"
     text = re.sub(r'\s*\([^)]*[a-zA-Z]{3,}[^)]*\)', '', text).strip()
-    # Remove lines that are mostly ASCII (English annotations mixed in)
+
+    # For English: do NOT strip ASCII lines or enforce Indic Unicode characters
+    if language_code == "en":
+        alpha_count = sum(1 for c in text if c.isalpha())
+        if alpha_count < 3:
+            return SAFE_FALLBACKS["en"]
+        return text.strip()
+
+    # For Indic languages: Remove lines that are mostly ASCII (English annotations mixed in)
     lines = []
     for line in text.splitlines():
         ascii_ratio = sum(1 for c in line if ord(c) < 128 and c.isalpha()) / max(len(line), 1)

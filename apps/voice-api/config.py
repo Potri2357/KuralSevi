@@ -30,15 +30,15 @@ class Settings(BaseSettings):
     twilio_whatsapp_number: str = "whatsapp:+14155238886"
     
     # WhatsApp
-    whatsapp_api_token: str
-    whatsapp_phone_number_id: str
-    whatsapp_webhook_verify_token: str
+    whatsapp_api_token: str = "your-whatsapp-token"
+    whatsapp_phone_number_id: str = "your-phone-number-id"
+    whatsapp_webhook_verify_token: str = "your-verify-token"
     
     # Application
     app_url: str = "http://localhost:3000"
     voice_api_url: str = "http://localhost:8000"
     officer_sla_days: int = 3
-    consent_hmac_secret: str
+    consent_hmac_secret: str = "5464573cffb4fba56d24ecb7adb35bfdbfea904dc52e5fb07aa5c9a470070b8e"
     
     # Groq Fallback
     groq_api_key: Optional[str] = None

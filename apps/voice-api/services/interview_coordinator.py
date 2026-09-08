@@ -858,6 +858,40 @@ class InterviewCoordinator:
 
         # ── Turn 2: Identity Response Fast-Path ──────────────────────────────────
         if session.state == InterviewState.FIELD_COLLECTION and getattr(session, "identity_asked", False) and not getattr(session, "identity_confirmed", False):
+            # If user simply stated their language preference (e.g., 'Tamil', 'தமிழ்', 'English'), don't treat it as their name!
+            clean_token = user_lower.strip().replace(".", "").replace("!", "")
+            is_just_lang = clean_token in (
+                "tamil", "தமிழ்", "tamizh", "thamizh", "english", "hindi", "हिंदी", "telugu", "తెలుగు", "malayalam", "മലയാളം"
+            )
+            if is_just_lang:
+                if lang == "ml":
+                    q1_text = "വളരെ നന്ദി! ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?"
+                    q1_audio = _get_static_bytes("q1_name_village_ml.wav")
+                elif lang == "hi":
+                    q1_text = "बहुत-बहुत धन्यवाद! सबसे पहले आपका शुभ नाम और आप किस गांव या शहर से हैं, यह बताइए?"
+                    q1_audio = _get_static_bytes("q1_name_village_hi.wav")
+                elif lang == "te":
+                    q1_text = "చాలా ధన్యవాదాలు అండీ! ముందుగా మీ పేరు మరియు మీ ఊరు ఏదో చెబుతారా?"
+                    q1_audio = _get_static_bytes("q1_name_village_te.wav")
+                elif lang == "en":
+                    q1_text = "Thank you! To begin, could you please tell me your name and your village or town?"
+                    q1_audio = await self._synthesize_safe(q1_text, "en", speaker=speaker)
+                else:
+                    q1_text = "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
+                    q1_audio = _get_static_bytes("q_name_place.wav") or _get_static_bytes("q1_name_village.wav")
+
+                q1_audio = q1_audio or await self._synthesize_safe(q1_text, lang, speaker=speaker)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=q1_text,
+                    audio_bytes=q1_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=session.current_field,
+                    language_code=lang,
+                )
+
             session.identity_confirmed = True
             
             # Fast synchronous extraction of name / village from user speech
