@@ -87,16 +87,16 @@ TWILIO_SAY_VOICE_MAP = {
 @router.api_route("/audio/{audio_id}.wav", methods=["GET", "HEAD", "POST"])
 async def get_audio_wav(audio_id: str):
     """Streams synthesized Sarvam AI / Edge-TTS audio WAV directly to Twilio."""
+    # 1. Pre-rendered static audio assets
+    c_name = audio_id if audio_id.endswith(".wav") else f"{audio_id}.wav"
+    static_file = _STATIC_AUDIO_DIR / c_name
+    if static_file.exists():
+        return Response(content=static_file.read_bytes(), media_type="audio/wav")
     if audio_id in ("hold_ta", "hold"):
         hold_file = _STATIC_AUDIO_DIR / "hold_ta.wav"
         if hold_file.exists():
             return Response(content=hold_file.read_bytes(), media_type="audio/wav")
     if audio_id.startswith("consent"):
-        c_name = audio_id if audio_id.endswith(".wav") else f"{audio_id}.wav"
-        consent_file = _STATIC_AUDIO_DIR / c_name
-        if consent_file.exists():
-            return Response(content=consent_file.read_bytes(), media_type="audio/wav")
-        # Fallback to consent_ta.wav
         c_ta = _STATIC_AUDIO_DIR / "consent_ta.wav"
         if c_ta.exists():
             return Response(content=c_ta.read_bytes(), media_type="audio/wav")
