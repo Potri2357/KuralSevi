@@ -5,27 +5,35 @@ import { saveCompletedCall, loadCompletedCalls } from '@/lib/recommendation-serv
 import { buildRealDataWhatsAppMessage } from '@/lib/notification-formatter';
 
 function getEnvVar(key: string, defaultValue = ''): string {
-  if (process.env[key]) return process.env[key]!;
+  const candidatePaths = [
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(process.cwd(), 'apps/web/.env'),
+    path.resolve(process.cwd(), '../../.env'),
+    path.resolve(process.cwd(), '../.env'),
+    path.resolve(process.cwd(), '.env.local'),
+  ];
 
-  try {
-    const rootEnv = path.resolve(process.cwd(), '../../.env');
-    if (fs.existsSync(rootEnv)) {
-      const content = fs.readFileSync(rootEnv, 'utf8');
-      for (const line of content.split('\n')) {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-          const [k, ...rest] = trimmed.split('=');
-          if (k.trim() === key) {
-            return rest.join('=').trim();
+  for (const envPath of candidatePaths) {
+    try {
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, 'utf8');
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+            const [k, ...rest] = trimmed.split('=');
+            if (k.trim() === key) {
+              const val = rest.join('=').trim();
+              if (val) return val;
+            }
           }
         }
       }
+    } catch {
+      // ignore
     }
-  } catch {
-    // ignore
   }
 
-  return defaultValue;
+  return process.env[key] || defaultValue;
 }
 
 export async function POST(req: NextRequest) {
@@ -51,14 +59,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Clean and normalize phone number
-    let cleanPhone = phone.trim().replace(/[\s\-()]/g, '');
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = '+91' + cleanPhone.slice(1);
-    } else if (!cleanPhone.startsWith('+')) {
-      cleanPhone = '+91' + cleanPhone;
+    let digitsOnly = phone.trim().replace(/\D/g, '');
+    if (digitsOnly.length === 11 && digitsOnly.startsWith('0')) {
+      digitsOnly = '91' + digitsOnly.slice(1);
+    } else if (digitsOnly.length === 10) {
+      digitsOnly = '91' + digitsOnly;
     }
-
-    const digitsOnly = cleanPhone.replace(/\D/g, '');
+    const cleanPhone = '+' + digitsOnly;
 
     // Look up existing call record in completed_calls.json if caseId provided
     const allCalls = loadCompletedCalls();
@@ -106,44 +113,31 @@ export async function POST(req: NextRequest) {
     // Direct wa.me link for browser / desktop 1-click fallback
     const waLink = `https://wa.me/${digitsOnly}?text=${encodeURIComponent(waMessage)}`;
 
-    // Attempt Twilio WhatsApp dispatch
-    const accountSid = getEnvVar('TWILIO_ACCOUNT_SID');
-    const authToken = getEnvVar('TWILIO_AUTH_TOKEN');
-    let fromNumber = getEnvVar('TWILIO_WHATSAPP_NUMBER') || 'whatsapp:+14155238886';
-    if (!fromNumber.startsWith('whatsapp:')) {
-      fromNumber = `whatsapp:${fromNumber}`;
-    }
+    let dispatched = false;
+    let dispatchProvider = 'none';
+    let botMessageId = '';
+    let failureReason = '';
 
-    let twilioResult: any = null;
-    let twilioDispatched = false;
-
-    if (accountSid && authToken && !accountSid.includes('dummy')) {
-      try {
-        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-        const authHeader = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-        const formData = new URLSearchParams();
-        formData.append('To', `whatsapp:${cleanPhone}`);
-        formData.append('From', fromNumber);
-        formData.append('Body', waMessage);
-
-        const twilioRes = await fetch(twilioUrl, {
-          method: 'POST',
-          headers: {
-            Authorization: authHeader,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData.toString(),
-        });
-
-        twilioResult = await twilioRes.json();
-        if (twilioRes.ok) {
-          twilioDispatched = true;
-        } else {
-          console.warn('Twilio WhatsApp response:', twilioResult);
-        }
-      } catch (err: any) {
-        console.warn('Twilio WhatsApp dispatch notice:', err?.message);
+    // Dispatch via Self-Hosted WhatsApp Bot (Baileys Multi-Device)
+    const localBotUrl = getEnvVar('WHATSAPP_BOT_URL') || 'http://localhost:5005';
+    try {
+      const botRes = await fetch(`${localBotUrl.replace(/\/$/, '')}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: digitsOnly, message: waMessage }),
+        signal: AbortSignal.timeout(6000),
+      });
+      const botData = await botRes.json().catch(() => ({}));
+      if (botRes.ok && botData.success) {
+        dispatched = true;
+        dispatchProvider = 'self-hosted-bot';
+        botMessageId = botData.messageId || 'sent';
+        console.log('[Local WhatsApp Bot] Successfully dispatched to', digitsOnly, 'Message ID:', botMessageId);
+      } else {
+        failureReason = botData.error || `Bot returned HTTP ${botRes.status}`;
       }
+    } catch (err: any) {
+      failureReason = `Local WhatsApp Bot unreachable at ${localBotUrl}: ${err?.message || 'offline'}. Start with npm run whatsapp:bot`;
     }
 
     // Persist or Update completed call record
@@ -165,7 +159,7 @@ export async function POST(req: NextRequest) {
 
       finalRecord = {
         ...existingRecord,
-        notification_status: twilioDispatched ? 'WHATSAPP_DISPATCHED' : 'WHATSAPP_READY',
+        notification_status: dispatched ? 'WHATSAPP_DISPATCHED' : 'WHATSAPP_READY',
         confirmed_via: existingRecord.confirmed_via || 'WhatsApp',
         transcript: updatedTranscript,
         turns_count: updatedTranscript.length,
@@ -186,7 +180,7 @@ export async function POST(req: NextRequest) {
         language: activeLanguage,
         status: activeSelectedCourse ? 'BENEFICIARY_CONFIRMED' : 'RECEIPT_DISPATCHED',
         citizen_confirmed: !!activeSelectedCourse,
-        notification_status: twilioDispatched ? 'WHATSAPP_DISPATCHED' : 'WHATSAPP_READY',
+        notification_status: dispatched ? 'WHATSAPP_DISPATCHED' : 'WHATSAPP_READY',
         completed_at: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
         confirmed_fields: activeFields,
         recommended_courses: activeCourses,
@@ -200,19 +194,24 @@ export async function POST(req: NextRequest) {
           },
         ],
         confirmed_via: 'WhatsApp',
-        confirmed_at: twilioDispatched ? new Date().toISOString() : undefined,
+        confirmed_at: dispatched ? new Date().toISOString() : undefined,
       };
 
       saveCompletedCall(finalRecord);
     }
 
     return NextResponse.json({
-      success: true,
-      message: twilioDispatched
-        ? `Official PM-AJAY WhatsApp receipt successfully dispatched to ${cleanPhone}.`
-        : `WhatsApp confirmation receipt prepared for ${cleanPhone}. You can also open directly in WhatsApp Web.`,
-      twilio_dispatched: twilioDispatched,
-      twilio_sid: twilioResult?.sid,
+      success: dispatched,
+      dispatched,
+      message: dispatched
+        ? `Official PM-AJAY WhatsApp receipt successfully dispatched to ${cleanPhone} via ${dispatchProvider.toUpperCase()}.`
+        : `Could not deliver automatically (${failureReason}). Pair your device at http://localhost:5005/qr or open directly in WhatsApp to send.`,
+      error: dispatched
+        ? undefined
+        : `Delivery notice: ${failureReason}. Use "Open in WhatsApp" to deliver directly.`,
+      provider: dispatchProvider,
+      failure_reason: failureReason || undefined,
+      message_id: botMessageId || undefined,
       wa_link: waLink,
       case_id: generatedCaseId,
       phone: cleanPhone,

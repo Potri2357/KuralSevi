@@ -5,26 +5,49 @@ import path from 'path';
 function getEnvVar(key: string, defaultValue = ''): string {
   if (process.env[key]) return process.env[key]!;
 
-  // Fallback to checking root .env file
-  try {
-    const rootEnv = path.resolve(process.cwd(), '../../.env');
-    if (fs.existsSync(rootEnv)) {
-      const content = fs.readFileSync(rootEnv, 'utf8');
-      for (const line of content.split('\n')) {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-          const [k, ...rest] = trimmed.split('=');
-          if (k.trim() === key) {
-            return rest.join('=').trim();
+  const candidatePaths = [
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(process.cwd(), '../../.env'),
+    path.resolve(process.cwd(), '../.env'),
+    path.resolve(process.cwd(), '.env.local'),
+    path.resolve(process.cwd(), 'apps/web/.env.local'),
+  ];
+
+  for (const envPath of candidatePaths) {
+    try {
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, 'utf8');
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+            const [k, ...rest] = trimmed.split('=');
+            if (k.trim() === key) {
+              return rest.join('=').trim();
+            }
           }
         }
       }
+    } catch {
+      // ignore
     }
-  } catch {
-    // ignore
   }
 
   return defaultValue;
+}
+
+async function fetchWithRetry(url: string, opts: RequestInit, retries = 3): Promise<Response> {
+  let lastErr: any;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fetch(url, opts);
+    } catch (err: any) {
+      lastErr = err;
+      if (i < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 350 * (i + 1)));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 export async function POST(req: NextRequest) {
@@ -54,35 +77,94 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const accountSid = getEnvVar('TWILIO_ACCOUNT_SID');
-    const authToken = getEnvVar('TWILIO_AUTH_TOKEN');
-    const fromNumber = getEnvVar('TWILIO_PHONE_NUMBER');
-    const voiceApiUrl = getEnvVar('VOICE_API_URL', 'https://charita-techiest-histogenetically.ngrok-free.dev');
+    const exotelSid = getEnvVar('EXOTEL_ACCOUNT_SID', 'incogvia1');
+    const exotelKey = getEnvVar('EXOTEL_API_KEY');
+    const exotelToken = getEnvVar('EXOTEL_API_TOKEN');
+    const exotelCallerId = getEnvVar('EXOTEL_CALLER_ID', '08047289241');
+    const exotelAppId = getEnvVar('EXOTEL_APP_ID');
+    const voiceApiUrl = getEnvVar('VOICE_API_URL', 'https://charita-techiest-histogenetically.ngrok-free.dev').replace(/\/+$/, '');
 
-    const cliCommand = `python3 scripts/trigger-outbound-call.py ${cleanPhone} ${language}`;
+    const hasExotel = Boolean(exotelSid && exotelKey && exotelToken);
+    const cliCommand = `python3 scripts/trigger-exotel-call.py ${cleanPhone} ${language}`;
 
-    if (!accountSid || !authToken || !fromNumber) {
+    if (!hasExotel) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Twilio credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER) are not configured in environment.',
+          error: 'Exotel telephony credentials (EXOTEL_API_KEY / EXOTEL_API_TOKEN) not configured in environment.',
           command: cliCommand,
         },
         { status: 500 }
       );
     }
 
-    const webhookUrl = `${voiceApiUrl}/webhooks/twilio/interview-start?language=${encodeURIComponent(language)}`;
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`;
+    // Pre-flight check: Verify that the Voice API Webhook Tunnel is online before dialing
+    let tunnelOnline = false;
+    let preflightError = '';
 
-    const authHeader = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+    try {
+      const healthRes = await fetch(`${voiceApiUrl}/health`, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          'User-Agent': 'KuralSeviDialer/1.0',
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (healthRes.ok) {
+        tunnelOnline = true;
+      } else {
+        preflightError = `Voice API tunnel (${voiceApiUrl}) responded with HTTP ${healthRes.status}. Please make sure your ngrok tunnel is active and forwarding to port 8000.`;
+      }
+    } catch {
+      // Direct fetch over public ngrok might fail on local loopback/TLS; fallback to local inspector
+    }
+
+    if (!tunnelOnline) {
+      try {
+        const [localRes, ngrokRes] = await Promise.all([
+          fetch('http://127.0.0.1:8000/health', { signal: AbortSignal.timeout(2000) }),
+          fetch('http://127.0.0.1:4040/api/tunnels', { signal: AbortSignal.timeout(2000) }),
+        ]);
+        if (localRes.ok && ngrokRes.ok) {
+          const ngrokData = await ngrokRes.json();
+          const activeTunnels = ngrokData?.tunnels || [];
+          if (activeTunnels.length > 0) {
+            tunnelOnline = true;
+          }
+        }
+      } catch {
+        // Local fallback check failed
+      }
+    }
+
+    if (!tunnelOnline) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: preflightError || `Voice API Webhook Tunnel (${voiceApiUrl}) is offline or unreachable. Telephony requires an active public webhook URL to handle calls without throwing error. Please start your tunnel using: npm run tunnel.`,
+          command: cliCommand,
+        },
+        { status: 502 }
+      );
+    }
+
+    // ── Primary Path: Exotel (India Domestic Cloud Telephony) ──
+    const exotelDigits = cleanPhone.replace(/^\+91|^91|^0/, '');
+    const exotelUrl = `https://api.exotel.com/v1/Accounts/${exotelSid}/Calls/connect.json`;
+    const authHeader = 'Basic ' + Buffer.from(`${exotelKey}:${exotelToken}`).toString('base64');
+    
     const formData = new URLSearchParams();
-    formData.append('To', cleanPhone);
-    formData.append('From', fromNumber);
-    formData.append('Url', webhookUrl);
-    formData.append('Method', 'POST');
+    formData.append('From', exotelDigits);
+    formData.append('CallerId', exotelCallerId);
+    formData.append('CallType', 'trans');
 
-    const twilioRes = await fetch(twilioUrl, {
+    if (exotelAppId) {
+      formData.append('Url', `http://my.exotel.com/${exotelSid}/exoml/start_voice/${exotelAppId}`);
+    } else {
+      formData.append('To', exotelDigits);
+    }
+
+    const exotelRes = await fetchWithRetry(exotelUrl, {
       method: 'POST',
       headers: {
         Authorization: authHeader,
@@ -91,27 +173,32 @@ export async function POST(req: NextRequest) {
       body: formData.toString(),
     });
 
-    const twilioData = await twilioRes.json();
+    const exotelData = await exotelRes.json().catch(() => ({}));
 
-    if (!twilioRes.ok) {
+    if (!exotelRes.ok) {
+      let errorDetail = exotelData.RestException?.Message || `Exotel dispatch failed with status ${exotelRes.status}`;
+      if (errorDetail.toLowerCase().includes('kyc compliant')) {
+        errorDetail = `Exotel Free Trial restriction: Without commercial KYC, Exotel only allows outbound calls to your single registered phone number (+91 9342900638). Please dial +91 9342900638 to test the live voice interview.`;
+      }
       return NextResponse.json(
         {
           success: false,
-          error: twilioData.message || `Twilio call dispatch failed with status ${twilioRes.status}`,
-          code: twilioData.code,
+          error: `Exotel Dispatch Error: ${errorDetail}`,
+          provider: 'exotel',
           command: cliCommand,
         },
-        { status: twilioRes.status }
+        { status: exotelRes.status }
       );
     }
 
+    const callSid = exotelData.Call?.Sid || 'initiated';
     return NextResponse.json({
       success: true,
-      message: `Outbound call initiated to ${cleanPhone}. The beneficiary's phone will ring shortly.`,
-      call_sid: twilioData.sid,
-      status: twilioData.status,
-      to: twilioData.to,
-      from: twilioData.from,
+      message: `Outbound call initiated via Exotel to +91 ${exotelDigits}. Your phone will ring shortly from ${exotelCallerId}.`,
+      call_sid: callSid,
+      provider: 'exotel',
+      to: exotelDigits,
+      from: exotelCallerId,
       language,
       command: cliCommand,
     });

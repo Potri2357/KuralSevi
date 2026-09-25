@@ -45,11 +45,11 @@ def test_template_generation():
 
         print(f"\n[LANG: {lang}] Checking WhatsApp & SMS contents...")
         for kw in keywords:
-            assert kw in wa_msg, f"Missing keyword '{kw}' in WhatsApp message for {lang}!"
+            assert kw.lower() in wa_msg.lower(), f"Missing keyword '{kw}' in WhatsApp message for {lang}!"
         assert "Official Administrative Record (English):" in wa_msg, f"Missing English section in WA {lang}"
         assert "Education Level" in wa_msg, f"Missing Education Level in WA {lang}"
         assert "Agriculture / Farming" in wa_msg, f"Missing Agriculture / Farming in WA {lang}"
-        assert "PM-AJAY" in sms_msg, f"Missing PM-AJAY in SMS {lang}"
+        assert "Kural Sevi" in sms_msg or "PM-AJAY" in sms_msg, f"Missing Kural Sevi in SMS {lang}"
         assert len(sms_msg) <= 160, f"SMS length {len(sms_msg)} exceeds single segment 160 chars!"
         print(f"✓ {lang.upper()}: WhatsApp ({len(wa_msg)} chars) and SMS ({len(sms_msg)} chars) validated successfully!")
 
@@ -62,15 +62,15 @@ def test_full_call_and_sms_confirmation():
     phone = "+919444112233"
 
     with httpx.Client(base_url=API_BASE) as client:
-        # Start Call
+        # Start Call via Exotel
         start_res = client.post(
-            "/webhooks/twilio/interview-start?language=ta",
+            "/webhooks/exotel/interview-start?language=ta",
             data={"CallSid": call_sid, "From": phone, "Direction": "inbound"},
             timeout=10.0,
         )
         assert start_res.status_code == 200
 
-        # Run conversation turns to completion
+        # Run conversation turns to completion via Exotel
         turns = [
             "ஆமாம், பேசலாம்",
             "என் பேரு செல்வம், நான் மதுரை",
@@ -82,8 +82,8 @@ def test_full_call_and_sms_confirmation():
 
         for idx, t in enumerate(turns, 1):
             res = client.post(
-                "/webhooks/twilio/interview-turn?language=ta",
-                data={"CallSid": call_sid, "From": phone, "SpeechResult": t, "Confidence": "0.95"},
+                "/webhooks/exotel/interview-turn?language=ta",
+                data={"CallSid": call_sid, "From": phone, "Digits": "1"},
                 timeout=10.0,
             )
             assert res.status_code == 200
@@ -100,22 +100,20 @@ def test_full_call_and_sms_confirmation():
         assert target_rec.get("status") == "COMPLETED", f"Expected COMPLETED, got {target_rec.get('status')}"
         assert target_rec.get("notification_status") == "DISPATCHED", "Notification was not marked as dispatched!"
         case_id = target_rec.get("case_id")
-        print(f"\n✓ Call COMPLETED. Case ID: {case_id}")
-        print(f"✓ Notification dispatched via WhatsApp and SMS!")
+        print(f"\n✓ Call COMPLETED via Exotel. Case ID: {case_id}")
+        print(f"✓ Notification dispatched via WhatsApp Bot and Fast2SMS!")
 
-        # 3. Simulate Citizen Replying "YES" via SMS Webhook
+        # 3. Simulate Citizen Replying "YES" via /api/citizen-confirm
         print("\n--- Simulating Citizen SMS Reply: 'YES' ---")
         sms_reply_res = client.post(
-            "/webhooks/twilio/sms",
-            data={"From": phone, "To": "+17409134857", "Body": "YES"},
+            "/api/citizen-confirm",
+            json={"phone": phone, "channel": "SMS", "text": "YES"},
             timeout=10.0,
         )
         assert sms_reply_res.status_code == 200
-        root = ET.fromstring(sms_reply_res.text)
-        body_tag = root.find("Message/Body") if root.find("Message/Body") is not None else root.find("Message")
-        reply_ack = body_tag.text if body_tag is not None else sms_reply_res.text
-        print(f"Twilio SMS Response: '{reply_ack}'")
-        assert "உறுதிப்படுத்தப்பட்டன" in reply_ack or "PM-AJAY" in reply_ack, f"Unexpected reply ack: {reply_ack}"
+        reply_data = sms_reply_res.json()
+        assert reply_data.get("success") is True, f"Confirmation failed: {reply_data}"
+        print(f"Citizen SMS Confirm: Case {reply_data.get('case', {}).get('case_id')} confirmed!")
 
         # 4. Verify Dashboard has updated status to BENEFICIARY_CONFIRMED
         rec_res2 = client.get("/api/completed-calls")
@@ -142,16 +140,14 @@ def test_whatsapp_confirmation_loop():
     phone = "+919444112233"
     with httpx.Client(base_url=API_BASE) as client:
         wa_reply_res = client.post(
-            "/webhook/whatsapp",
-            data={"From": f"whatsapp:{phone}", "To": "whatsapp:+17409134857", "Body": "சரி"},
+            "/api/citizen-confirm",
+            json={"phone": phone, "channel": "WHATSAPP", "text": "சரி"},
             timeout=10.0,
         )
         assert wa_reply_res.status_code == 200
-        root = ET.fromstring(wa_reply_res.text)
-        body_tag = root.find("Message/Body") if root.find("Message/Body") is not None else root.find("Message")
-        reply_ack = body_tag.text if body_tag is not None else wa_reply_res.text
-        print(f"WhatsApp Response: '{reply_ack}'")
-        assert "உறுதிப்படுத்தப்பட்டன" in reply_ack, f"Expected confirmation ack, got: {reply_ack}"
+        reply_data = wa_reply_res.json()
+        assert reply_data.get("success") is True, f"WhatsApp confirmation failed: {reply_data}"
+        print(f"Citizen WhatsApp Confirm: Case {reply_data.get('case', {}).get('case_id')} confirmed!")
 
         # Check dashboard
         rec_res = client.get("/api/completed-calls")

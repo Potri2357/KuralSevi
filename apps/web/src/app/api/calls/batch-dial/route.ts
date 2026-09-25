@@ -46,12 +46,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const accountSid = getEnvVar('TWILIO_ACCOUNT_SID');
-    const authToken = getEnvVar('TWILIO_AUTH_TOKEN');
-    const fromNumber = getEnvVar('TWILIO_PHONE_NUMBER');
-    const voiceApiUrl = getEnvVar('VOICE_API_URL', 'https://charita-techiest-histogenetically.ngrok-free.dev');
+    const exotelSid = getEnvVar('EXOTEL_ACCOUNT_SID', 'incogvia1');
+    const exotelKey = getEnvVar('EXOTEL_API_KEY');
+    const exotelToken = getEnvVar('EXOTEL_API_TOKEN');
+    const exotelCallerId = getEnvVar('EXOTEL_CALLER_ID', '08047289241');
+    const exotelAppId = getEnvVar('EXOTEL_APP_ID');
 
-    const hasTwilio = Boolean(accountSid && authToken && fromNumber && !accountSid.toLowerCase().includes('dummy'));
+    const hasExotel = Boolean(exotelSid && exotelKey && exotelToken);
 
     const results: Array<{
       phone: string;
@@ -77,10 +78,6 @@ export async function POST(req: NextRequest) {
       existingCalls = [];
     }
 
-    const authHeader = hasTwilio
-      ? 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64')
-      : '';
-
     for (let i = 0; i < beneficiaries.length; i++) {
       const item = beneficiaries[i];
       let cleanPhone = (item.phone || '').trim().replace(/[\s\-()]/g, '');
@@ -103,21 +100,27 @@ export async function POST(req: NextRequest) {
       }
 
       const lang = item.language || 'ta';
-      const webhookUrl = `${voiceApiUrl}/webhooks/twilio/interview-start?language=${encodeURIComponent(lang)}`;
       const sessionId = `batch-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`;
       const caseId = `BAT-${cleanPhone.slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
 
-      // If we have Twilio, we can dispatch the first call right now, and queue the rest
-      if (hasTwilio && i === 0) {
+      // If we have Exotel, dispatch the first call right now, and queue the rest
+      if (hasExotel && i === 0) {
         try {
-          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`;
+          const exotelDigits = cleanPhone.replace(/^\+91|^91|^0/, '');
+          const exotelUrl = `https://api.exotel.com/v1/Accounts/${exotelSid}/Calls/connect.json`;
+          const authHeader = 'Basic ' + Buffer.from(`${exotelKey}:${exotelToken}`).toString('base64');
+          
           const formData = new URLSearchParams();
-          formData.append('To', cleanPhone);
-          formData.append('From', fromNumber);
-          formData.append('Url', webhookUrl);
-          formData.append('Method', 'POST');
+          formData.append('From', exotelDigits);
+          formData.append('CallerId', exotelCallerId);
+          formData.append('CallType', 'trans');
+          if (exotelAppId) {
+            formData.append('Url', `http://my.exotel.com/${exotelSid}/exoml/start_voice/${exotelAppId}`);
+          } else {
+            formData.append('To', exotelDigits);
+          }
 
-          const twilioRes = await fetch(twilioUrl, {
+          const exotelRes = await fetch(exotelUrl, {
             method: 'POST',
             headers: {
               Authorization: authHeader,
@@ -126,20 +129,21 @@ export async function POST(req: NextRequest) {
             body: formData.toString(),
           });
 
-          const twilioData = await twilioRes.json();
-          if (twilioRes.ok) {
+          const exotelData = await exotelRes.json().catch(() => ({}));
+          if (exotelRes.ok) {
+            const sid = exotelData.Call?.Sid || 'dispatched';
             results.push({
               phone: cleanPhone,
               name: item.name,
               language: lang,
               district: item.district,
               status: 'dispatched',
-              call_sid: twilioData.sid,
+              call_sid: sid,
             });
 
             // Register call in completed_calls.json
             existingCalls.unshift({
-              session_id: twilioData.sid || sessionId,
+              session_id: sid || sessionId,
               case_id: caseId,
               phone: cleanPhone,
               beneficiary_name: item.name || 'Registered Beneficiary',
@@ -168,7 +172,7 @@ export async function POST(req: NextRequest) {
               language: lang,
               district: item.district,
               status: 'failed',
-              error: twilioData.message || 'Twilio call failed',
+              error: exotelData.RestException?.Message || `Exotel call failed (${exotelRes.status})`,
             });
           }
         } catch (err: any) {

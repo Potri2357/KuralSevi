@@ -148,7 +148,7 @@ export default function HomePage() {
             DPDP Act 2023 Compliant
           </span>
           <span>·</span>
-          <span>Twilio IVR & WhatsApp Business</span>
+          <span>Exotel Telephony & Fast2SMS / WhatsApp</span>
           <span>·</span>
           <span>NSQF / QP-NOS Standard</span>
         </div>

@@ -23,6 +23,20 @@ class STTResult:
         self.confidence = confidence
         self.language_code = language_code
 
+_stt_async_client: Optional[httpx.AsyncClient] = None
+
+def _get_stt_client() -> httpx.AsyncClient:
+    global _stt_async_client
+    if _stt_async_client is None or _stt_async_client.is_closed:
+        limits = httpx.Limits(max_keepalive_connections=20, max_connections=40, keepalive_expiry=30.0)
+        _stt_async_client = httpx.AsyncClient(
+            http2=True,
+            timeout=httpx.Timeout(5.0, connect=3.0),
+            limits=limits,
+            headers={"User-Agent": "curl/8.7.1"}
+        )
+    return _stt_async_client
+
 async def transcribe_audio(
     audio_bytes: bytes,
     language_code: str,
@@ -69,7 +83,8 @@ async def transcribe_audio(
         "api-subscription-key": sarvam_api_key,
     }
 
-    async with httpx.AsyncClient(http2=True, timeout=30.0, headers={"User-Agent": "curl/8.7.1"}) as client:
+    try:
+        client = _get_stt_client()
         response = await client.post(
             sarvam_stt_url,
             files=files,
@@ -78,31 +93,75 @@ async def transcribe_audio(
         )
 
         if response.status_code != 200:
-            logger.error(f"Sarvam STT error: {response.status_code} {response.text}")
-            raise Exception(f"STT failed: {response.status_code} - {response.text}")
+            logger.warning(f"Sarvam STT returned {response.status_code} ({response.text[:120]}); falling back to Google Gemini 2.5 Flash STT.")
+            return await _transcribe_gemini_fallback(audio_bytes, language_code, ct)
 
         res_json = response.json()
         transcript = res_json.get("transcript", "").strip()
+    except Exception as e:
+        logger.warning(f"Sarvam STT connection failed ({e}); falling back to Google Gemini 2.5 Flash STT.")
+        return await _transcribe_gemini_fallback(audio_bytes, language_code, ct)
 
-        # If transcript was empty (e.g. ambient background or silence)
-        if not transcript:
-            logger.info("Sarvam STT returned empty transcript (silence or non-speech)")
-            return STTResult(
-                transcript="",
-                confidence=0.5,
-                language_code=language_code
-            )
-
-        # Sarvam returns confidence per word or overall
-        words = res_json.get("words", [])
-        if words:
-            confidences = [w.get("confidence", 0.85) for w in words if isinstance(w, dict)]
-            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.85
-        else:
-            avg_confidence = float(res_json.get("confidence", 0.88))
-
+    # If transcript was empty (e.g. ambient background or silence)
+    if not transcript:
+        logger.info("Sarvam STT returned empty transcript (silence or non-speech)")
         return STTResult(
-            transcript=transcript,
-            confidence=avg_confidence,
+            transcript="",
+            confidence=0.5,
             language_code=language_code
         )
+
+    # Sarvam returns confidence per word or overall
+    words = res_json.get("words", [])
+    if words:
+        confidences = [w.get("confidence", 0.85) for w in words if isinstance(w, dict)]
+        avg_confidence = sum(confidences) / len(confidences) if confidences else 0.85
+    else:
+        avg_confidence = float(res_json.get("confidence", 0.88))
+
+    return STTResult(
+        transcript=transcript,
+        confidence=avg_confidence,
+        language_code=language_code
+    )
+
+async def _transcribe_gemini_fallback(audio_bytes: bytes, language_code: str, content_type: str = "audio/wav") -> STTResult:
+    """Multimodal fallback transcription using Google Gemini 2.5 Flash."""
+    import base64
+    from config import settings
+    gemini_key = settings.google_ai_api_key
+    if not gemini_key:
+        logger.error("No GOOGLE_AI_API_KEY available for STT fallback.")
+        return STTResult(transcript="", confidence=0.0, language_code=language_code)
+
+    mime = "audio/wav"
+    if "webm" in content_type:
+        mime = "audio/webm"
+    elif "mp4" in content_type:
+        mime = "audio/mp4"
+
+    b64_audio = base64.b64encode(audio_bytes).decode("utf-8")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+    payload = {
+        "contents": [{
+            "parts": [
+                {"inlineData": {"mimeType": mime, "data": b64_audio}},
+                {"text": f"Transcribe this audio recording verbatim in {language_code}. Return ONLY the transcribed text without quotes, formatting, or commentary."}
+            ]
+        }]
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            res = await client.post(url, json=payload)
+            if res.status_code == 200:
+                data = res.json()
+                text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                logger.info(f"Gemini STT fallback success: {text[:60]!r}")
+                return STTResult(transcript=text, confidence=0.92, language_code=language_code)
+            else:
+                logger.error(f"Gemini STT fallback failed: {res.status_code} {res.text[:120]}")
+    except Exception as e:
+        logger.error(f"Gemini STT fallback exception: {e}")
+
+    return STTResult(transcript="", confidence=0.0, language_code=language_code)

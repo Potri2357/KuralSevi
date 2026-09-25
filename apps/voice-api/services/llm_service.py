@@ -193,10 +193,39 @@ class GeminiInterviewDriver:
             spoken = f"{greeting}\n\n{consent}"
             return LLMExtractionResult(spoken_response=spoken, action="ask_consent")
 
+        # ── Course Selection Recommendation ──
+        if action == "select_course":
+            courses = context.get("recommended_courses", [])
+            lang = session.language_code
+            from services.course_catalog import get_localized_course_name
+            c1_local = get_localized_course_name(courses[0], lang) if len(courses) >= 1 else "தொழில் பயிற்சி"
+            c2_local = get_localized_course_name(courses[1], lang) if len(courses) >= 2 else "சுயதொழில் பயிற்சி"
+            if lang == "ml":
+                spoken = f"വളരെ നന്ദി! വിവരങ്ങൾ രേഖപ്പെടുത്തി. നിങ്ങൾക്കായി രണ്ട് മികച്ച കോഴ്സുകൾ: ഒന്ന്, {c1_local}. രണ്ട്, {c2_local}. ഇതിൽ ഏതിലാണ് താല്പര്യം എന്ന് പറയാമോ?"
+            elif lang == "hi":
+                spoken = f"बहुत धन्यवाद! आपकी जानकारी दर्ज हो गई है। आपके लिए दो प्रमुख कोर्स हैं: पहला, {c1_local}, और दूसरा, {c2_local}। इनमें से आपकी किसमें रुचि है?"
+            elif lang == "te":
+                spoken = f"చాలా ధన్యవాదాలు అండీ! వివరాలు నమోదయ్యాయి. మీ కోసం రెండు ఉత్తమ కోర్సులు: ఒకటి, {c1_local}, రెండు, {c2_local}. వీటిలో మీకు దేనిపై ఆసక్తి ఉందో చెబుతారా?"
+            else:
+                spoken = f"மிக்க நன்றிங்க! விவரங்கள் பதிவாகிடுச்சு. உங்களுக்கான இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, {c1_local}. இரண்டு, {c2_local}. இந்த இரண்டில் உங்களுக்கு எதில் விருப்பம்னு சொல்லுங்க?"
+            return LLMExtractionResult(spoken_response=spoken, action="select_course")
+
         # ── Wrap up ──
         if action == "wrap_up":
             case_id = session.session_id[:12].upper()
-            spoken = WRAP_UP_SCRIPTS.get(session.language_code, WRAP_UP_SCRIPTS["hi"]).format(case_id=case_id)
+            lang = session.language_code
+            sel_course = getattr(session, "citizen_selected_course", None)
+            if sel_course:
+                if lang == "ml":
+                    spoken = f"വളരെ സന്തോഷം! നിങ്ങൾ തിരഞ്ഞെടുത്ത {sel_course} രേഖപ്പെടുത്തി. വിവരങ്ങൾ വാട്ട്‌സ്ആപ്പിലും അയച്ചിട്ടുണ്ട്. നന്ദി!"
+                elif lang == "hi":
+                    spoken = f"बहुत बढ़िया! आपके पसंदीदा {sel_course} का चयन दर्ज हो गया है। विवरण व्हाट्सएप पर भेज दिया गया है। धन्यवाद!"
+                elif lang == "te":
+                    spoken = f"చాలా మంచిది అండీ! మీరు ఎంచుకున్న {sel_course} నమోదయ్యాయి. వివరాలు వాట్సాప్‌లో పంపాము. ధన్యవాదాలు!"
+                else:
+                    spoken = f"ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான {sel_course} பயிற்சி பதிவாகிடுச்சு. விவரங்கள் வாட்ஸ்அப்பிலும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!"
+            else:
+                spoken = WRAP_UP_SCRIPTS.get(session.language_code, WRAP_UP_SCRIPTS["hi"]).format(case_id=case_id)
             return LLMExtractionResult(spoken_response=spoken, action="wrap_up")
 
         # ── Build system prompt ──
@@ -223,8 +252,8 @@ class GeminiInterviewDriver:
         )
 
         user_msg = user_speech or f"Please ask about {context.get('field_name', 'information')}"
-        lang_names = {"ta": "Tamil", "ml": "Malayalam", "hi": "Hindi", "te": "Telugu"}
-        lang_name = lang_names.get(session.language_code, "Tamil")
+        lang_names = {"en": "English", "ta": "Tamil", "ml": "Malayalam", "hi": "Hindi", "te": "Telugu"}
+        lang_name = lang_names.get(session.language_code, "English" if session.language_code == "en" else "Tamil")
         prompt = (
             f"{system_prompt}\n\n"
             f"Beneficiary Spoke: \"{user_msg}\"\n\n"

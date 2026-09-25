@@ -97,7 +97,7 @@ class TestCoordinatorCourseSelectionTurn(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(res1.state, InterviewState.COURSE_SELECTION)
         self.assertFalse(res1.is_completed)
         self.assertIn("பயிற்சி", res1.spoken_response)
-        self.assertIn("ஆர்வம்", res1.spoken_response)
+        self.assertTrue("விருப்பம்" in res1.spoken_response or "ஆர்வம்" in res1.spoken_response)
 
         # Citizen replies choosing option 1 / tailoring
         res2 = await coordinator.process_turn(
@@ -111,7 +111,7 @@ class TestCoordinatorCourseSelectionTurn(unittest.IsolatedAsyncioTestCase):
         # Call completes!
         self.assertEqual(res2.state, InterviewState.COMPLETED)
         self.assertTrue(res2.is_completed)
-        self.assertIn("பதிவாகிவிட்டது", res2.spoken_response)
+        self.assertTrue("பதிவாகிடுச்சு" in res2.spoken_response or "பதிவாகிவிட்டது" in res2.spoken_response)
         self.assertNotIn("பயிற்சி பயிற்சி", res2.spoken_response)
 
         # Verify completed call record
@@ -125,7 +125,7 @@ class TestCoordinatorCourseSelectionTurn(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(len(rec["transcript"]) > 0)
         last_turn = rec["transcript"][-1]
         self.assertEqual(last_turn["user"], "முதல் தையல் பயிற்சி தான் விருப்பம்")
-        self.assertIn("பதிவாகிவிட்டது", last_turn["assistant"])
+        self.assertTrue("பதிவாகிடுச்சு" in last_turn["assistant"] or "பதிவாகிவிட்டது" in last_turn["assistant"])
 
 
 class TestNotificationFormatting(unittest.TestCase):

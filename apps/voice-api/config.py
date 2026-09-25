@@ -23,16 +23,18 @@ class Settings(BaseSettings):
     sarvam_stt_url: str = "https://api.sarvam.ai/speech-to-text"
     sarvam_tts_url: str = "https://api.sarvam.ai/text-to-speech"
     
-    # Twilio
-    twilio_account_sid: str
-    twilio_auth_token: str
-    twilio_phone_number: str
-    twilio_whatsapp_number: str = "whatsapp:+14155238886"
+    # Exotel Telephony
+    exotel_account_sid: str = "incogvia1"
+    exotel_api_key: Optional[str] = None
+    exotel_api_token: Optional[str] = None
+    exotel_caller_id: str = "08047289241"
+    exotel_app_id: Optional[str] = None
+    exotel_trial_number: Optional[str] = None
+    exotel_trial_pin: Optional[str] = None
+    telephony_provider: str = "exotel"
     
-    # WhatsApp
-    whatsapp_api_token: str = "your-whatsapp-token"
-    whatsapp_phone_number_id: str = "your-phone-number-id"
-    whatsapp_webhook_verify_token: str = "your-verify-token"
+    # WhatsApp (Self-Hosted Baileys Bot)
+    whatsapp_bot_url: str = "http://localhost:5005"
     
     # Application
     app_url: str = "http://localhost:3000"
@@ -47,6 +49,14 @@ class Settings(BaseSettings):
     # OpenRouter Fallback
     openrouter_api_key: Optional[str] = None
     openrouter_model: str = "meta-llama/llama-3.3-70b-instruct"
+    
+    # Open-Source SMS Gateway (Android SMS Gateway / Local Hub)
+    sms_gateway_url: str = "http://localhost:5005"
+    android_sms_gateway_url: Optional[str] = None
+    android_sms_gateway_login: Optional[str] = None
+    android_sms_gateway_password: Optional[str] = None
+    sms_provider: str = "open-source"
+    fast2sms_api_key: Optional[str] = None
     
     # Feature flags
     enable_mock_stt: bool = False

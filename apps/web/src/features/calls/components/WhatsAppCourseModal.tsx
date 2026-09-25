@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Briefcase,
   Eye,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,7 @@ export function WhatsAppCourseModal({
   const [customNote, setCustomNote] = useState<string>('');
   const [showPreview, setShowPreview] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmittingSms, setIsSubmittingSms] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [dispatchResult, setDispatchResult] = useState<{
     success: boolean;
@@ -157,11 +159,11 @@ export function WhatsAppCourseModal({
       });
 
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok && data.success && data.dispatched) {
         setDispatchResult({
           success: true,
           message: data.message,
-          wa_link: data.wa_link,
+          wa_link: data.wa_link || directWaLink,
         });
         if (onDispatched) {
           onDispatched();
@@ -169,7 +171,8 @@ export function WhatsAppCourseModal({
       } else {
         setDispatchResult({
           success: false,
-          error: data.error || 'Failed to dispatch WhatsApp message.',
+          error: data.error || data.message || 'Automatic Cloud API delivery failed. Click the button below to send directly via WhatsApp.',
+          wa_link: data.wa_link || directWaLink,
         });
       }
     } catch (err: any) {
@@ -179,6 +182,48 @@ export function WhatsAppCourseModal({
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDispatchSms = async () => {
+    setIsSubmittingSms(true);
+    setDispatchResult(null);
+
+    try {
+      const res = await fetch('/api/calls/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          caseId: selectedCallId,
+          beneficiaryName,
+          selected_course: selectedCourse || currentCall?.citizen_selected_course,
+          recommended_courses: currentCall?.recommended_courses,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.dispatched) {
+        setDispatchResult({
+          success: true,
+          message: data.message || `SMS dispatched via ${data.provider?.toUpperCase()} (1 Credit consumed).`,
+        });
+        if (onDispatched) {
+          onDispatched();
+        }
+      } else {
+        setDispatchResult({
+          success: false,
+          error: data.error || data.message || 'SMS dispatch failed.',
+        });
+      }
+    } catch (err: any) {
+      setDispatchResult({
+        success: false,
+        error: err.message || 'Network error while dispatching SMS.',
+      });
+    } finally {
+      setIsSubmittingSms(false);
     }
   };
 
@@ -296,7 +341,7 @@ export function WhatsAppCourseModal({
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+919876543210"
+                  placeholder="+919342900638"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075E54] min-h-[42px]"
                 />
               </div>
@@ -435,15 +480,17 @@ export function WhatsAppCourseModal({
                   {dispatchResult.message || dispatchResult.error}
                 </p>
                 {dispatchResult.wa_link && (
-                  <a
-                    href={dispatchResult.wa_link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 font-bold text-[#075E54] hover:underline mt-1.5 text-[11px]"
-                  >
-                    <span>Open directly in WhatsApp Web / Mobile</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                  <div className="mt-2">
+                    <a
+                      href={dispatchResult.wa_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#075E54] hover:bg-[#128C7E] transition-all shadow-xs"
+                    >
+                      <span>👉 Send via WhatsApp Web / App (1-Click)</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 )}
               </div>
             </div>
@@ -471,6 +518,27 @@ export function WhatsAppCourseModal({
           </button>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {/* Send 1-Credit SMS via Fast2SMS */}
+            <button
+              type="button"
+              onClick={handleDispatchSms}
+              disabled={isSubmittingSms || isSubmitting || !phone || phone.length < 10}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 hover:bg-sky-100 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+              title="Dispatches strictly 1 single GSM-7 credit SMS (~₹0.25) to save Fast2SMS balance"
+            >
+              {isSubmittingSms ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-600" />
+                  <span>Sending SMS...</span>
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Instant SMS (1 Credit)</span>
+                </>
+              )}
+            </button>
+
             {/* Open in WhatsApp Web */}
             <a
               href={directWaLink}

@@ -9,6 +9,9 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=apps/web\" \"npm run dev --workspace=apps/voice-api\"",
+    "whatsapp:bot": "node apps/whatsapp-bot/server.js",
+    "tunnel": "ngrok http 8000 --url=charita-techiest-histogenetically.ngrok-free.dev --log=stdout",
+    "dev:tunnel": "concurrently \"npm run dev --workspace=apps/web\" \"npm run dev --workspace=apps/voice-api\" \"npm run tunnel\"",
     "build": "npm run build --workspace=packages/shared && npm run build --workspace=packages/recommendation-engine && npm run build --workspace=apps/web",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",

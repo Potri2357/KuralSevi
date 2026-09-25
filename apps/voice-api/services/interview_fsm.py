@@ -66,6 +66,7 @@ class InterviewSession:
     identity_asked: bool = False
     identity_confirmed: bool = False
     recommended_courses: list[dict] = field(default_factory=list)
+    courses_prompted: bool = False
     citizen_selected_course: Optional[str] = None
     citizen_selected_choice: Optional[int] = None
     
@@ -169,7 +170,7 @@ class InterviewFSM:
                 s.advance_to_next_field()
             
             if s.all_fields_collected:
-                s.state = InterviewState.COMPLETED
+                s.state = InterviewState.COURSE_SELECTION
             else:
                 s.state = InterviewState.FIELD_COLLECTION
         
@@ -183,7 +184,7 @@ class InterviewFSM:
                 s.advance_to_next_field()
             
             if s.all_fields_collected:
-                s.state = InterviewState.COMPLETED
+                s.state = InterviewState.COURSE_SELECTION
             else:
                 s.state = InterviewState.FIELD_COLLECTION
         

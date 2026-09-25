@@ -208,7 +208,29 @@ async def synthesize_speech(
         all_audio = await _async_post_chunk(chunks[0])
     else:
         results = await asyncio.gather(*[_async_post_chunk(c) for c in chunks])
-        all_audio = b"".join(results)
+        # Cleanly merge PCM frames without embedded WAV headers
+        import io, wave
+        pcm_parts = []
+        for r in results:
+            if not r:
+                continue
+            try:
+                with wave.open(io.BytesIO(r), "rb") as w:
+                    pcm_parts.append(w.readframes(w.getnframes()))
+            except Exception:
+                pcm_parts.append(r[44:] if len(r) > 44 else r)
+        
+        if pcm_parts:
+            combined_pcm = b"".join(pcm_parts)
+            buf = io.BytesIO()
+            with wave.open(buf, "wb") as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(8000)
+                w.writeframes(combined_pcm)
+            all_audio = buf.getvalue()
+        else:
+            all_audio = b""
 
     if not all_audio:
         logger.info(f"Attempting edge-tts neural synthesis for ({language_code}): {text[:60]!r}")
@@ -224,7 +246,7 @@ async def synthesize_speech(
     return TTSResult(audio_bytes=all_audio, audio_format="wav")
 
 async def _synthesize_edge_tts(text: str, language_code: str) -> Optional[bytes]:
-    """Fallback neural TTS using Microsoft edge-tts (Sobhana/Pallavi/Swara/Shruti)."""
+    """Fallback neural TTS using Microsoft edge-tts directly converted to 8kHz mono WAV."""
     voice_map = {
         "ml": "ml-IN-SobhanaNeural",
         "ta": "ta-IN-PallaviNeural",
@@ -235,33 +257,30 @@ async def _synthesize_edge_tts(text: str, language_code: str) -> Optional[bytes]
     voice = voice_map.get(language_code, "ta-IN-PallaviNeural" if language_code == "ta" else "en-IN-NeerjaNeural")
     try:
         import edge_tts
-        import subprocess
-        import tempfile
-        import os
-
-        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp_mp3:
-            tmp_mp3_path = tmp_mp3.name
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
-            tmp_wav_path = tmp_wav.name
-
-        try:
-            communicate = edge_tts.Communicate(text, voice, rate="+0%")
-            await communicate.save(tmp_mp3_path)
-            try:
-                cmd = ["ffmpeg", "-y", "-i", tmp_mp3_path, "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", tmp_wav_path]
-                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-                wav_bytes = Path(tmp_wav_path).read_bytes()
-                if wav_bytes:
-                    return wav_bytes
-            except Exception:
-                # Fallback to direct MP3
-                return Path(tmp_mp3_path).read_bytes()
-        finally:
-            for p in (tmp_mp3_path, tmp_wav_path):
-                if os.path.exists(p):
-                    os.remove(p)
+        communicate = edge_tts.Communicate(text, voice, rate="+15%")
+        chunks = []
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                chunks.append(chunk["data"])
+        mp3_bytes = b"".join(chunks)
+        if mp3_bytes:
+            # Resample MP3 to standard 8000Hz 16-bit mono WAV so cache & telephony get clean audio
+            import subprocess
+            cmd = [
+                "ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-i", "pipe:0",
+                "-ar", "8000",
+                "-ac", "1",
+                "-c:a", "pcm_s16le",
+                "-f", "wav",
+                "pipe:1"
+            ]
+            res = subprocess.run(cmd, input=mp3_bytes, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3.0)
+            if res.returncode == 0 and res.stdout:
+                return res.stdout
+            return mp3_bytes
     except Exception as e:
-        logger.warning(f"edge-tts fallback synthesis failed: {e}")
+        logger.warning(f"edge-tts in-memory synthesis failed: {e}")
     return None
 
 def _sarvam_lang(code: str) -> str:

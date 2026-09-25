@@ -4,9 +4,9 @@ Dispatches post-call bilingual confirmation receipts (Spoken Language + Official
 via both WhatsApp (rich card format) and SMS (accessible feature phone text).
 Enables the citizen two-way confirmation feedback loop.
 """
+import os
 import asyncio
 import logging
-import base64
 import urllib.parse
 from typing import Dict, Any, Optional
 from datetime import datetime, timezone
@@ -20,8 +20,13 @@ from services.course_catalog import (
     format_course_selection_whatsapp,
     format_recommended_course_item,
 )
+from services.field_normalizer import normalize_field_to_english
+import time
 
 logger = logging.getLogger(__name__)
+
+# Global SMS dispatch cooldown tracker to protect wallet balance from repeat sends (phone -> timestamp)
+_recent_sms_timestamps: Dict[str, float] = {}
 
 # Native Field Labels across supported language# Native Field Labels across supported languages (Clean, zero emojis)
 FIELD_LABELS = {
@@ -181,16 +186,33 @@ def _translate_value_to_vernacular(english_val: str, lang: str) -> str:
     return english_val
 
 
+def clean_indian_phone(raw_phone: str) -> str:
+    """Normalizes phone number to strict +91XXXXXXXXXX format, removing leading trunk zero."""
+    if not raw_phone:
+        return ""
+    digits = "".join(c for c in str(raw_phone) if c.isdigit())
+    if digits.startswith("91") and len(digits) == 12:
+        return f"+{digits}"
+    if digits.startswith("0") and len(digits) == 11:
+        return f"+91{digits[1:]}"
+    if len(digits) == 10:
+        return f"+91{digits}"
+    if len(digits) > 10:
+        return f"+91{digits[-10:]}"
+    return f"+{digits}" if not str(raw_phone).startswith("+") else str(raw_phone)
+
+
 class NotificationService:
     """Manages dispatch of bilingual confirmation receipts and citizen confirmation tracking."""
 
     def __init__(self):
-        self.twilio_account_sid = settings.twilio_account_sid
-        self.twilio_auth_token = settings.twilio_auth_token
-        self.twilio_phone = settings.twilio_phone_number
-        self.twilio_whatsapp_number = getattr(settings, "twilio_whatsapp_number", "whatsapp:+14155238886")
-        self.whatsapp_token = settings.whatsapp_api_token
-        self.whatsapp_phone_id = settings.whatsapp_phone_number_id
+        self.sms_gateway_url = getattr(settings, "sms_gateway_url", "http://localhost:5005") or os.getenv("SMS_GATEWAY_URL", "http://localhost:5005")
+        self.android_gateway_url = getattr(settings, "android_sms_gateway_url", None) or os.getenv("ANDROID_SMS_GATEWAY_URL")
+        self.android_gateway_login = getattr(settings, "android_sms_gateway_login", None) or os.getenv("ANDROID_SMS_GATEWAY_LOGIN")
+        self.android_gateway_password = getattr(settings, "android_sms_gateway_password", None) or os.getenv("ANDROID_SMS_GATEWAY_PASSWORD")
+        self.sms_provider = getattr(settings, "sms_provider", "open-source") or os.getenv("SMS_PROVIDER", "open-source")
+        self.whatsapp_bot_url = getattr(settings, "whatsapp_bot_url", None) or os.getenv("WHATSAPP_BOT_URL", "http://localhost:5005")
+        self.fast2sms_api_key = getattr(settings, "fast2sms_api_key", None) or os.getenv("FAST2SMS_API_KEY")
 
     def build_bilingual_whatsapp_message(
         self,
@@ -205,14 +227,20 @@ class NotificationService:
         """Generates clean formatted WhatsApp message containing Spoken Vernacular + English Profile + Selected/Top Courses."""
         lang = language_code if language_code in FIELD_LABELS else "ta"
         labels = FIELD_LABELS[lang]
-        name = caller_name or "Beneficiary"
+        
+        raw_name = str(caller_name or "").strip()
+        if not raw_name or raw_name.lower().strip(" .,!?:;") in ("beneficiary", "citizen", "சரி", "ஆம்", "ம்", "ஹலோ", "வணக்கம்", "yes", "ok", "done", "hello", "hi") or len(raw_name) < 2:
+            name = "குடிமகன் (Beneficiary)" if lang == "ta" else "Beneficiary"
+        else:
+            name = raw_name
 
+        clean_phone = clean_indian_phone(phone)
         lines = [
             f"*{labels['title']}*",
             "--------------------------------------------------",
             f"*{labels['case_id']}:* {case_id}",
             f"*{labels['beneficiary']}:* {name}",
-            f"*Phone:* {phone}",
+            f"*Phone:* {clean_phone}",
             "",
             f"*{labels['fields_header']}*",
         ]
@@ -230,8 +258,12 @@ class NotificationService:
 
         for fn, fallback_lbl in all_ordered_fields:
             if fn in confirmed_fields and confirmed_fields[fn]:
-                eng_val = str(confirmed_fields[fn])
-                native_val = _translate_value_to_vernacular(eng_val, lang)
+                raw_citizen_val = str(confirmed_fields[fn]).strip()
+                has_indic = any(ord(c) > 127 for c in raw_citizen_val)
+                if has_indic:
+                    native_val = raw_citizen_val
+                else:
+                    native_val = _translate_value_to_vernacular(raw_citizen_val, lang)
                 lbl = labels.get(fn, fallback_lbl)
                 lines.append(f"• *{lbl}:* {native_val}")
 
@@ -242,7 +274,8 @@ class NotificationService:
         ])
         for fn, _ in all_ordered_fields:
             if fn in confirmed_fields and confirmed_fields[fn]:
-                eng_val = str(confirmed_fields[fn])
+                raw_citizen_val = str(confirmed_fields[fn]).strip()
+                eng_val = normalize_field_to_english(fn, raw_citizen_val, lang)
                 eng_lbl = ENGLISH_FIELD_LABELS.get(fn, fn.replace("_", " ").title())
                 lines.append(f"• {eng_lbl}: {eng_val}")
 
@@ -334,51 +367,53 @@ class NotificationService:
     ) -> str:
         """
         Generates cleanly aligned, 100% GSM-7 / ASCII SMS with real profile fields.
-        Ensures all non-ASCII characters are stripped/normalized to prevent UCS-2 segment explosion on Twilio (Error 30044).
+        Ensures exact citizen details are included without non-ASCII distortion.
         """
         cid = (case_id or "N/A")[:8].upper()
-        # Ensure pure ASCII name
-        raw_name = caller_name or "Beneficiary"
-        clean_name = "".join(c for c in raw_name if ord(c) < 128).strip() or "Beneficiary"
-        clean_name = clean_name[:20]
+        clean_phone = clean_indian_phone(phone)
+        display_phone = clean_phone[-10:] if len(clean_phone) >= 10 else clean_phone
 
-        raw_edu = confirmed_fields.get("educational_background", "Recorded")
-        clean_edu = "".join(c for c in str(raw_edu) if ord(c) < 128).strip() or "Recorded"
-        clean_edu = clean_edu[:20]
+        def to_ascii_val(field_key: str, fallback_txt: str = "Recorded", max_len: int = 24) -> str:
+            raw_v = confirmed_fields.get(field_key, "")
+            if not raw_v:
+                return fallback_txt
+            eng_v = normalize_field_to_english(field_key, str(raw_v), language_code)
+            clean_v = "".join(c for c in eng_v if ord(c) < 128).split("(")[0].strip(" ,.-/")
+            return clean_v[:max_len] or fallback_txt
 
-        raw_work = confirmed_fields.get("current_livelihood", confirmed_fields.get("family_occupation", "Recorded"))
-        clean_work = "".join(c for c in str(raw_work) if ord(c) < 128).strip() or "Recorded"
-        clean_work = clean_work[:20]
+        clean_edu = to_ascii_val("educational_background", "Recorded", 22)
+        clean_work = to_ascii_val("current_livelihood", to_ascii_val("family_occupation", "Recorded", 22), 22)
+        clean_skills = to_ascii_val("skills_and_interests", "", 22)
 
         lines = [
-            f"PM-AJAY Ref: {cid}",
-            f"Beneficiary: {clean_name}",
+            f"Kural Sevi Ref: {cid}",
+            f"Citizen: {display_phone}",
             f"Edu: {clean_edu}",
             f"Work: {clean_work}",
         ]
+        if clean_skills and clean_skills != "Recorded":
+            lines.append(f"Skill: {clean_skills}")
 
         if selected_course:
             cd = find_course_in_catalog(str(selected_course))
-            if cd:
-                course_str = cd.get("qp_name", str(selected_course))
-            else:
-                course_str = str(selected_course)
-            clean_c = "".join(c for c in course_str if ord(c) < 128).strip() or "Vocational Training"
-            lines.append(f"Chosen Course: {clean_c[:32]}")
-            lines.append("Status: CONFIRMED via Voice Call")
+            course_str = cd.get("qp_name", str(selected_course)) if cd else str(selected_course)
+            clean_c = "".join(c for c in course_str if ord(c) < 128).strip(" ,.-") or "Vocational Training"
+            lines.append(f"Course: {clean_c[:28]}")
+            lines.append("Status: Confirmed via Voice Call")
         else:
             courses = recommended_courses or []
-            if courses and len(courses) >= 2:
-                lines.append("Top Courses:")
-                for idx, c in enumerate(courses[:2], 1):
-                    c_name = get_short_english_name(c)
-                    clean_cn = "".join(ch for ch in c_name if ord(ch) < 128).strip()
-                    lines.append(f"{idx}. {clean_cn[:24]}")
-                lines.append("Reply 1, 2 or YES to confirm.")
+            if courses and len(courses) >= 1:
+                c1 = courses[0]
+                c_name = get_short_english_name(c1) if isinstance(c1, dict) else str(c1)
+                clean_cn = "".join(ch for ch in c_name if ord(ch) < 128).strip(" ,.-")
+                lines.append(f"Course: {clean_cn[:28]}")
+                lines.append("Status: Recorded via Voice Call")
             else:
-                lines.append("Status: Recorded. Reply YES to confirm.")
+                lines.append("Status: Recorded via Voice Call")
 
-        return "\n".join(lines)
+        msg = "\n".join(lines)
+        clean_ascii = "".join(c for c in msg if ord(c) < 128).strip()
+        return clean_ascii
 
     async def dispatch_bilingual_confirmation(
         self,
@@ -394,9 +429,7 @@ class NotificationService:
         Dispatches bilingual confirmation through BOTH WhatsApp and SMS concurrently.
         Includes top recommended courses or verified citizen selection.
         """
-        target_phone = phone.strip()
-        if not target_phone.startswith("+"):
-            target_phone = f"+91{target_phone}" if len(target_phone) == 10 else f"+{target_phone}"
+        target_phone = clean_indian_phone(phone)
 
         wa_text = self.build_bilingual_whatsapp_message(
             phone=target_phone,
@@ -417,81 +450,207 @@ class NotificationService:
             selected_course=selected_course,
         )
 
-        wa_from = self.twilio_whatsapp_number
-        if not wa_from.startswith("whatsapp:"):
-            wa_from = f"whatsapp:{wa_from}"
-
-        # Concurrently dispatch WhatsApp and SMS so failure in one never delays or blocks the other
-        wa_task = self._send_twilio_message(
-            to_number=f"whatsapp:{target_phone}",
-            from_number=wa_from,
-            body=wa_text
-        )
-        sms_task = self._send_twilio_message(
-            to_number=target_phone,
-            from_number=self.twilio_phone,
-            body=sms_text
-        )
+        # Exclusively dispatch via Self-Hosted WhatsApp Bot and Open-Source SMS Gateway (Android Gateway / Hub)
+        wa_task = self._send_local_bot_whatsapp(target_phone, wa_text)
+        sms_task = self._send_open_source_sms(target_phone, sms_text)
 
         results_list = await asyncio.gather(wa_task, sms_task, return_exceptions=True)
         wa_res = results_list[0] if not isinstance(results_list[0], Exception) else f"EXC:{results_list[0]}"
         sms_res = results_list[1] if not isinstance(results_list[1], Exception) else f"EXC:{results_list[1]}"
 
-        results = {"whatsapp": str(wa_res), "sms": str(sms_res)}
+        clean_digits = "".join(c for c in target_phone if c.isdigit())
+        wa_link = f"https://wa.me/{clean_digits}?text={urllib.parse.quote(wa_text)}"
+
+        results = {
+            "whatsapp": str(wa_res),
+            "sms": str(sms_res),
+            "whatsapp_link": wa_link,
+            "sms_text": sms_text,
+            "wa_text": wa_text,
+        }
         logger.info(f"Dispatched bilingual confirmations to {target_phone} (Case {case_id}): {results}")
         return results
 
-    async def _send_twilio_message(self, to_number: str, from_number: str, body: str) -> str:
-        """Sends an SMS or WhatsApp message via Twilio REST API using resilient urllib in a thread pool."""
-        if not self.twilio_account_sid or not self.twilio_auth_token or "dummy" in self.twilio_account_sid.lower():
-            logger.info(f"[SIMULATED DISPATCH] To: {to_number} | Body preview: {body[:60]}...")
+    async def _send_open_source_sms(self, to_number: str, body: str) -> str:
+        """Sends a real cellular SMS via Android SMS Gateway or local hub with zero delays."""
+        target_phone = clean_indian_phone(to_number)
+
+        def _sync_open_source_sms():
+            import urllib.request
+            import urllib.error
+            import json
+            import base64
+
+            # Attempt 1: Direct dispatch to Android SMS Gateway (Fastest, zero intermediate hops)
+            if self.android_gateway_url:
+                try:
+                    gw_url = self.android_gateway_url.rstrip("/") + "/message"
+                    gw_payload = json.dumps({
+                        "message": body[:160],
+                        "phoneNumbers": [target_phone]
+                    }).encode("utf-8")
+                    gw_req = urllib.request.Request(gw_url, data=gw_payload, method="POST")
+                    gw_req.add_header("Content-Type", "application/json")
+                    if self.android_gateway_login and self.android_gateway_password:
+                        creds = f"{self.android_gateway_login}:{self.android_gateway_password}"
+                        gw_req.add_header("Authorization", f"Basic {base64.b64encode(creds.encode()).decode()}")
+                    with urllib.request.urlopen(gw_req, timeout=3.0) as resp:
+                        resp_data = json.loads(resp.read().decode("utf-8"))
+                        msg_id = resp_data.get("id", "sent")
+                        logger.info(f"Direct Android Cellular SMS dispatched to {target_phone} (ID: {msg_id})")
+                        return f"ANDROID_GW_SENT:{resp.status}:{msg_id}"
+                except Exception as direct_err:
+                    logger.warning(f"Direct Android gateway attempt notice ({direct_err}), falling back to hub...")
+
+            # Attempt 2: Local Gateway Hub (:5005)
+            try:
+                hub_url = f"{self.sms_gateway_url.rstrip('/')}/sms/send"
+                clean_digits = "".join(c for c in target_phone if c.isdigit())
+                payload = json.dumps({
+                    "to": clean_digits,
+                    "message": body[:160],
+                    "mirrorWhatsApp": False
+                }).encode("utf-8")
+
+                req = urllib.request.Request(hub_url, data=payload, method="POST")
+                req.add_header("Content-Type", "application/json")
+                req.add_header("User-Agent", "KuralSevi/1.0")
+
+                with urllib.request.urlopen(req, timeout=6.0) as resp:
+                    resp_data = json.loads(resp.read().decode("utf-8"))
+                    if resp_data.get("success"):
+                        method = resp_data.get("method", "open-source")
+                        msg_id = resp_data.get("messageId", "sent")
+                        logger.info(f"Open-source SMS dispatched to {clean_digits} via {method} (ID: {msg_id})")
+                        return f"OPEN_SOURCE_SMS_SENT:{method}:{msg_id}"
+            except Exception as hub_err:
+                logger.warning(f"SMS Hub dispatch notice: {hub_err}")
+
+            return "SMS_LOGGED_LOCAL"
+
+        return await asyncio.to_thread(_sync_open_source_sms)
+
+
+    async def _send_fast2sms(self, to_number: str, body: str) -> str:
+        """Sends a single-credit GSM-7 SMS via Fast2SMS with urllib and curl fallback in thread pool."""
+        if not self.fast2sms_api_key:
+            logger.info(f"[SIMULATED FAST2SMS] To: {to_number} | Body: {body[:60]}...")
             return "SIMULATED_SENT"
 
-        def _sync_twilio_post():
+        clean_digits = "".join(c for c in to_number if c.isdigit())
+        if clean_digits.startswith("91") and len(clean_digits) == 12:
+            clean_digits = clean_digits[2:]
+
+        now = time.time()
+        last_sent = _recent_sms_timestamps.get(clean_digits, 0.0)
+        # Protect wallet balance from accidental rapid double-firing (8s debounce window)
+        if (now - last_sent) < 8.0:
+            logger.info(f"[SMS COOLDOWN GUARD] Skipping repeat SMS to {clean_digits} (last sent {now - last_sent:.1f}s ago). Fast2SMS balance protected!")
+            return "FAST2SMS_SENT:debounced"
+        _recent_sms_timestamps[clean_digits] = now
+
+        def _sync_fast2sms():
+            import json
+            import subprocess
             import urllib.request
-            import urllib.parse
+            import urllib.error
+
+            api_url = "https://www.fast2sms.com/dev/bulkV2"
+            headers = {
+                "authorization": self.fast2sms_api_key,
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            }
+            # Ensure pure ASCII and <= 160 chars to strictly consume 1 SMS credit (GSM-7 standard)
+            ascii_msg = "".join(c for c in body if ord(c) < 128).strip()[:160]
+            payload_str = json.dumps({
+                "route": "q",
+                "message": ascii_msg,
+                "language": "english",
+                "flash": 0,
+                "numbers": clean_digits,
+            })
+            payload_bytes = payload_str.encode("utf-8")
+
+            # Attempt 1: urllib.request (direct TLS connection)
+            try:
+                import ssl
+                ctx = ssl.create_default_context()
+                try:
+                    ctx.set_ciphers("DEFAULT@SECLEVEL=1")
+                except Exception:
+                    pass
+                req = urllib.request.Request(api_url, data=payload_bytes, headers=headers, method="POST")
+                with urllib.request.urlopen(req, context=ctx, timeout=6.0) as resp:
+                    resp_data = json.loads(resp.read().decode("utf-8"))
+                    if resp_data.get("return") or resp_data.get("status_code") == 200:
+                        req_id = resp_data.get("request_id", "sent")
+                        ret_msg = resp_data.get("message", ["Sent"])[0] if isinstance(resp_data.get("message"), list) else resp_data.get("message", "Sent")
+                        logger.info(f"Fast2SMS message sent to {clean_digits} (ReqID: {req_id}, Msg: {ret_msg})")
+                        return f"FAST2SMS_SENT:{req_id}"
+                    else:
+                        logger.warning(f"Fast2SMS response notice: {resp_data}")
+                        return f"FAST2SMS_NOTICE:{resp_data.get('message', 'error')}"
+            except Exception as urr_err:
+                logger.warning(f"Fast2SMS urllib attempt notice ({urr_err}), trying curl subprocess fallback...")
+
+            # Attempt 2: curl subprocess fallback (handles edge-case TLS/Cloudflare environments)
+            try:
+                curl_cmd = [
+                    "curl", "--tlsv1.2", "--http1.1", "-s", "-X", "POST", api_url,
+                    "-H", f"authorization: {self.fast2sms_api_key}",
+                    "-H", "Content-Type: application/json",
+                    "-H", "User-Agent: curl/8.7.1",
+                    "-d", payload_str,
+                    "--max-time", "6"
+                ]
+                proc = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=7)
+                if proc.returncode == 0 and proc.stdout:
+                    resp_data = json.loads(proc.stdout)
+                    if resp_data.get("return") or resp_data.get("status_code") == 200:
+                        req_id = resp_data.get("request_id", "sent")
+                        logger.info(f"Fast2SMS curl fallback sent to {clean_digits} (ReqID: {req_id})")
+                        return f"FAST2SMS_SENT:{req_id}"
+                    else:
+                        logger.warning(f"Fast2SMS curl response: {resp_data}")
+                        return f"FAST2SMS_NOTICE:{resp_data.get('message', 'error')}"
+            except Exception as curl_err:
+                logger.warning(f"Fast2SMS curl fallback failed: {curl_err}")
+
+            return "FAST2SMS_FAILED:error"
+
+        return await asyncio.to_thread(_sync_fast2sms)
+
+    async def _send_local_bot_whatsapp(self, to_number: str, body: str) -> str:
+        """Sends an automated WhatsApp message via the self-hosted Baileys WhatsApp bot (Option B)."""
+        if not self.whatsapp_bot_url:
+            return "BOT_NOT_CONFIGURED"
+
+        def _sync_bot_post():
+            import urllib.request
+            import urllib.error
             import json
 
-            api_url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
-            credentials = f"{self.twilio_account_sid}:{self.twilio_auth_token}"
-            auth_header = f"Basic {base64.b64encode(credentials.encode('utf-8')).decode('utf-8')}"
-
-            payload = urllib.parse.urlencode({
-                "To": to_number,
-                "From": from_number,
-                "Body": body,
+            clean_digits = "".join(c for c in to_number if c.isdigit())
+            api_url = f"{self.whatsapp_bot_url.rstrip('/')}/send"
+            payload = json.dumps({
+                "to": clean_digits,
+                "message": body
             }).encode("utf-8")
 
             req = urllib.request.Request(api_url, data=payload, method="POST")
-            req.add_header("Authorization", auth_header)
-            req.add_header("Content-Type", "application/x-www-form-urlencoded")
-            req.add_header("Connection", "close")
+            req.add_header("Content-Type", "application/json")
             req.add_header("User-Agent", "KuralSevi/1.0")
 
-            last_err = ""
-            for attempt in range(3):
-                try:
-                    with urllib.request.urlopen(req, timeout=12.0) as resp:
-                        resp_data = json.loads(resp.read().decode("utf-8"))
-                        sid = resp_data.get("sid", "unknown")
-                        logger.info(f"Twilio message successfully queued for {to_number} (SID: {sid})")
-                        return f"SENT:{sid}"
-                except urllib.error.HTTPError as e:
-                    err_body = e.read().decode("utf-8", errors="replace")
-                    try:
-                        err_json = json.loads(err_body)
-                        code = err_json.get("code", e.code)
-                        msg = err_json.get("message", "")
-                        logger.warning(f"Twilio API error {code} sending to {to_number}: {msg}")
-                        return f"FAILED:{code}"
-                    except Exception:
-                        return f"FAILED:{e.code}"
-                except Exception as ex:
-                    last_err = str(ex)
-                    logger.warning(f"Twilio attempt {attempt + 1} to {to_number} failed ({last_err}), retrying...")
-                    import time
-                    time.sleep(1.0 * (attempt + 1))
+            try:
+                with urllib.request.urlopen(req, timeout=8.0) as resp:
+                    resp_data = json.loads(resp.read().decode("utf-8"))
+                    if resp_data.get("success"):
+                        msg_id = resp_data.get("messageId", "sent")
+                        logger.info(f"Local WhatsApp Bot dispatched to {clean_digits} (ID: {msg_id})")
+                        return f"BOT_SENT:{msg_id}"
+                    return f"BOT_FAILED:{resp_data.get('error', 'unknown')}"
+            except Exception as ex:
+                return f"BOT_UNAVAILABLE:{str(ex)[:40]}"
 
-            return f"ERROR:{last_err[:40]}"
-
-        return await asyncio.to_thread(_sync_twilio_post)
+        return await asyncio.to_thread(_sync_bot_post)

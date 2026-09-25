@@ -43,7 +43,7 @@ export default function AdminPage() {
     },
     {
       title: 'Infrastructure & Engine Health',
-      desc: 'Telemetry monitors for Sarvam AI Voice APIs, Gemini 2.5 embeddings, Supabase pgvector index, and Twilio IVR gateway.',
+      desc: 'Telemetry monitors for Sarvam AI Voice APIs, Gemini 2.5 embeddings, Supabase pgvector index, and Exotel IVR gateway.',
       badge: 'All Systems Nominal',
       badgeVariant: 'green' as const,
       icon: Activity,

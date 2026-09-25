@@ -243,7 +243,7 @@ def _get_static_bytes(filename: str) -> Optional[bytes]:
 def _infer_semantic_fields_fast(user_speech: str, language_code: str) -> Dict[str, str]:
     """
     Fast semantic helper across rural livelihood domains.
-    Provides candidate mappings without prematurely completing unasked questions.
+    Provides candidate mappings and out-of-order co-inference without delaying telephony audio.
     """
     text = (user_speech or "").lower().strip()
     extracted = {}
@@ -253,231 +253,400 @@ def _infer_semantic_fields_fast(user_speech: str, language_code: str) -> Dict[st
         "விவசாய", "விவசாயம்", "காடு", "பயிர்", "நிலம்", "மாடு", "கழனி", "விவசாய கூலி",
         "കൃഷി", "കർഷക", "പാടം", "പശു", "തോട്ടം",
         "खेती", "किसान", "कृषि", "फसल", "खेत", "मजदूरी",
-        "వ్యవసాయం", "రైతు", "పొలం", "కూలి", "పంట"
+        "వ్యవసాయం", "రైతు", "పొలం", "కూలి", "పంట",
+        "farming", "farmer", "agriculture", "crops", "cattle", "field"
     ]
     if any(k in text for k in farming_tokens):
         extracted["family_occupation"] = "Agriculture / Farming"
 
     # Poultry
-    poultry_tokens = ["கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை", "broiler", "poultry", "chicken", "farm"]
+    poultry_tokens = [
+        "கோழி", "பண்ணை", "கோழிப்பண்ணை", "முட்டை",
+        "കോഴി", "ഫാം", "മുട്ട",
+        "मुर्गी", "पोल्ट्री", "अंडा",
+        "కోడి", "ఫారం", "గుడ్లు",
+        "broiler", "poultry", "chicken", "farm"
+    ]
     if any(k in text for k in poultry_tokens):
         extracted["skills_and_interests"] = "Small Poultry Farming"
 
     # Weaving / Handloom
-    weaving_tokens = ["நெசவு", "கைத்தறி", "చేనేత", "మగ్గం", "बुनकर", "हथकरघा", "നെയ്ത്ത്"]
+    weaving_tokens = [
+        "நெசவு", "கைத்தறி", "தறி", "சேலை",
+        "നെയ്ത്ത്", "കൈത്തറി",
+        "बुनकर", "हथकरघा", "बुनाई",
+        "చేనేత", "మగ్గం",
+        "weaving", "handloom", "weaver"
+    ]
     if any(k in text for k in weaving_tokens):
-        extracted["family_occupation"] = "Weaving / Handloom"
+        extracted["skills_and_interests"] = "Handloom Weaver"
 
-    # Cooking / Catering / Hotel
+    # Cooking & Catering
     cooking_tokens = [
-        "பிரியாணி", "சமையல்", "ஹோட்டல்", "சாப்பாடு", "மாஸ்டர்", "கேட்டரிங்",
-        "പാചക", "ബിരിയാണി", "ഹോട്ടൽ", "खाना", "होटल", "रसोई", "వంట"
+        "பிரியாணி", "சமையல்", "ஹோட்டல்", "சாப்பாடு", "மாஸ்டர்", "ரெஸ்டாரன்ட்", "கேட்டரிங்",
+        "പാചകം", "ഹോട്ടൽ", "ഭക്ഷണം", "കറ്ററിംഗ്",
+        "खाना", "रसोई", "होटल", "कुक", "केटरिंग", "भोजन",
+        "వంట", "హోటల్", "భోజనం", "క్యాటరింగ్",
+        "cooking", "cook", "catering", "hotel", "food", "chef"
     ]
     if any(k in text for k in cooking_tokens):
-        extracted["skills_and_interests"] = "Cooking & Catering"
+        extracted["skills_and_interests"] = "Food Preparation & Catering"
+
+    # Driving
+    driving_tokens = [
+        "டிரைவர்", "வண்டி", "ஆட்டோ", "கார்", "ஓட்டுநர்", "லாரி",
+        "ഡ്രൈവർ", "വണ്ടി", "ഓട്ടോ", "കാർ",
+        "ड्राइवर", "गाड़ी", "ऑटो", "कार",
+        "డ్రైవర్", "వాహనం", "ఆటో", "కారు",
+        "driver", "driving", "auto", "car", "cab", "truck"
+    ]
+    if any(k in text for k in driving_tokens):
+        extracted["current_livelihood"] = "Commercial Driver / Vehicle Operator"
+        extracted["skills_and_interests"] = "Commercial Driver / Vehicle Operator"
+
+    # Electrical
+    electrical_tokens = [
+        "எலக்ட்ரீசியன்", "கரண்ட்", "வயர்", "மின்சாரம்",
+        "ഇലക്ട്രീഷൻ", "കറണ്ട്", "വയറിംഗ്",
+        "इलेक्ट्रीशियन", "बिजली", "वायरिंग",
+        "ఎలక్ట్రీషియన్", "కరెంట్", "వైరింగ్",
+        "electrician", "electrical", "wiring", "current"
+    ]
+    if any(k in text for k in electrical_tokens):
+        extracted["skills_and_interests"] = "Domestic Electrician"
+
+    # Tailoring
+    tailoring_tokens = [
+        "தையல்", "தையல்காரர்", "துணி", "தையல் மிஷின்",
+        "തയ്യൽ", "തുണി",
+        "दर्जी", "सिलाई", "कपड़ा",
+        "టైలరింగ్", "కుట్టు", "బట్టలు",
+        "tailor", "tailoring", "stitching", "sewing", "garment"
+    ]
+    if any(k in text for k in tailoring_tokens):
+        extracted["skills_and_interests"] = "Sewing & Tailoring"
+
+    # Plumber
+    plumber_tokens = [
+        "பிளம்பர்", "பிளம்பிங்", "குழாய்", "தண்ணீர் பைப்", "பைப்",
+        "പ്ലംബർ", "പൈപ്പ്",
+        "प्लम्बर", "नल", "पाइप",
+        "ప్లంబర్", "పైప్", "కుళాయి",
+        "plumber", "plumbing", "pipe"
+    ]
+    if any(k in text for k in plumber_tokens):
+        extracted["skills_and_interests"] = "General Plumbing & Pipe Fitting"
+
+    # Mason / Construction
+    mason_tokens = [
+        "மேஸ்திரி", "கொத்தனார்", "கட்டிடம்", "சிமெண்ட்", "செங்கல்", "கட்டுமான",
+        "മേസ്തിരി", "നിർമ്മാണം",
+        "राजमिस्त्री", "मिस्त्री", "निर्माण", "मकान",
+        "మేస్త్రీ", "భవన నిర్మాణం",
+        "mason", "masonry", "construction", "builder"
+    ]
+    if any(k in text for k in mason_tokens):
+        extracted["skills_and_interests"] = "Building Construction & Masonry"
+
+    # Solar
+    solar_tokens = [
+        "சோலார்", "சூரிய மின்சக்தி", "பேனல்",
+        "സോളാർ", "സൗരോർജ്ജം",
+        "सोलर", "सौर ऊर्जा",
+        "సోలార్", "సౌర విద్యుత్",
+        "solar", "solar panel", "clean energy"
+    ]
+    if any(k in text for k in solar_tokens):
+        extracted["skills_and_interests"] = "Solar Panel Installation"
+
+    # Two-Wheeler Mechanic
+    mechanic_tokens = [
+        "டூவீலர்", "பைக்", "மெக்கானிக்", "ஒர்க்‌ஷாப்",
+        "ടൂവീലർ", "ബൈക്ക്", "മെക്കാനിക്ക്",
+        "मैकेनिक", "बाइक", "गैरेज",
+        "టూవీలర్", "బైక్", "మెకానిక్",
+        "mechanic", "two wheeler", "bike repair", "garage"
+    ]
+    if any(k in text for k in mechanic_tokens):
+        extracted["skills_and_interests"] = "Two-Wheeler Service Technician"
+
+    # Beauty & Salon
+    beauty_tokens = [
+        "பார்லர்", "அழகுக்கலை", "மேக்கப்", "சலூன்", "பியூட்டி", "ஹேர்", "பார்பர்", "முடி திருத்து", "ஹேர்கட்",
+        "ബ്യൂട്ടി പാർലർ", "മേക്കപ്പ്", "സലൂൺ", "ബാർബർ",
+        "ब्यूटी पार्लर", "मेकअप", "सैलून", "नाई", "पार्लर", "बाल काटना",
+        "బ్యూటీ పార్లర్", "మేకప్", "సెలూన్", "పార్లర్", "క్షౌర",
+        "beauty parlour", "salon", "saloon", "barber", "haircut", "makeup", "hair", "grooming", "barbershop"
+    ]
+    if any(k in text for k in beauty_tokens):
+        extracted["skills_and_interests"] = "Beauty Therapist & Salon Care"
 
     # Footwear / Leather Goods
-    footwear_tokens = ["செருப்பு", "பாதணி", "சப்பல்", "காலணி", "தோல்", "footwear", "chappal", "shoe", "leather", "shoes", "जूता", "चप्पल", "పాదరక్షలు"]
+    footwear_tokens = [
+        "செருப்பு", "பாதணி", "சப்பல்", "காலணி", "தோல்",
+        "ചെരുപ്പ്",
+        "जूता", "चप्पल", "चमड़ा",
+        "పాదరక్షలు", "చెప్పులు",
+        "footwear", "chappal", "shoe", "leather", "shoes"
+    ]
     if any(k in text for k in footwear_tokens):
         extracted["skills_and_interests"] = "Footwear & Leather Goods Specialist"
 
-    # Grocery / Kirana
-    grocery_tokens = ["மளிகை", "கிராணா", "किराना", "కిరాణా", "പലചരക്ക്"]
+    # Grocery / Kirana (Specific provisions only, never generic shop)
+    grocery_tokens = [
+        "மளிகை", "கிரானா", "அண்ணாச்சி கடை", "மளிகை கடை",
+        "പലചരക്ക്", "പലചരക്ക് കട",
+        "किराना", "राशन", "किराना दुकान", "राशन दुकान",
+        "కిరాణా", "కిరాణా షాపు",
+        "grocery", "kirana", "provision", "provision store", "grocery store", "supermarket"
+    ]
     if any(k in text for k in grocery_tokens):
         extracted["skills_and_interests"] = "Grocery Store / Retail Trade"
 
+    # Explicit Self-Employment Preference
+    self_emp_tokens = [
+        "சொந்த கடை", "சொந்த தொழில்", "பிசினஸ்", "சுயதொழில்", "சொந்த வியாபாரம்", "முதலீடு",
+        "own business", "own shop", "self employment", "start business", "startup", "entrepreneur",
+        "स्वरोजगार", "खुद का काम", "खुद की दुकान", "व्यापार",
+        "స్వయం ఉపాధి", "సొంత వ్యాపారం", "షాపు",
+        "സ്വയംതൊഴിൽ", "സ്വന്തം സംരംഭം", "കട"
+    ]
+    if any(k in text for k in self_emp_tokens) or (("own" in text or "start" in text) and ("business" in text or "shop" in text or "enterprise" in text)):
+        extracted["employment_preference"] = "Self-Employment (Own Business / Shop)"
+
+    # Explicit Wage Employment Preference
+    wage_tokens = [
+        "கம்பெனி வேலை", "மாத சம்பளம்", "நிறுவனம்", "மாதாந்திர வேலை", "சம்பள வேலை",
+        "company job", "monthly salary", "salary", "wage job", "salaried",
+        "कंपनी की नौकरी", "मासिक वेतन", "नौकरी",
+        "కంపెనీ ఉద్యోగం", "నెలవారీ జీతం", "ఉద్యోగం",
+        "കമ്പനി ജോലി", "മാസ ശമ്പളം"
+    ]
+    if any(k in text for k in wage_tokens):
+        extracted["employment_preference"] = "Wage Employment (Monthly Salary)"
+
+    # Mobility: Local vs Travel
+    if any(k in text for k in ["local only", "local", "village", "in my village", "nearby", "ஊருக்குள்ள", "ஊருக்குள்ள மட்டும்", "வெளியூர் போக முடியாது", "staying nearby", "गाँव में ही", "गाँव में", "స్థానికంగా"]):
+        extracted["mobility_constraints"] = "Local Area Only (Within Village / Block)"
+    elif any(k in text for k in ["can travel", "travel", "city", "town", "பக்கத்து ஊருக்கு போவேன்", "டவுனுக்கு போவேன்", "travel nearby", "शहर जा सकते हैं", "పట్టణాలకు వెళ్లగలను"]):
+        extracted["mobility_constraints"] = "Can Travel to Nearby Towns & District Centre"
+
     return extracted
 
-def _get_question_for_field(next_field: str, user_speech: str, session: InterviewSession) -> Tuple[str, str]:
-    """
-    Selects warm, non-monotonous, appreciative question audio for all supported languages.
-    Provides clear conversational reasons for questions asked so beneficiaries never feel
-    subjected to repetitive questioning.
-    """
-    user_lower = (user_speech or "").lower()
-    turn_count = getattr(session, "turn_count", 0)
-    use_v2 = (turn_count % 2 == 1)
-    lang = getattr(session, "language_code", "ta")
 
-    # ── Malayalam Flow (ml) ─────────────────────────────────────────────────────
-    if lang == "ml":
+def _generate_conversational_acknowledgement(user_speech: str, lang: str) -> Optional[str]:
+    """
+    Disabled to prevent premature call-completed feeling.
+    Citizen questions must be direct, crisp, and focused on the next field.
+    """
+    return None
+
+
+def _select_field_prompt(next_field: str, session: InterviewSession, lang: str, use_v2: bool) -> Tuple[str, str]:
+    """Selects base question audio and respectful, open text prompt for the next field."""
+    # ── English Flow (en) ───────────────────────────────────────────────────────
+    if lang == "en":
         if next_field == "educational_background":
             if use_v2:
-                return "q2_education_v2_ml.wav", "നന്നായി! സ്കൂൾ വിദ്യാഭ്യാസം എത്രത്തോളം ഉണ്ടെന്ന് പറയാമോ?"
-            return "q2_education_v1_ml.wav", "വളരെ സന്തോഷം! നിങ്ങളുടെ വിദ്യാഭ്യാസം എന്താണ്, സ്കൂളിൽ പോയിട്ടുണ്ടോ?"
+                return "q2_education_v2_en.wav", "Wonderful to connect with you! To help us understand your background, could you tell me a little about your schooling or education?"
+            return "q2_education_v1_en.wav", "Great to speak with you! To get started, could you share a bit about your educational background or schooling?"
 
         elif next_field == "family_occupation":
             if use_v2:
-                return "q3_family_occ_v2_ml.wav", "ശരി! നിങ്ങളുടെ കുടുംബത്തിന്റെ പ്രധാന തൊഴിൽ എന്താണ്?"
-            return "q3_family_occ_v1_ml.wav", "വളരെ നല്ലത്! നിങ്ങളുടെ കുടുംബത്തിൽ സാധാരണയായി എന്തൊക്കെ ജോലികളാണ് ചെയ്യുന്നത്?"
+                return "q3_family_occ_v2_en.wav", "Thank you for sharing that with me! In your family or household, what traditional trade or work did your elders usually do?"
+            return "q3_family_occ_v1_en.wav", "Thank you! To help us understand your family heritage, what kind of traditional work or trade did your family engage in?"
 
         elif next_field == "current_livelihood":
-            is_farming = any(k in user_lower for k in ["കൃഷി", "കർഷക", "പാടം", "നിലം", "പശു", "തോട്ടം"])
-            if is_farming:
-                return "q4_current_work_farming_ml.wav", "കൃഷി ചെയ്യുന്നത് വളരെ വലിയൊരു കാര്യമാണ്! ഇപ്പോൾ പ്രധാനമായും എന്തൊക്കെ ജോലികളാണ് ചെയ്യുന്നത്?"
-            return "q4_current_work_gen_ml.wav", "അഭിനന്ദനങ്ങൾ! ഇപ്പോൾ നിങ്ങളുടെ വരുമാനത്തിനായി എന്തൊക്കെ ജോലികളാണ് ചെയ്യുന്നത്?"
+            if use_v2:
+                return "q4_current_work_v2_en.wav", "Traditional skills and family heritage are truly valuable! Currently, what work do you personally do on a day-to-day basis for your livelihood?"
+            return "q4_current_work_v1_en.wav", "Generational heritage is so respected! Today, what kind of work or activity do you personally do for your daily earnings?"
 
         elif next_field == "skills_and_interests":
             if use_v2:
-                return "q5_skills_v2_ml.wav", "വളരെ സന്തോഷം! സ്വന്തമായി ചെയ്യാൻ എന്തൊക്കെ ജോലികൾ പഠിച്ചിട്ടുണ്ട്?"
-            return "q5_skills_v1_ml.wav", "നന്നായി! നിങ്ങൾക്ക് എന്തൊക്കെ തൊഴിൽ നൈപുണ്യങ്ങളും താൽപ്പര്യങ്ങളുമാണ് ഉള്ളത്?"
+                return "q5_skills_v2_en.wav", "Your dedication and daily hard work are truly inspiring! What are some skills you have learned, or trades you are passionate about pursuing?"
+            return "q5_skills_v1_en.wav", "Thank you for sharing that! For our government vocational support, what skills do you currently possess or wish to learn?"
 
         elif next_field == "mobility_constraints":
-            is_cooking = any(k in user_lower for k in ["പാചക", "ബിരിയാണി", "ഹോട്ടൽ", "ഷെഫ്", "ഭക്ഷണ"])
-            is_driving = any(k in user_lower for k in ["ഡ്രൈവർ", "വണ്ടി", "ഓട്ടോ", "കാർ", "ലോറി"])
-            if is_cooking:
-                return "q6_mobility_cooking_ml.wav", "നന്നായി, പാചക കല വലിയൊരു വരദാനമാണ്! ജോലിക്കായി അടുത്തുള്ള സ്ഥലങ്ങളിലേക്ക് യാത്ര ചെയ്യാൻ സാധിക്കുമോ?"
-            elif is_driving:
-                return "q6_mobility_driving_ml.wav", "ഡ്രൈവിംഗ് മികച്ചൊരു തൊഴിലാണ്! ജോലിക്കായി പുറത്തേക്ക് പോകാൻ സാധിക്കുമോ?"
-            return "q6_mobility_gen_ml.wav", "ശരി! ജോലിക്കായി പുറത്തേക്കോ അടുത്തുള്ള പട്ടണങ്ങളിലേക്കോ പോകാൻ സാധിക്കുമോ?"
+            if use_v2:
+                return "q6_mobility_v2_en.wav", "Those are wonderful and practical skills to build on! How do you feel about traveling for training or work opportunities — do you prefer staying nearby or are you open to nearby towns?"
+            return "q6_mobility_v1_en.wav", "That sounds like a great field of interest! When thinking about training or job opportunities, what are your thoughts on traveling to nearby towns or staying local?"
 
         elif next_field == "employment_preference":
             if use_v2:
-                return "q7_pref_v2_ml.wav", "വളരെ നല്ലത്! നിങ്ങൾക്ക് സ്വന്തമായി കട തുടങ്ങാനാണോ അതോ സ്ഥാപനത്തിൽ ജോലി ചെയ്യാനാണോ ആഗ്രഹം?"
-            return "q7_pref_v1_ml.wav", "വളരെ സന്തോഷം! നിങ്ങൾക്ക് സ്വന്തമായി ബിസിനസ് തുടങ്ങാനാണോ അതോ മാസ ശമ്പളമുള്ള ജോലിയാണോ താൽപ്പര്യം?"
+                return "q7_pref_v2_en.wav", "Understood, that makes complete sense! Looking ahead, what are your thoughts on starting a business or shop of your own versus working in a salaried role?"
+            return "q7_pref_v1_en.wav", "Thank you, that is very helpful context! For your future growth, are you more inclined toward self-employment and your own enterprise, or a steady monthly salary?"
 
         elif next_field == "local_economic_context":
-            is_business = any(k in user_lower for k in ["കട", "ബിസിനസ്", "സ്ഥാപനം", "ചന്ത", "കച്ചവടം"])
-            if is_business:
-                return "q8_context_business_ml.wav", "സ്വന്തം സംരംഭ ശ്രമങ്ങൾക്ക് എല്ലാവിധ ആശംസകളും! നിങ്ങളുടെ നാട്ടിൽ എന്തൊക്കെ കടകളോ ചന്തയോ ഉണ്ട്?"
-            return "q8_context_gen_ml.wav", "നന്നായി! നിങ്ങളുടെ നാട്ടിൽ പ്രധാനമായും എന്തൊക്കെ കടകളും സ്ഥാപനങ്ങളുമാണ് ഉള്ളത്?"
+            if use_v2:
+                return "q8_context_v2_en.wav", "That is a great direction to aim for! Could you tell me a little about the business and market environment around your local area?"
+            return "q8_context_v1_en.wav", "Wishing you the very best with your aspirations! To identify the best local avenues, what kind of markets, shops, or industries are active around your area?"
 
-        return "q2_education_v1_ml.wav", "നിങ്ങളുടെ വിദ്യാഭ്യാസം എന്താണ്, സ്കൂളിൽ പോയിട്ടുണ്ടോ?"
+        return "q2_education_v1_en.wav", "Could you please tell me about your schooling or education?"
 
-    # ── Hindi Flow (hi) ─────────────────────────────────────────────────────────
+    # ── Malayalam Flow (ml) ─────────────────────────────────────────────────────
+    elif lang == "ml":
+        if next_field == "educational_background":
+            if use_v2:
+                return "q2_education_v2_ml.wav", "വളരെ സന്തോഷം! നിങ്ങളുടെ പശ്ചാത്തലം മനസ്സിലാക്കാൻ, സ്കൂൾ വിദ്യാഭ്യാസം അല്ലെങ്കിൽ പഠനാനുഭവങ്ങളെക്കുറിച്ച് പറയാമോ?"
+            return "q2_education_v1_ml.wav", "വളരെ സന്തോഷം! നിങ്ങളുടെ വിദ്യാഭ്യാസ പശ്ചാത്തലത്തെക്കുറിച്ച് കുറച്ച് പറയാമോ?"
+
+        elif next_field == "family_occupation":
+            if use_v2:
+                return "q3_family_occ_v2_ml.wav", "വിവരങ്ങൾ പങ്കുവെച്ചതിന് നന്ദി! നിങ്ങളുടെ കുടുംബത്തിൽ പൂർവ്വികരോ മുതിർന്നവരോ പരമ്പരാഗതമായി എന്തൊക്കെ തൊഴിലുകളാണ് ചെയ്തിരുന്നത്?"
+            return "q3_family_occ_v1_ml.wav", "വളരെ നല്ലത്! കുടുംബ പാരമ്പര്യം മനസ്സിലാക്കാൻ, നിങ്ങളുടെ കുടുംബത്തിൽ തലമുറകളായി എന്തൊക്കെ തൊഴിലുകളാണ് ചെയ്തുപോന്നത്?"
+
+        elif next_field == "current_livelihood":
+            if use_v2:
+                return "q4_current_work_farming_ml.wav", "പാരമ്പര്യ നൈപുണ്യങ്ങൾ വലിയൊരു സമ്പത്താണ്! ഇപ്പോൾ താങ്കൾ സ്വന്തമായി ദിവസ വരുമാനത്തിനായി എന്തൊക്കെ ജോലികളാണ് ചെയ്യുന്നത്?"
+            return "q4_current_work_gen_ml.wav", "അഭിനന്ദനങ്ങൾ! ഇപ്പോൾ താങ്കൾ സ്വന്തമായി ദിവസേന എന്തൊക്കെ ജോലികൾ ചെയ്താണ് ഉപജീവനം കണ്ടെത്തുന്നത്?"
+
+        elif next_field == "skills_and_interests":
+            if use_v2:
+                return "q5_skills_v2_ml.wav", "നിങ്ങളുടെ അധ്വാനശീലം ഏറെ പ്രശംസനീയമാണ്! താങ്കൾക്ക് താല്പര്യമുള്ള മറ്റ് തൊഴിൽ നൈപുണ്യങ്ങൾ എന്തൊക്കെയാണെന്ന് പറയാമോ?"
+            return "q5_skills_v1_ml.wav", "നന്ദി! സർക്കാർ നൈപുണ്യ പരിശീലനത്തിനായി, താങ്കൾ പഠിച്ചിട്ടുള്ളതോ പഠിക്കാൻ ആഗ്രഹിക്കുന്നതോ ആയ കഴിവുകൾ എന്തൊക്കെയാണ്?"
+
+        elif next_field == "mobility_constraints":
+            if use_v2:
+                return "q6_mobility_cooking_ml.wav", "വളരെ നല്ല തൊഴിൽ താല്പര്യങ്ങൾ! പരിശീലനത്തിനോ ജോലിക്കോ ആയി അടുത്തുള്ള നഗരങ്ങളിലേക്ക് യാത്ര ചെയ്യുന്നതിനെക്കുറിച്ച് എന്താണ് അഭിപ്രായം?"
+            return "q6_mobility_gen_ml.wav", "ശരി! പരിശീലനത്തിനോ ജോലിക്കോ ആയി സ്വന്തം പ്രദേശത്ത് നിൽക്കാനാണോ അതോ അടുത്തുള്ള ടൗണുകളിലേക്ക് പോകാനാണോ താല്പര്യം?"
+
+        elif next_field == "employment_preference":
+            if use_v2:
+                return "q7_pref_v2_ml.wav", "തീർച്ചയായും മനസ്സിലാക്കുന്നു! ഭാവി വളർച്ചയ്ക്കായി സ്വന്തമായി ഒരു സംരംഭം തുടങ്ങാനാണോ അതോ മാസ ശമ്പളമുള്ള ജോലിയാണോ കൂടുതൽ ആഗ്രഹം?"
+            return "q7_pref_v1_ml.wav", "വളരെ നല്ലത്! തൊഴിൽ മാർഗ്ഗനിർദ്ദേശത്തിനായി, സ്വന്തമായി ബിസിനസ് ചെയ്യുന്നതിലാണോ കമ്പനി ജോലിയിലാണോ താല്പര്യം?"
+
+        elif next_field == "local_economic_context":
+            if use_v2:
+                return "q8_context_business_ml.wav", "നല്ലൊരു ലക്ഷ്യമാണത്! നിങ്ങളുടെ പ്രദേശത്ത് കൂടുതൽ സജീവമായിട്ടുള്ള കടകളോ വ്യവസായങ്ങളോ എന്തൊക്കെയാണെന്ന് പറയാമോ?"
+            return "q8_context_gen_ml.wav", "നിങ്ങളുടെ ഭാവി പരിശ്രമങ്ങൾക്ക് എല്ലാ ആശംസകളും! നിങ്ങളുടെ പ്രദേശത്തെ ചന്തകളും തൊഴിൽ സാധ്യതകളും എങ്ങനെയുണ്ട്?"
+
+        return "q2_education_v1_ml.wav", "വിദ്യാഭ്യാസ പശ്ചാത്തലത്തെക്കുറിച്ച് പറയാമോ?"
+
+    # ── Hindi Flow (hi) ────────────────────────────────────────────────────────
     elif lang == "hi":
         if next_field == "educational_background":
             if use_v2:
-                return "q2_education_v2_hi.wav", "बहुत बढ़िया! आपकी शिक्षा कितनी तक हुई है, क्या स्कूल की पढ़ाई की है?"
-            return "q2_education_v1_hi.wav", "बहुत अच्छा! आपकी पढ़ाई के बारे में बताइए, क्या आप स्कूल गए हैं?"
+                return "q2_education_v2_hi.wav", "आपसे बात करके बहुत खुशी हुई! आपकी पृष्ठभूमि को समझने के लिए, अपनी पढ़ाई और शिक्षा के बारे में कुछ बताइए?"
+            return "q2_education_v1_hi.wav", "बहुत अच्छा! अपनी पढ़ाई और शिक्षा के बारे में हमें कुछ बताइए?"
 
         elif next_field == "family_occupation":
             if use_v2:
-                return "q3_family_occ_v2_hi.wav", "अच्छा! आपके परिवार का मुख्य व्यवसाय या पारंपरिक काम क्या है?"
-            return "q3_family_occ_v1_hi.wav", "बिल्कुल सही! आपके परिवार में पारंपरिक रूप से कौन सा काम या व्यवसाय किया जाता है?"
+                return "q3_family_occ_v2_hi.wav", "यह जानकारी साझा करने के लिए धन्यवाद! आपके परिवार में पारंपरिक रूप से बुजुर्ग क्या काम या व्यवसाय करते आए हैं?"
+            return "q3_family_occ_v1_hi.wav", "बहुत बढ़िया! आपकी पारिवारिक परंपरा को समझने के लिए, आपके परिवार में मुख्य रूप से क्या काम किया जाता है?"
 
         elif next_field == "current_livelihood":
-            is_farming = any(k in user_lower for k in ["खेती", "किसान", "कृषि", "फसल", "खेत"])
-            if is_farming:
-                return "q4_current_work_farming_hi.wav", "खेती करना बहुत गर्व की बात है! खेती के साथ-साथ क्या आप रोज़ाना कोई अन्य काम भी करते हैं?"
-            return "q4_current_work_gen_hi.wav", "बहुत अच्छा! वर्तमान में अपनी दैनिक आजीविका या आमदनी के लिए आप क्या काम करते हैं?"
+            if use_v2:
+                return "q4_current_work_farming_hi.wav", "पारंपरिक हुनर सचमुच बहुत मूल्यवान है! आजकल आप अपनी दैनिक आजीविका और कमाई के लिए मुख्य रूप से क्या काम करते हैं?"
+            return "q4_current_work_gen_hi.wav", "शानदार! वर्तमान में आप अपने और अपने परिवार के भरण-पोषण के लिए दिनभर क्या काम करते हैं?"
 
         elif next_field == "skills_and_interests":
             if use_v2:
-                return "q5_skills_v2_hi.wav", "बहुत खूब! खुद का काम करने के लिए आपने कौन सा हुनर या काम सीखा हुआ है?"
-            return "q5_skills_v1_hi.wav", "सरकारी कौशल योजना के लिए, आपके पास कौन से विशेष काम या हुनर की जानकारी है?"
+                return "q5_skills_v2_hi.wav", "आपकी मेहनत और लगन सचमुच सराहनीय है! आपने कौन-से हुनर सीखे हैं या किस काम को सीखने में आपकी गहरी रुचि है?"
+            return "q5_skills_v1_hi.wav", "सरकारी कौशल प्रशिक्षण के लिए, आपके पास कौन-सी कला या हुनर है जिसे आप आगे बढ़ाना चाहते हैं?"
 
         elif next_field == "mobility_constraints":
-            is_cooking = any(k in user_lower for k in ["रसोई", "खाना", "होटल", "बावर्ची", "कुक", "बिरयानी"])
-            is_driving = any(k in user_lower for k in ["ड्राइवर", "गाड़ी", "ऑटो", "कार", "ट्रक"])
-            if is_cooking:
-                return "q6_mobility_cooking_hi.wav", "रसोई और खानपान का हुनर बहुत बढ़िया है! क्या काम के लिए आप पास के शहर या कस्बे जा सकते हैं?"
-            elif is_driving:
-                return "q6_mobility_driving_hi.wav", "ड्राइविंग एक बेहतरीन पेशा है! क्या काम के सिलसिले में आप बाहर यात्रा कर सकते हैं?"
-            return "q6_mobility_gen_hi.wav", "अच्छा! क्या काम के लिए आप अपने गांव से बाहर या पास के शहर जा सकते हैं?"
+            if use_v2:
+                return "q6_mobility_cooking_hi.wav", "यह बहुत ही उपयोगी हुनर है! काम या प्रशिक्षण के लिए पास के कस्बे या शहर जाने के बारे में आपका क्या विचार है?"
+            return "q6_mobility_gen_hi.wav", "बहुत अच्छा! प्रशिक्षण या रोजगार के लिए आप अपने गाँव में ही रहना पसंद करेंगे या आसपास के शहर भी जा सकते हैं?"
 
         elif next_field == "employment_preference":
             if use_v2:
-                return "q7_pref_v2_hi.wav", "सरकारी सहायता के लिए, आपकी अपनी दुकान शुरू करने में रुचि है या किसी कंपनी में नौकरी करने में?"
-            return "q7_pref_v1_hi.wav", "बहुत बढ़िया! आप खुद का कोई छोटा व्यवसाय या दुकान शुरू करना चाहते हैं, या मासिक वेतन वाली नौकरी?"
+                return "q7_pref_v2_hi.wav", "बिल्कुल सही! भविष्य में आप खुद की दुकान या व्यवसाय शुरू करना चाहते हैं, या किसी कंपनी में मासिक वेतन वाली नौकरी?"
+            return "q7_pref_v1_hi.wav", "बहुत अच्छा! अपने भविष्य के लिए आपकी अधिक रुचि स्वरोजगार में है या बंधी-बंधाई मासिक नौकरी में?"
 
         elif next_field == "local_economic_context":
-            is_business = any(k in user_lower for k in ["दुकान", "व्यापार", "बिजनेस", "खुद का काम"])
-            if is_business:
-                return "q8_context_business_hi.wav", "आपके नए उद्यम के लिए शुभकामनाएं! आपके गांव या इलाके में कौन-सी दुकानें या बाजार हैं?"
-            return "q8_context_gen_hi.wav", "अच्छा! आपके गांव या आसपास रोजगार के क्या अवसर और बाजार उपलब्ध हैं?"
+            if use_v2:
+                return "q8_context_business_hi.wav", "यह बहुत अच्छी सोच है! आपके आसपास के बाजार या इलाके में किस प्रकार की दुकानें और कारोबार सबसे ज्यादा चलते हैं?"
+            return "q8_context_gen_hi.wav", "आपके उज्ज्वल भविष्य की कामना करते हैं! आपके क्षेत्र में व्यापार और रोजगार के अवसर कैसे हैं?"
 
-        return "q2_education_v1_hi.wav", "आपकी पढ़ाई के बारे में बताइए, क्या आप स्कूल गए हैं?"
+        return "q2_education_v1_hi.wav", "अपनी पढ़ाई और शिक्षा के बारे में बताइए?"
 
-    # ── Telugu Flow (te) ────────────────────────────────────────────────────────
+    # ── Telugu Flow (te) ───────────────────────────────────────────────────────
     elif lang == "te":
         if next_field == "educational_background":
             if use_v2:
-                return "q2_education_v2_te.wav", "బాగుంది అండీ! మీ చదువు ఎంతవరకు సాగింది, పాఠశాలకు వెళ్లారా?"
-            return "q2_education_v1_te.wav", "చాలా సంతోషం అండీ! మీ చదువు వివరాలు చెప్పండి, బడికి వెళ్లారా?"
+                return "q2_education_v2_te.wav", "మీతో మాట్లాడటం చాలా సంతోషంగా ఉంది! మీ నేపథ్యం అర్థం చేసుకోవడానికి, మీ చదువు వివరాల గురించి కొంచెం చెబుతారా?"
+            return "q2_education_v1_te.wav", "చాలా సంతోషం అండీ! మీ చదువు మరియు విద్యా నేపథ్యం గురించి కొంచెం చెబుతారా?"
 
         elif next_field == "family_occupation":
             if use_v2:
-                return "q3_family_occ_v2_te.wav", "సరేనండీ! మీ కుటుంబం యొక్క ప్రధాన వృత్తి లేదా పని ఏమిటి?"
-            return "q3_family_occ_v1_te.wav", "మంచిదండీ! మీ కుటుంబంలో సాధారణంగా లేదా సంప్రదాయకంగా ఏ వృత్తి చేస్తారు?"
+                return "q3_family_occ_v2_te.wav", "వివరాలు పంచుకున్నందుకు ధన్యవాదాలు! మీ కుటుంబంలో పెద్దలు సంప్రదాయకంగా లేదా తరతరాలుగా ఏ వృత్తి చేసేవారు?"
+            return "q3_family_occ_v1_te.wav", "మంచిదండీ! మీ కుటుంబ వారసత్వాన్ని అర్థం చేసుకోవడానికి, మీ కుటుంబంలో సాధారణంగా ఏ పని చేస్తారు?"
 
         elif next_field == "current_livelihood":
-            is_farming = any(k in user_lower for k in ["వ్యవసాయం", "రైతు", "పొలం", "కూలి", "పంట"])
-            if is_farming:
-                return "q4_current_work_farming_te.wav", "వ్యవసాయం చేయడం ఎంతో గొప్ప విషయం అండీ! వ్యవసాయంతో పాటు ప్రస్తుతం మీ రోజువారీ ఆదాయానికి ఏం పని చేస్తున్నారు?"
-            return "q4_current_work_gen_te.wav", "చాలా మంచిది అండీ! ప్రస్తుతం మీ రోజువారీ జీవనాధారం కోసం ఏ పని చేస్తున్నారు?"
+            if use_v2:
+                return "q4_current_work_farming_te.wav", "సంప్రదాయ నైపుణ్యాలు ఎంతో విలువైనవి! ప్రస్తుతం మీ రోజువారీ ఆదాయం మరియు జీవనాధారం కోసం ఏ పని చేస్తున్నారు?"
+            return "q4_current_work_gen_te.wav", "చాలా మంచిది అండీ! ప్రస్తుతం మీ జీవనోపాధి కోసం ప్రతిరోజూ వ్యక్తిగతంగా ఏం పని చేస్తున్నారు?"
 
         elif next_field == "skills_and_interests":
             if use_v2:
-                return "q5_skills_v2_te.wav", "చాలా సంతోషం అండీ! స్వయంగా ఏదైనా పని చేయడానికి మీకు ఏ నైపుణ్యం ఉంది?"
-            return "q5_skills_v1_te.wav", "ప్రభుత్వ నైపుణ్య శిక్షణ కోసం, మీకు ఏయే వృత్తి నైపుణ్యాలు లేదా ఆసక్తులు ఉన్నాయి?"
+                return "q5_skills_v2_te.wav", "మీ కష్టపడే తత్వం ఎంతో స్ఫూర్తిదాయకం! మీరు నేర్చుకున్న నైపుణ్యాలు లేదా నేర్చుకోవాలనుకుంటున్న పనులు ఏంటి?"
+            return "q5_skills_v1_te.wav", "ప్రభుత్వ ఉచిత శిక్షణ కోసం, మీకు ఏయే రంగాలలో పని నైపుణ్యాలు లేదా ఆసక్తులు ఉన్నాయి?"
 
         elif next_field == "mobility_constraints":
-            is_cooking = any(k in user_lower for k in ["వంట", "హోటల్", "బిర్యానీ", "భోజనం"])
-            is_driving = any(k in user_lower for k in ["డ్రైవర్", "బండి", "ఆటో", "కారు", "లారీ"])
-            if is_cooking:
-                return "q6_mobility_cooking_te.wav", "వంట పని ఎంతో గొప్ప నైపుణ్యం అండీ! పని కోసం పక్క ఊర్లకు లేదా పట్టణాలకు వెళ్లగలరా?"
-            elif is_driving:
-                return "q6_mobility_driving_te.wav", "డ్రైవింగ్ మంచి వృత్తి అండీ! పని కోసం బయటి ప్రాంతాలకు ప్రయాణం చేయగలరా?"
-            return "q6_mobility_gen_te.wav", "సరేనండీ! పని కోసం బయటి ఊర్లకు లేదా పట్టణాలకు ప్రయాణం చేయగలరా?"
+            if use_v2:
+                return "q6_mobility_cooking_te.wav", "ఇవి ఎంతో ఉపయోగకరమైన నైపుణ్యాలు! శిక్షణ లేదా ఉద్యోగాల కోసం పక్క ఊర్లకు లేదా పట్టణాలకు ప్రయాణం చేయడంపై మీ ఆలోచన ఏంటి?"
+            return "q6_mobility_gen_te.wav", "సరేనండీ! ఉపాధి కోసం స్థానికంగా ఉండటం ఇష్టమా లేక సమీప పట్టణాలకు వెళ్లడానికి సిద్ధంగా ఉన్నారా?"
 
         elif next_field == "employment_preference":
             if use_v2:
-                return "q7_pref_v2_te.wav", "ప్రభుత్వ సహాయం కోసం, మీకు సొంత వ్యాపారం మొదలుపెట్టాలని ఉందా లేదా కంపెనీలో ఉద్యోగమా?"
-            return "q7_pref_v1_te.wav", "చాలా మంచిది అండీ! మీకు సొంతంగా వ్యాపారం లేదా దుకాణం పెట్టడం ఇష్టమా, లేక నెల జీతం ఉద్యోగమా?"
+                return "q7_pref_v2_te.wav", "బాగా చెప్పారు! భవిష్యత్తులో సొంతంగా దుకాణం లేదా వ్యాపారం పెట్టడం ఇష్టమా, లేక నెల జీతం ఉద్యోగమా?"
+            return "q7_pref_v1_te.wav", "చాలా సంతోషం అండీ! మీ భవిష్యత్ ఉన్నతికి స్వయం ఉపాధిపై ఆసక్తి ఉందా లేక నిలకడైన ఉద్యోగమా?"
 
         elif next_field == "local_economic_context":
-            is_business = any(k in user_lower for k in ["దుకాణం", "షాపు", "సొంత వ్యాపారం", "బిజినెస్"])
-            if is_business:
-                return "q8_context_business_te.wav", "మీ సొంత వ్యాపార ప్రయత్నాలకు శుభాకాంక్షలు అండీ! మీ ఊర్లో ఎలాంటి దుకాణాలు లేదా మార్కెట్ ఉన్నాయి?"
-            return "q8_context_gen_te.wav", "బాగుంది అండీ! మీ ఊర్లో ఉపాధి అవకాశాలు, దుకాణాలు ఎలా ఉన్నాయి?"
+            if use_v2:
+                return "q8_context_business_te.wav", "మంచి లక్ష్యం వైపు అడుగులు వేస్తున్నారు! మీ ప్రాంతంలో లేదా మార్కెట్లో ఎలాంటి వ్యాపారాలు ఎక్కువగా నడుస్తున్నాయి?"
+            return "q8_context_gen_te.wav", "మీ లక్ష్యాలు నెరవేరాలని కోరుకుంటున్నాము! మీ పరిసర ప్రాంతాలలో వ్యాపార వాతావరణం, అవకాశాలు ఎలా ఉన్నాయి?"
 
-        return "q2_education_v1_te.wav", "మీ చదువు వివరాలు చెప్పండి, బడికి వెళ్లారా?"
+        return "q2_education_v1_te.wav", "మీ చదువు వివరాల గురించి చెబుతారా?"
 
     # ── Tamil Flow (ta) ─────────────────────────────────────────────────────────
     else:
         if next_field == "educational_background":
-            if use_v2:
-                return "q2_education_v2.wav", "அருமைங்க! உங்க படிப்பு விவரம் சொல்லுங்க, பள்ளிக்கூடம் வரை போயிருக்கீங்களா?"
-            return "q2_education_v1.wav", "ரொம்ப சந்தோஷம்ங்க! உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?"
+            return "q_educational_background.wav", "உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?"
 
         elif next_field == "family_occupation":
-            if use_v2:
-                return "q3_family_occ_v2.wav", "சரிங்க! அரசு திட்டத்திற்காக உங்க குடும்பத்துல வழக்கமா என்ன தொழில் செய்றாங்க?"
-            return "q3_family_occ_v1.wav", "நல்லதுங்க! அரசு நலத்திட்ட பதிவிற்காக உங்க குடும்ப பாரம்பரிய தொழில் என்னங்க?"
+            return "q_family_occupation.wav", "உங்க குடும்பத்தில் என்ன பாரம்பரிய தொழில் அல்லது வேலை செய்றாங்க?"
 
         elif next_field == "current_livelihood":
-            is_farming = any(k in user_lower for k in ["விவசாய", "விவசாயம்", "காடு", "பயிர்", "நிலம்", "மாடு", "கழனி"])
-            if is_farming:
-                return "q4_current_work_farming.wav", "விவசாயம் செய்றது பெருமைக்குரிய விஷயம்ங்க! விவசாயத்தோடு சேர்த்து கூடுதல் வருமானத்திற்கு தினசரி என்ன வேலை செய்றீங்க?"
-            return "q4_current_work_gen.wav", "மிகவும் சிறப்புங்க! குடும்ப வருமானத்தை சரியாக திட்டமிட இப்ப தினசரி என்ன வேலை பாக்குறீங்க?"
+            return "q_current_livelihood.wav", "தற்போது உங்கள் தினசரி வருமானத்திற்கு என்ன வேலை செய்றீங்க?"
 
         elif next_field == "skills_and_interests":
-            if use_v2:
-                return "q5_skills_v2.wav", "ரொம்ப மகிழ்ச்சிங்க! அரசு திறன் பயிற்சிக்காக சொந்தமா செய்ய என்ன வேலை கத்து வச்சிருக்கீங்க?"
-            return "q5_skills_v1.wav", "அருமைங்க! அரசு பயிற்சி உதவிக்கு உங்களுக்கு என்னென்ன தொழில் திறன்கள் அல்லது ஆர்வங்கள் இருக்கு?"
+            return "q_skills_and_interests.wav", "உங்களுக்கு தெரிந்த தொழில் அல்லது செய்ய விரும்பும் வேலை என்னங்க?"
 
         elif next_field == "mobility_constraints":
-            is_cooking = any(k in user_lower for k in ["பிரியாணி", "சமையல்", "ஹோட்டல்", "சாப்பாடு", "மாஸ்டர்", "ரெஸ்டாரன்ட்", "கேட்டரிங்"])
-            is_driving = any(k in user_lower for k in ["டிரைவர்", "வண்டி", "ஆட்டோ", "கார்", "ஓட்டுநர்", "லாரி"])
-            if is_cooking:
-                return "q6_mobility_cooking.wav", "அருமைங்க, சமையல் கைபக்குவம் பெரிய வரம்! வேலைக்காக பக்கத்து ஊருக்கு பயணம் செய்ய முடியுமா?"
-            elif is_driving:
-                return "q6_mobility_driving.wav", "வாகனம் ஓட்டுவது சிறந்த தொழில்ங்க! வேலைக்காக வெளியூர் போக வாய்ப்பிருக்கா?"
-            return "q6_mobility_gen.wav", "சரிங்க! வேலை வாய்ப்புகளுக்காக வெளியூர் அல்லது பக்கத்து ஊர்களுக்கு போக முடியுமா?"
+            return "q_mobility_constraints.wav", "வேலை வாய்ப்புக்காக பக்கத்து ஊர்களுக்கு போக முடியுமா?"
 
         elif next_field == "employment_preference":
-            if use_v2:
-                return "q7_pref_v2.wav", "நல்லதுங்க! அரசு கடன் மானிய உதவிக்கு உங்களுக்கு சொந்த கடை வைக்க ஆசையா அல்லது நிறுவன வேலையா?"
-            return "q7_pref_v1.wav", "ரொம்ப சந்தோஷம்ங்க! தொழில் வழிகாட்டலுக்கு நீங்க சொந்தமா தொழில் வைக்க விருப்பமா, இல்ல மாத சம்பள வேலையா?"
+            return "q_employment_preference.wav", "உங்களுக்கு சொந்தமாக தொழில் செய்ய விருப்பமா அல்லது மாத சம்பள வேலையா?"
 
         elif next_field == "local_economic_context":
-            is_business = any(k in user_lower for k in ["கடை", "சொந்த", "வியாபாரம்", "தொழில்", "பிசினஸ்", "பண்ண"])
-            if is_business:
-                return "q8_context_business.wav", "சூப்பர்ங்க! சொந்த தொழில் வெற்றிக்கு உங்க ஊர்ல அல்லது சந்தையில இந்த தொழிலுக்கு நல்ல ஆதரவு இருக்கா?"
-            return "q8_context_gen.wav", "அருமைங்க! உங்க ஊர்ல சுத்துப்பட்டுல வேலை வாய்ப்புகள் மற்றும் சந்தை எப்படி இருக்குங்க?"
+            return "q_local_economic_context.wav", "உங்கள் ஊரில் என்ன கடைகள் அல்லது தொழில்கள் நல்லா நடக்குதுங்க?"
 
-        return "q2_education_v1.wav", "ரொம்ப சந்தோஷம்ங்க! உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?"
+        return "q_educational_background.wav", "உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?"
+
+
+
+def _get_question_for_field(next_field: str, user_speech: str, session: InterviewSession) -> Tuple[str, str]:
+    """
+    Selects warm, non-monotonous, appreciative question audio for all supported languages.
+    Dynamically prepends empathetic active-listening acknowledgement (Sentence 1)
+    to the open, respectful field inquiry prompt (Sentence 2).
+    """
+    lang = getattr(session, "language_code", "ta")
+    turn_count = getattr(session, "turn_count", 0)
+    use_v2 = (turn_count % 2 == 1)
+
+    q_file, base_prompt = _select_field_prompt(next_field, session, lang, use_v2)
+
+    # Dynamic empathetic acknowledgement of user speech (Sentence 1)
+    custom_ack = _generate_conversational_acknowledgement(user_speech, lang)
+    if custom_ack:
+        full_text = f"{custom_ack} {base_prompt}"
+        return q_file, full_text
+
+    return q_file, base_prompt
+
 
 class InterviewCoordinator:
     """
@@ -554,6 +723,20 @@ class InterviewCoordinator:
                 session.language_code = detected_lang
                 lang = detected_lang
 
+        # Guard: If interview is already completed, do not process trailing turns or re-dispatch notifications
+        if session.state == InterviewState.COMPLETED:
+            logger.info(f"Session {session.session_id} is already COMPLETED. Ignoring trailing speech: '{user_speech}'")
+            return CoordinatorTurnResult(
+                session_id=session.session_id,
+                spoken_response="",
+                audio_bytes=b"",
+                state=InterviewState.COMPLETED,
+                is_completed=True,
+                case_id=session.session_id[:12].upper(),
+                current_field=None,
+                language_code=session.language_code,
+            )
+
         # ── Turn 0: Initial prompt (greeting + consent explanation) ────────────
         if is_initial:
             session.consent_prompted = True
@@ -592,6 +775,7 @@ class InterviewCoordinator:
                     reprompt_audio = _get_static_bytes("intro_reprompt.wav")
 
                 reprompt_audio = reprompt_audio or await self._synthesize_safe(reprompt_text, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=reprompt_text,
@@ -626,6 +810,7 @@ class InterviewCoordinator:
                 audio_bytes = await self._synthesize_safe(spoken_refusal, lang, speaker=speaker)
                 if key in self._active_sessions:
                     del self._active_sessions[key]
+                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=spoken_refusal,
@@ -697,6 +882,7 @@ class InterviewCoordinator:
                     "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
                 })
 
+                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=q1_text,
@@ -718,16 +904,19 @@ class InterviewCoordinator:
 
             # If user said nothing / empty audio on course question, reprompt warmly
             if not user_speech:
-                if lang == "ml":
-                    reprompt_course = "ഹലോ, ശുപാർശ ചെയ്ത രണ്ട് കോഴ്സുകളിൽ ഏതിലാണ് താല്പര്യമെന്ന് പറയാമോ?"
+                if lang == "en":
+                    reprompt_course = "Hello, among the three recommended courses, which one would you prefer?"
+                elif lang == "ml":
+                    reprompt_course = "ഹലോ, ശുപാർശ ചെയ്ത മൂന്ന് കോഴ്സുകളിൽ ഏതിലാണ് താല്പര്യമെന്ന് പറയാമോ?"
                 elif lang == "hi":
-                    reprompt_course = "नमस्ते, अनुशंसित दो पाठ्यक्रमों में से आपकी किसमें रुचि है, कृपया बताइए?"
+                    reprompt_course = "नमस्ते, अनुशंसित तीन पाठ्यक्रमों में से आपकी किसमें रुचि है, कृपया बताइए?"
                 elif lang == "te":
-                    reprompt_course = "హలో అండీ, సిఫార్సు చేసిన రెండు కోర్సులలో మీకు ఏది ఇష్టమో చెబుతారా?"
+                    reprompt_course = "హలో అండీ, సిఫార్సు చేసిన మూడు కోర్సులలో మీకు ఏది ఇష్టమో చెబుతారా?"
                 else:
-                    reprompt_course = "ஹலோங்க, பரிந்துரைக்கப்பட்ட இரண்டு பயிற்சிகளில் உங்களுக்கு எதில் விருப்பம்னு சொல்லுங்க?"
+                    reprompt_course = "ஹலோங்க, பரிந்துரைக்கப்பட்ட மூன்று பயிற்சிகளில் உங்களுக்கு எதில் விருப்பம்னு சொல்லுங்க?"
 
                 reprompt_audio = await self._synthesize_safe(reprompt_course, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=reprompt_course,
@@ -745,17 +934,27 @@ class InterviewCoordinator:
             c2_keywords = courses[1].get("keywords", []) if len(courses) >= 2 else []
             c3_keywords = courses[2].get("keywords", []) if len(courses) >= 3 else []
 
-            if any(w in user_lower for w in ["3", "three", "மூன்று", "மூணாவது", "மூணு", "மூன்றாவது", "மூன்றாம்", "तीसरा", "മൂന്ന്", "మూడు", "third"]):
+            # Check 3rd choice first to avoid false substring match on '3' or 'மூன்று'
+            if any(w in user_lower for w in [
+                "3", "three", "third", "மூன்று", "மூணாவது", "மூணு", "மூன்றாவது", "மூன்றாம்", "தேர்ட்", "ஆப்ஷன் 3", "ஆப்ஷன் மூன்று", "ஆப்ஷன் மூணு",
+                "तीसरा", "तीन", "ऑप्शन 3", "മൂന്ന്", "മൂന്നാമത്", "മൂന്നാമത്തെ", "మూడు", "మూడవ", "మూడో", "option 3", "option three"
+            ]):
                 choice_idx = 2 if len(courses) >= 3 else 0
-            elif any(w in user_lower for w in ["2", "two", "இரண்டு", "ரெண்டாவது", "இரண்டாவது", "ரெண்டு", "இரண்டாம்", "ரெண்டாம்", "दूसरा", "രണ്ട്", "రెండు", "second"]):
+            elif any(w in user_lower for w in [
+                "2", "two", "second", "இரண்டு", "ரெண்டாவது", "இரண்டாவது", "ரெண்டு", "இரண்டாம்", "ரெண்டாம்", "செகண்ட்", "ஆப்ஷன் 2", "ஆப்ஷன் இரண்டு", "ஆப்ஷன் ரெண்டு",
+                "दूसरा", "दो", "ऑप्शन 2", "രണ്ട്", "രണ്ടാമത്", "രണ്ടാമത്തെ", "రెండు", "రెండవ", "రెండో", "option 2", "option two"
+            ]):
                 choice_idx = 1 if len(courses) >= 2 else 0
-            elif any(w in user_lower for w in ["1", "one", "ஒன்று", "முதல்", "முதலாவது", "முதலாம்", "ஒன்னு", "पहला", "ഒന്ന്", "ఒకటి", "first"]):
+            elif any(w in user_lower for w in [
+                "1", "one", "first", "ஒன்று", "முதல்", "முதலாவது", "முதலாம்", "ஒன்னு", "பர்ஸ்ட்", "ஃபர்ஸ்ட்", "ஆப்ஷன் 1", "ஆப்ஷன் ஒன்று", "ஆப்ஷன் ஒன்னு",
+                "पहला", "एक", "ऑप्शन 1", "ഒന്ന്", "ഒന്നാമത്", "ഒന്നാമത്തെ", "ఒకటి", "మొదటి", "ఒకటో", "option 1", "option one"
+            ]):
                 choice_idx = 0
-            elif any(kw.lower() in user_lower for kw in c2_keywords):
-                choice_idx = 1 if len(courses) >= 2 else 0
-            elif any(kw.lower() in user_lower for kw in c3_keywords):
+            elif any(kw.lower() in user_lower for kw in c3_keywords if len(kw) > 2 and kw.lower() not in ["shop", "store", "work", "கடை", "வேலை"]):
                 choice_idx = 2 if len(courses) >= 3 else 0
-            elif any(kw.lower() in user_lower for kw in c1_keywords):
+            elif any(kw.lower() in user_lower for kw in c2_keywords if len(kw) > 2 and kw.lower() not in ["shop", "store", "work", "கடை", "வேலை"]):
+                choice_idx = 1 if len(courses) >= 2 else 0
+            elif any(kw.lower() in user_lower for kw in c1_keywords if len(kw) > 2 and kw.lower() not in ["shop", "store", "work", "கடை", "வேலை"]):
                 choice_idx = 0
             else:
                 # Default to top recommendation if affirmative / general
@@ -767,15 +966,16 @@ class InterviewCoordinator:
 
             session.citizen_selected_course = selected_course_name
             session.citizen_selected_choice = choice_idx + 1
-            session.state = InterviewState.COMPLETED
             fsm.transition("course_selected", selected_course=selected_course_name, choice_idx=choice_idx + 1)
             case_id = session.session_id[:12].upper()
-
+            # Preserve exact citizen responses (spoken transcript preferred, fallback to value)
             confirmed_dict = {
-                k: normalize_field_to_english(k, f.value or f.raw_transcript or "Recorded", lang)
+                k: (f.raw_transcript or f.value or "Recorded")
                 for k, f in session.fields.items()
-                if f.status == "confirmed"
+                if (f.status == "confirmed" or f.raw_transcript or f.value)
             }
+
+
 
             # Warm celebratory wrap-up text acknowledging selected course
             if lang == "en":
@@ -831,20 +1031,42 @@ class InterviewCoordinator:
                 _completed_calls_records.pop()
             _save_persisted_records()
 
-            # Asynchronously dispatch post-call bilingual confirmation (WhatsApp + SMS) with pre-confirmed course
-            asyncio.create_task(self.notification_service.dispatch_bilingual_confirmation(
-                phone=phone,
-                language_code=lang,
-                case_id=case_id,
-                confirmed_fields=confirmed_dict,
-                caller_name=getattr(session, "caller_name", None),
-                recommended_courses=courses,
-                selected_course=selected_course_name,
-            ))
+            # Asynchronously dispatch post-call bilingual confirmation (WhatsApp + SMS) with pre-confirmed course (ONLY ONCE)
+            if not getattr(session, "notification_dispatched", False):
+                session.notification_dispatched = True
 
-            if key in self._active_sessions:
-                del self._active_sessions[key]
+                async def _dispatch_and_update(rec_ref: dict):
+                    try:
+                        res = await self.notification_service.dispatch_bilingual_confirmation(
+                            phone=phone,
+                            language_code=lang,
+                            case_id=case_id,
+                            confirmed_fields=confirmed_dict,
+                            caller_name=getattr(session, "caller_name", None),
+                            recommended_courses=courses,
+                            selected_course=selected_course_name,
+                        )
+                        if isinstance(res, dict):
+                            rec_ref["notification_results"] = res
+                            if res.get("whatsapp_link"):
+                                rec_ref["whatsapp_link"] = res["whatsapp_link"]
+                            if res.get("sms"):
+                                rec_ref["sms_status"] = res["sms"]
+                            _save_persisted_records()
+                    except Exception as err:
+                        logger.warning(f"Error in background notification dispatch: {err}")
 
+                asyncio.create_task(_dispatch_and_update(record))
+
+            # Keep session marked as COMPLETED in _active_sessions for 120s to absorb trailing frames, then clean up
+            async def _cleanup_active_session_later(s_key: str):
+                await asyncio.sleep(120.0)
+                if s_key in self._active_sessions:
+                    del self._active_sessions[s_key]
+
+            asyncio.create_task(_cleanup_active_session_later(key))
+
+            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=wrap_text,
@@ -881,6 +1103,7 @@ class InterviewCoordinator:
                     q1_audio = _get_static_bytes("q_name_place.wav") or _get_static_bytes("q1_name_village.wav")
 
                 q1_audio = q1_audio or await self._synthesize_safe(q1_text, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=q1_text,
@@ -895,20 +1118,28 @@ class InterviewCoordinator:
             session.identity_confirmed = True
             
             # Fast synchronous extraction of name / village from user speech
-            session.caller_name = user_speech.split(",")[0].replace("என் பேரு", "").replace("പേര്", "").replace("मेरा नाम", "").replace("నా పేరు", "").strip() or "Beneficiary"
-
-            if lang == "ml":
-                q_edu = "വളരെ സന്തോഷം! നിങ്ങളുടെ വിദ്യാഭ്യാസം എന്താണ്, സ്കൂളിൽ പോയിട്ടുണ്ടോ?"
-                edu_audio = _get_static_bytes("q2_education_v1_ml.wav")
-            elif lang == "hi":
-                q_edu = "बहुत अच्छा! आपकी पढ़ाई के बारे में बताइए, क्या आप स्कूल गए हैं?"
-                edu_audio = _get_static_bytes("q2_education_v1_hi.wav")
-            elif lang == "te":
-                q_edu = "చాలా సంతోషం అండੀ! మీ చదువు వివరాలు చెప్పండి, బడికి వెళ్లారా?"
-                edu_audio = _get_static_bytes("q2_education_v1_te.wav")
+            raw_name = user_speech.split(",")[0].replace("என் பேரு", "").replace("പേര്", "").replace("मेरा नाम", "").replace("నా పేరు", "").strip()
+            clean_token = raw_name.lower().strip(" .,!?:;")
+            if clean_token in ("சரி", "ஆம்", "ம்", "ஹலோ", "வணக்கம்", "yes", "ok", "yeah", "done", "hello", "hi", "ha", "haan", "avunu") or len(clean_token) < 2:
+                session.caller_name = "Beneficiary"
             else:
-                q_edu = "ரொம்ப சந்தோஷம்ங்க! அரசு நலத்திட்ட பதிவிற்காக உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?"
-                edu_audio = _get_static_bytes("q2_education_v1.wav") or _get_static_bytes("q1_education_ta.wav") or _get_static_bytes("q_educational_background.wav")
+                session.caller_name = raw_name
+
+            if lang == "en":
+                q_edu = "Could you tell me a little about your schooling or education?"
+                edu_audio = await self._synthesize_safe(q_edu, "en", speaker=speaker)
+            elif lang == "ml":
+                q_edu = "നിങ്ങളുടെ വിദ്യാഭ്യാസ പശ്ചാത്തലത്തെക്കുറിച്ച് പറയാമോ?"
+                edu_audio = _get_static_bytes("q2_education_v1_ml.wav") or await self._synthesize_safe(q_edu, "ml", speaker=speaker)
+            elif lang == "hi":
+                q_edu = "अपनी पढ़ाई और शिक्षा के बारे में हमें कुछ बताइए?"
+                edu_audio = _get_static_bytes("q2_education_v1_hi.wav") or await self._synthesize_safe(q_edu, "hi", speaker=speaker)
+            elif lang == "te":
+                q_edu = "మీ చదువు మరియు విద్యా నేపథ్యం గురించి చెబుతారా?"
+                edu_audio = _get_static_bytes("q2_education_v1_te.wav") or await self._synthesize_safe(q_edu, "te", speaker=speaker)
+            else:
+                q_edu = "உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?"
+                edu_audio = _get_static_bytes("q_educational_background.wav")
 
             edu_audio = edu_audio or await self._synthesize_safe(q_edu, lang, speaker=speaker)
 
@@ -928,6 +1159,7 @@ class InterviewCoordinator:
             # Fire background extraction for identity without delaying the audio
             asyncio.create_task(self._process_background_extraction(session, fsm, user_speech))
 
+            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=q_edu,
@@ -950,7 +1182,8 @@ class InterviewCoordinator:
                 "ரீபீட்", "மறுபடி", "திரும்ப", "புரியல என்ன சொன்னீங்க", "மறுபடியும் சொல்லுங்க",
                 "മനസ്സിലായില്ല", "വ്യക്തമായില്ല", "ഹലോ", "എന്താണ് പറഞ്ഞത്", "വീണ്ടും പറയൂ", "ഒന്നുകൂടി പറയുമോ", "കേൾക്കുന്നില്ല",
                 "समझ नहीं आया", "दोबारा बोलिए", "सुनाई नहीं दिया", "क्या कहा", "फिर से बोलो",
-                "వినపడలేదు", "మళ్ళీ చెప్పండి", "అర్థం కాలేదు", "ఏమన్నారు", "హలో"
+                "వినపడలేదు", "మళ్ళీ చెప్పండి", "అర్థం కాలేదు", "ఏమన్నారు", "హలో",
+                "repeat", "could you repeat", "say that again", "pardon", "did not hear", "couldn't hear", "what did you say", "sorry what", "what was that", "can you repeat"
             ])
 
             if is_clarification:
@@ -958,9 +1191,13 @@ class InterviewCoordinator:
                     "மறுபடி", "திரும்ப", "சொல்லுங்க", "விளங்கலங்க", "கேக்கலங்க", "புரியல என்ன சொன்னீங்க", "மறுபடியும் சொல்லுங்க",
                     "വീണ്ടും പറയൂ", "ഒന്നുകൂടി പറയുമോ", "വ്യക്തമായില്ല", "കേൾക്കുന്നില്ല",
                     "दोबारा बोलिए", "फिर से बोलो", "सुनाई नहीं दिया", "समझ नहीं आया",
-                    "మళ్ళీ చెప్పండి", "వినపడలేదు", "అర్థం కాలేదు"
+                    "మళ్ళీ చెప్పండి", "వినపడలేదు", "అర్థం కాలేదు",
+                    "repeat", "say that again", "pardon", "did not hear", "couldn't hear", "what did you say", "what was that"
                 ]):
-                    if lang == "ml":
+                    if lang == "en":
+                        sorry_audio = _get_static_bytes("sorry_unclear_en.wav") or _get_static_bytes("sorry_repeat_en.wav")
+                        sorry_text = "Sorry, I could not hear that clearly. Could you please say that again?"
+                    elif lang == "ml":
                         sorry_audio = _get_static_bytes("sorry_unclear_ml.wav") or _get_static_bytes("sorry_repeat_ml.wav")
                         sorry_text = "ക്ഷമിക്കണം, നിങ്ങൾ പറഞ്ഞത് വ്യക്തമായില്ല. വീണ്ടും പറയാമോ?"
                     elif lang == "hi":
@@ -974,6 +1211,7 @@ class InterviewCoordinator:
                         sorry_text = "மன்னிச்சுக்கோங்க, மறுபடியும் சொல்றேன். இன்னும் ஒரு முறை சொல்லுங்களேன்?"
 
                     sorry_audio = sorry_audio or await self._synthesize_safe(sorry_text, lang, speaker=speaker)
+                    await asyncio.sleep(0.075)
                     return CoordinatorTurnResult(
                         session_id=session.session_id,
                         spoken_response=sorry_text,
@@ -989,6 +1227,7 @@ class InterviewCoordinator:
                 llm_result = await self.llm.process_turn(session, fsm, user_speech=user_speech)
                 spoken_text = llm_result.spoken_response
                 audio_bytes = await self._synthesize_safe(spoken_text, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=spoken_text,
@@ -1014,7 +1253,10 @@ class InterviewCoordinator:
             for inf_key, inf_val in inferred.items():
                 if inf_key in session.fields and session.fields[inf_key].status != "confirmed":
                     session.fields[inf_key].value = normalize_field_to_english(inf_key, inf_val, lang)
-                    # Keep status as 'pending' so advance_to_next_field asks the citizen!
+                    session.fields[inf_key].raw_transcript = user_speech.strip()
+                    # If caller proactively stated their employment preference or mobility constraints, mark as confirmed so advance_to_next_field() automatically skips re-asking them
+                    if inf_key in ("employment_preference", "mobility_constraints") and inf_key != current_field:
+                        session.fields[inf_key].status = "confirmed"
 
             # Advance to next uncollected field
             session.advance_to_next_field()
@@ -1039,15 +1281,18 @@ class InterviewCoordinator:
 
                 c1_local = get_localized_course_name(top_courses[0], lang) if len(top_courses) >= 1 else "தொழில் பயிற்சி"
                 c2_local = get_localized_course_name(top_courses[1], lang) if len(top_courses) >= 2 else "சுயதொழில் பயிற்சி"
+                c3_local = get_localized_course_name(top_courses[2], lang) if len(top_courses) >= 3 else "சிறப்பு தொழில் பயிற்சி"
 
-                if lang == "ml":
-                    ask_course_text = f"വളരെ നന്ദി! നിങ്ങളുടെ എല്ലാ വിവരങ്ങളും വിജയകരമായി രേഖപ്പെടുത്തിയിട്ടുണ്ട്. നിങ്ങളുടെ താല്പര്യപ്രകാരം രണ്ട് മികച്ച കോഴ്സുകൾ ശുപാർശ ചെയ്യുന്നു: ഒന്ന്, {c1_local}. രണ്ട്, {c2_local}. ഇതിൽ ഏതിലാണ് നിങ്ങൾക്ക് കൂടുതൽ താല്പര്യം?"
+                if lang == "en":
+                    ask_course_text = f"Thank you! Your details have been successfully recorded. Based on your background, we recommend top three courses: First, {c1_local}, second, {c2_local}, and third, {c3_local}. Which one would you prefer?"
+                elif lang == "ml":
+                    ask_course_text = f"വളരെ നന്ദി! നിങ്ങളുടെ എല്ലാ വിവരങ്ങളും വിജയകരമായി രേഖപ്പെടുത്തിയിട്ടുണ്ട്. നിങ്ങളുടെ താല്പര്യപ്രകാരം മൂന്ന് മികച്ച കോഴ്സുകൾ ശുപാർശ ചെയ്യുന്നു: ഒന്ന്, {c1_local}. രണ്ട്, {c2_local}. മൂന്ന്, {c3_local}. ഇതിൽ ഏതിലാണ് നിങ്ങൾക്ക് കൂടുതൽ താല്പര്യം?"
                 elif lang == "hi":
-                    ask_course_text = f"बहुत-बहुत धन्यवाद! आपकी सभी जानकारी सफलतापूर्वक दर्ज कर ली गई है। आपके लिए दो बेहतरीन पाठ्यक्रम हैं: पहला, {c1_local}, और दूसरा, {c2_local}। इनमें से आपकी किसमें अधिक रुचि है?"
+                    ask_course_text = f"बहुत-बहुत धन्यवाद! आपकी सभी जानकारी सफलतापूर्वक दर्ज कर ली गई है। आपके लिए तीन बेहतरीन पाठ्यक्रम हैं: पहला, {c1_local}, दूसरा, {c2_local}, और तीसरा, {c3_local}। इनमें से आपकी किसमें अधिक रुचि है?"
                 elif lang == "te":
-                    ask_course_text = f"చాలా ధన్యవాదాలు అండీ! మీ వివరాలన్నీ విజయవంతంగా నమోదయ్యాయి. మీ కోసం రెండు ఉత్తమ కోర్సులు ఉన్నాయి: ఒకటి, {c1_local}, రెండు, {c2_local}. వీటిలో మీకు దేనిపై ఎక్కువ ఆసక్తి ఉంది?"
+                    ask_course_text = f"చాలా ధన్యవాదాలు అండీ! మీ వివరాలన్నీ విజయవంతంగా నమోదయ్యాయి. మీ కోసం మూడు ఉత్తమ కోర్సులు ఉన్నాయి: ఒకటి, {c1_local}, రెండు, {c2_local}, మూడు, {c3_local}. వీటిలో మీకు దేనిపై ఎక్కువ ఆసక్తి ఉంది?"
                 else:
-                    ask_course_text = f"மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க விருப்பத்தின்படி இரண்டு சிறந்த பயிற்சிகள்: ஒன்று, {c1_local}. இரண்டு, {c2_local}. இந்த பயிற்சிகளில் உங்களுக்கு எதில் அதிக ஆர்வம் உள்ளது?"
+                    ask_course_text = f"மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க திறனுக்கும் விருப்பத்திற்கும் ஏற்ற மூன்று சிறந்த பயிற்சிகள்: ஒன்று, {c1_local}. இரண்டு, {c2_local}. மூன்று, {c3_local}. இந்த மூன்றில் உங்களுக்கு எந்த பயிற்சியில் அதிக விருப்பம் உள்ளது?"
 
                 ask_audio = await self._synthesize_safe(ask_course_text, lang, speaker=speaker)
 
@@ -1064,6 +1309,7 @@ class InterviewCoordinator:
                     "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
                 })
 
+                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=ask_course_text,
@@ -1092,6 +1338,7 @@ class InterviewCoordinator:
                 "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
             })
 
+            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=q_text,
@@ -1109,6 +1356,7 @@ class InterviewCoordinator:
             q_file, q_text = _get_question_for_field(next_field, "", session)
             fallback_sorry = f"sorry_unclear_{lang}.wav" if lang != "ta" else "sorry_unclear.wav"
             reprompt_audio = _get_static_bytes(q_file) or _get_static_bytes(fallback_sorry) or await self._synthesize_safe(q_text, lang, speaker=speaker)
+            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=q_text,
@@ -1122,6 +1370,7 @@ class InterviewCoordinator:
 
         wrap_text = WRAP_UP_SCRIPTS.get(lang, WRAP_UP_SCRIPTS["ta"])
         wrap_audio = _get_static_bytes(f"q_wrapup_v2_{lang}.wav") or _get_static_bytes("q_wrapup_v2.wav") or _get_static_bytes("q_wrapup.wav")
+        await asyncio.sleep(0.075)
         return CoordinatorTurnResult(
             session_id=session.session_id,
             spoken_response=wrap_text,
@@ -1224,7 +1473,102 @@ class InterviewCoordinator:
 
     async def handle_disconnect(self, phone: str, channel: str, session_key: Optional[str] = None):
         key = session_key or f"{channel}_{phone}"
-        if key in self._active_sessions:
-            session = self._active_sessions[key]["session"]
+        session_item = self._active_sessions.get(key)
+        if not session_item and session_key:
+            session_item = self._active_sessions.get(f"{channel}_{phone}")
+        if not session_item:
+            clean_p = clean_indian_phone(phone)
+            for k, v in list(self._active_sessions.items()):
+                s = v.get("session")
+                if s and clean_indian_phone(getattr(s, "phone", "") or "") == clean_p:
+                    session_item = v
+                    key = k
+                    break
+
+        if session_item:
+            session = session_item["session"]
+
+            # Extract actual citizen answers from session.fields (raw spoken transcripts or values)
+            confirmed_dict = {
+                k: (f.raw_transcript or f.value or "Recorded")
+                for k, f in session.fields.items()
+                if (f.status == "confirmed" or f.raw_transcript or f.value)
+            }
+            confirmed_dict_english = {
+                k: normalize_field_to_english(k, f.value or f.raw_transcript or "Recorded", getattr(session, "language_code", "ta"))
+                for k, f in session.fields.items()
+                if (f.status == "confirmed" or f.raw_transcript or f.value)
+            }
+
+            has_intake = len(confirmed_dict) >= 1 or session.state in (InterviewState.COURSE_SELECTION, InterviewState.COMPLETED)
+
+            if has_intake and not getattr(session, "notification_dispatched", False):
+                session.notification_dispatched = True
+                case_id = session.session_id[:12].upper()
+                lang = getattr(session, "preferred_language", None) or getattr(session, "language_code", "ta")
+                courses = getattr(session, "recommended_courses", [])
+                if not courses:
+                    courses = compute_top_recommended_courses(confirmed_dict_english, getattr(session, "transcript_turns", []))
+                    session.recommended_courses = courses
+
+                selected_course_name = getattr(session, "citizen_selected_course", None)
+                if not selected_course_name and courses:
+                    selected_course_name = get_short_english_name(courses[0])
+                if not selected_course_name:
+                    selected_course_name = "PM-AJAY Vocational Training"
+
+                # Check if already present in _completed_calls_records
+                existing_rec = next((r for r in _completed_calls_records if r.get("case_id") == case_id), None)
+                if not existing_rec:
+                    record = {
+                        "session_id": session.session_id,
+                        "case_id": case_id,
+                        "phone": phone,
+                        "beneficiary_name": getattr(session, "caller_name", None) or f"Citizen ({phone[-4:] if len(phone)>=4 else phone})",
+                        "channel": channel,
+                        "language": lang,
+                        "status": "BENEFICIARY_CONFIRMED" if session.state == InterviewState.COMPLETED else "BENEFICIARY_AUTO_RECORDED",
+                        "citizen_confirmed": True,
+                        "confirmed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                        "notification_status": "DISPATCHED",
+                        "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                        "confirmed_fields": confirmed_dict,
+                        "turns_count": len(getattr(session, "transcript_turns", [])),
+                        "transcript": list(getattr(session, "transcript_turns", [])),
+                        "recommended_courses": courses,
+                        "citizen_selected_choice": getattr(session, "citizen_selected_choice", 1),
+                        "citizen_selected_course": selected_course_name,
+                    }
+                    _completed_calls_records.insert(0, record)
+                    if len(_completed_calls_records) > 100:
+                        _completed_calls_records.pop()
+                    _save_persisted_records()
+                else:
+                    record = existing_rec
+
+                async def _dispatch_notifications_on_disconnect(rec_ref: dict):
+                    try:
+                        res = await self.notification_service.dispatch_bilingual_confirmation(
+                            phone=phone,
+                            language_code=lang,
+                            case_id=case_id,
+                            confirmed_fields=confirmed_dict,
+                            caller_name=getattr(session, "caller_name", None),
+                            recommended_courses=courses,
+                            selected_course=selected_course_name,
+                        )
+                        if isinstance(res, dict):
+                            rec_ref["notification_results"] = res
+                            if res.get("whatsapp_link"):
+                                rec_ref["whatsapp_link"] = res["whatsapp_link"]
+                            if res.get("sms"):
+                                rec_ref["sms_status"] = res["sms"]
+                            _save_persisted_records()
+                    except Exception as err:
+                        logger.warning(f"Error dispatching notification on disconnect: {err}")
+
+                asyncio.create_task(_dispatch_notifications_on_disconnect(record))
+
             await self.sm.mark_session_dropped(session.session_id)
-            del self._active_sessions[key]
+            if key in self._active_sessions:
+                del self._active_sessions[key]

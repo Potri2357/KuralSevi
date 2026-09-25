@@ -7,12 +7,31 @@ import base64
 import json
 from typing import Optional
 from contextlib import asynccontextmanager
+
+# ── Telephony Gateway WebSocket Keepalive Configuration ─────────────────────
+# Telephony servers (e.g., Exotel Voicebot / Media Streams) stream bidirectional audio
+# but DO NOT respond to WebSocket protocol-level Ping control frames with Pong frames.
+# Standard Uvicorn/websockets defaults (ping_interval=20s, ping_timeout=20s) cause
+# 'ConnectionClosedError: 1011 keepalive ping timeout', prematurely hanging up calls midway.
+# Setting ws_ping_interval=None and ws_ping_timeout=None ensures connections remain open
+# indefinitely throughout the full duration of the call until completion.
+try:
+    import uvicorn.protocols.websockets.websockets_impl as _ws_impl
+    _orig_ws_init = _ws_impl.WebSocketProtocol.__init__
+    def _safe_telephony_ws_init(self, config, *args, **kwargs):
+        config.ws_ping_interval = None
+        config.ws_ping_timeout = None
+        _orig_ws_init(self, config, *args, **kwargs)
+    _ws_impl.WebSocketProtocol.__init__ = _safe_telephony_ws_init
+except Exception:
+    pass
+
 from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers.twilio_router import router as twilio_router, handle_twilio_whatsapp, handle_twilio_sms
-from routers.whatsapp_router import router as meta_whatsapp_router
+from routers.exotel_router import router as exotel_router
+from routers.exotel_voicebot import router as exotel_voicebot_router
 from services.interview_coordinator import InterviewCoordinator, get_completed_calls_records, clear_completed_calls_records
 from services.field_normalizer import normalize_field_to_english
 from services.stt_service import transcribe_audio
@@ -79,17 +98,9 @@ app = FastAPI(
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# Primary Routers
-app.include_router(twilio_router)
-app.include_router(meta_whatsapp_router)
-
-# Support exact URL: /webhook/whatsapp and /webhooks/whatsapp mapping to Twilio WhatsApp
-app.add_api_route("/webhook/whatsapp", handle_twilio_whatsapp, methods=["POST"], tags=["Twilio WhatsApp Alias"])
-app.add_api_route("/webhooks/whatsapp/twilio", handle_twilio_whatsapp, methods=["POST"], tags=["Twilio WhatsApp Alias"])
-
-# Support exact URL: /webhook/sms and /webhooks/sms mapping to Twilio SMS
-app.add_api_route("/webhook/sms", handle_twilio_sms, methods=["POST"], tags=["Twilio SMS Alias"])
-app.add_api_route("/webhooks/sms", handle_twilio_sms, methods=["POST"], tags=["Twilio SMS Alias"])
+# Primary Routers (Indian Cloud Telephony via Exotel)
+app.include_router(exotel_router)
+app.include_router(exotel_voicebot_router)
 
 
 # ── Live Call Monitoring Dashboard & API ────────────────────────────────────────
@@ -139,7 +150,7 @@ async def view_logs_dashboard():
     <div class="header">
         <div>
             <h2 style="margin: 0; font-size: 20px; color: #38bdf8;">Kural Sevi — Live Call Telephony Logs</h2>
-            <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Auto-refreshing every 2s | Inspecting Groq LLM turns, Sarvam TTS/STT, and Twilio webhooks</p>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Auto-refreshing every 2s | Inspecting Groq LLM turns, Sarvam TTS/STT, and Exotel webhooks</p>
         </div>
         <div class="badge">Live Monitoring Active</div>
     </div>
@@ -188,38 +199,51 @@ class DialRequest(BaseModel):
     phone: str
     language: Optional[str] = "ta"
 
+class CitizenConfirmRequest(BaseModel):
+    phone: str
+    channel: str = "WHATSAPP"
+    text: str = ""
+
 @app.post("/calls/dial")
 async def trigger_dial_call(req: DialRequest):
-    """Initiates an outbound phone call to a beneficiary via Twilio API."""
+    """Initiates an outbound phone call to a beneficiary via Exotel API."""
     import urllib.request
     import urllib.parse
     import urllib.error
     phone = req.phone.strip().replace(" ", "").replace("-", "")
     if phone.startswith("0"):
-        phone = "+91" + phone[1:]
-    elif not phone.startswith("+"):
-        phone = "+91" + phone
+        phone = phone[1:]
+    elif phone.startswith("+91"):
+        phone = phone[3:]
+    elif phone.startswith("91") and len(phone) == 12:
+        phone = phone[2:]
     
-    account_sid = settings.twilio_account_sid
-    auth_token = settings.twilio_auth_token
-    from_number = settings.twilio_phone_number
+    exotel_sid = settings.exotel_account_sid
+    exotel_key = settings.exotel_api_key
+    exotel_token = settings.exotel_api_token
+    caller_id = settings.exotel_caller_id
+    app_id = settings.exotel_app_id
     lang = req.language or "ta"
-    webhook_url = f"{settings.voice_api_url}/webhooks/twilio/interview-start?language={lang}"
-    cli_cmd = f"python3 scripts/trigger-outbound-call.py {phone} {lang}"
+    cli_cmd = f"python3 scripts/trigger-exotel-call.py {phone} {lang}"
 
-    if not account_sid or not auth_token or not from_number:
-        return {"success": False, "error": "Twilio credentials not configured in voice-api environment.", "command": cli_cmd}
+    if not exotel_sid or not exotel_key or not exotel_token:
+        return {"success": False, "error": "Exotel credentials not configured in voice-api environment.", "command": cli_cmd}
 
-    api_url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json"
-    credentials = f"{account_sid}:{auth_token}"
+    api_url = f"https://api.exotel.com/v1/Accounts/{exotel_sid}/Calls/connect.json"
+    credentials = f"{exotel_key}:{exotel_token}"
     auth_header = f"Basic {base64.b64encode(credentials.encode('utf-8')).decode('utf-8')}"
 
-    post_data = urllib.parse.urlencode({
-        "To": phone,
-        "From": from_number,
-        "Url": webhook_url,
-        "Method": "POST",
-    }).encode("utf-8")
+    params = {
+        "From": phone,
+        "CallerId": caller_id,
+        "CallType": "trans",
+    }
+    if app_id:
+        params["Url"] = f"http://my.exotel.com/{exotel_sid}/exoml/start_voice/{app_id}"
+    else:
+        params["To"] = phone
+
+    post_data = urllib.parse.urlencode(params).encode("utf-8")
 
     req_obj = urllib.request.Request(api_url, data=post_data, method="POST")
     req_obj.add_header("Authorization", auth_header)
@@ -229,20 +253,31 @@ async def trigger_dial_call(req: DialRequest):
         with urllib.request.urlopen(req_obj, timeout=15.0) as resp:
             body = resp.read().decode("utf-8")
             call_data = json.loads(body)
+            call_obj = call_data.get("Call", {})
             return {
                 "success": True,
-                "call_sid": call_data.get("sid"),
-                "status": call_data.get("status"),
-                "to": call_data.get("to"),
+                "call_sid": call_obj.get("Sid") or "initiated",
+                "status": call_obj.get("Status") or "queued",
+                "to": phone,
                 "command": cli_cmd
             }
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8")
-        logger.error(f"Twilio dial error: {err_body}")
+        logger.error(f"Exotel dial error: {err_body}")
         return {"success": False, "error": err_body, "command": cli_cmd}
     except Exception as e:
         logger.error(f"Dial exception: {e}")
         return {"success": False, "error": str(e), "command": cli_cmd}
+
+
+@app.post("/api/citizen-confirm")
+async def citizen_confirm_endpoint(req: CitizenConfirmRequest):
+    """Receives citizen affirmative reply (e.g. YES, 1, 2, 3) from WhatsApp bot and updates case status."""
+    from services.interview_coordinator import confirm_case_from_citizen
+    res = confirm_case_from_citizen(req.phone, channel=req.channel, reply_text=req.text)
+    if res:
+        return {"success": True, "case": res}
+    return {"success": False, "message": "No matching active case found or already confirmed"}
 
 
 @app.api_route("/call-records", methods=["GET", "HEAD"])
@@ -489,20 +524,22 @@ async def root():
         "version": "1.0.0",
         "stages": {
             "stage_1_voice": "Sarvam AI (STT/TTS) + Gemini 2.5 Flash LLM Extraction",
-            "stage_2_phone_call": "Twilio IVR Telephony (/webhooks/twilio/interview-start)",
-            "stage_3_whatsapp": "Twilio WhatsApp Sandbox (/webhook/whatsapp)"
+            "stage_2_phone_call": "Exotel IVR Telephony (/webhooks/exotel/interview-start)",
+            "stage_3_whatsapp": "Self-Hosted WhatsApp Web Bot (http://localhost:5005)",
+            "stage_4_sms": "Fast2SMS India Domestic Quick Route"
         },
         "endpoints": {
             "health": "/health",
             "voice_mic_test": "/api/voice/process-speech",
-            "twilio_phone_start": "/webhooks/twilio/interview-start",
-            "twilio_phone_turn": "/webhooks/twilio/interview-turn",
-            "twilio_whatsapp": "/webhook/whatsapp",
-            "meta_whatsapp": "/webhooks/whatsapp"
+            "exotel_start": "/webhooks/exotel/interview-start",
+            "exotel_turn": "/webhooks/exotel/interview-turn",
+            "exotel_voicebot_ws": "/ws/exotel-voicebot",
+            "dial": "/calls/dial",
+            "citizen_confirm": "/api/citizen-confirm"
         }
     }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, ws_ping_interval=None, ws_ping_timeout=None)
