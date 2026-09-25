@@ -47,6 +47,37 @@ class TestLanguageDetectionAndAutoSwitch(unittest.TestCase):
         self.assertEqual(detect_spoken_language("", "en"), "en")
         self.assertEqual(detect_spoken_language("", "ta"), "ta")
 
+    def test_sticky_indic_protection_against_loanwords(self):
+        # Crucial bug fix: English loanwords must NEVER revert a Tamil interview to English
+        loanwords = [
+            "Tailor work", "Tailor", "Tailoring", "Auto driver", "Driver work",
+            "Yes", "Ok", "Okay", "Course", "Training", "Job", "10th pass",
+            "Electrician course", "Computer training", "Ready", "Confirm", "Sure"
+        ]
+        for word in loanwords:
+            self.assertEqual(
+                detect_spoken_language(word, "ta"), "ta",
+                f"Loanword '{word}' erroneously switched Tamil to English!"
+            )
+
+    def test_verbalized_digits_and_language_intent(self):
+        # Beneficiaries answering the initial menu "Press 1 for English, 2 for Tamil"
+        self.assertEqual(detect_spoken_language("2", "en"), "ta")
+        self.assertEqual(detect_spoken_language("two", "en"), "ta")
+        self.assertEqual(detect_spoken_language("rendu", "en"), "ta")
+        self.assertEqual(detect_spoken_language("irandu", "en"), "ta")
+        self.assertEqual(detect_spoken_language("இரண்டு", "en"), "ta")
+        self.assertEqual(detect_spoken_language("Tamil la sollunga", "en"), "ta")
+        self.assertEqual(detect_spoken_language("Speak in tamil", "en"), "ta")
+        self.assertEqual(detect_spoken_language("tamil please", "en"), "ta")
+        self.assertEqual(detect_spoken_language("in tamil", "en"), "ta")
+        self.assertEqual(detect_spoken_language("தமிழ்ல பேசுங்க", "en"), "ta")
+
+        # Explicit request to switch to English
+        self.assertEqual(detect_spoken_language("Speak in english", "ta"), "en")
+        self.assertEqual(detect_spoken_language("English please", "ta"), "en")
+        self.assertEqual(detect_spoken_language("1", "ta"), "en")
+
 
 class TestCoordinatorAutoLanguageSwitchTurn(unittest.IsolatedAsyncioTestCase):
     async def test_coordinator_starts_english_switches_to_tamil(self):
@@ -76,6 +107,42 @@ class TestCoordinatorAutoLanguageSwitchTurn(unittest.IsolatedAsyncioTestCase):
         # Session language must automatically switch to 'ta'
         self.assertEqual(turn1.language_code, "ta")
         self.assertTrue("பேரு" in turn1.spoken_response or "சந்தோஷம்" in turn1.spoken_response)
+
+        # 3. Turn 2: User answers with English loanwords ("Tailor work")
+        # Language must STAY in Tamil ('ta'), NOT revert to English!
+        turn2 = await coordinator.process_turn(
+            phone="+919876500001",
+            channel="ivr",
+            user_speech="Tailor work",
+            session_key="test_call_en_ta",
+        )
+        self.assertEqual(turn2.language_code, "ta", "Loanword 'Tailor work' reverted session from Tamil to English!")
+
+    async def test_coordinator_explicit_tamil_switch_phrase(self):
+        coordinator = InterviewCoordinator()
+        coordinator._synthesize_safe = MagicMock(return_value=asyncio.Future())
+        coordinator._synthesize_safe.return_value.set_result(b"dummy_audio")
+
+        # Initial call in English
+        await coordinator.process_turn(
+            phone="+919876500002",
+            channel="ivr",
+            language="en",
+            session_key="test_call_explicit_switch",
+            is_initial=True,
+            force_fresh=True,
+        )
+
+        # Caller says "Tamil la sollunga" (Please tell in Tamil)
+        turn1 = await coordinator.process_turn(
+            phone="+919876500002",
+            channel="ivr",
+            user_speech="Tamil la sollunga",
+            session_key="test_call_explicit_switch",
+        )
+        # Must switch to 'ta' and respond in Tamil
+        self.assertEqual(turn1.language_code, "ta")
+        self.assertIn("தமிழில்", turn1.spoken_response)
 
 
 class TestDualLanguageCourseFormatting(unittest.TestCase):

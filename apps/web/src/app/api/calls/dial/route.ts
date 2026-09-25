@@ -91,8 +91,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Exotel telephony credentials (EXOTEL_API_KEY / EXOTEL_API_TOKEN) not configured in environment.',
-          command: cliCommand,
+          error: 'Telephony gateway service is not configured in the environment.',
         },
         { status: 500 }
       );
@@ -176,16 +175,14 @@ export async function POST(req: NextRequest) {
     const exotelData = await exotelRes.json().catch(() => ({}));
 
     if (!exotelRes.ok) {
-      let errorDetail = exotelData.RestException?.Message || `Exotel dispatch failed with status ${exotelRes.status}`;
+      let errorDetail = exotelData.RestException?.Message || `Telephony dispatch failed with status ${exotelRes.status}`;
       if (errorDetail.toLowerCase().includes('kyc compliant')) {
-        errorDetail = `Exotel Free Trial restriction: Without commercial KYC, Exotel only allows outbound calls to your single registered phone number (+91 9342900638). Please dial +91 9342900638 to test the live voice interview.`;
+        errorDetail = `Outbound calling is currently routed to verified demonstration line (+91 9342900638). Please dial +91 9342900638 to test the live voice interview.`;
       }
       return NextResponse.json(
         {
           success: false,
-          error: `Exotel Dispatch Error: ${errorDetail}`,
-          provider: 'exotel',
-          command: cliCommand,
+          error: `Telephony Notice: ${errorDetail}`,
         },
         { status: exotelRes.status }
       );
@@ -194,13 +191,11 @@ export async function POST(req: NextRequest) {
     const callSid = exotelData.Call?.Sid || 'initiated';
     return NextResponse.json({
       success: true,
-      message: `Outbound call initiated via Exotel to +91 ${exotelDigits}. Your phone will ring shortly from ${exotelCallerId}.`,
+      message: `Outbound call initiated to +91 ${exotelDigits}. The phone will ring shortly from ${exotelCallerId}.`,
       call_sid: callSid,
-      provider: 'exotel',
       to: exotelDigits,
       from: exotelCallerId,
       language,
-      command: cliCommand,
     });
   } catch (error: any) {
     return NextResponse.json(

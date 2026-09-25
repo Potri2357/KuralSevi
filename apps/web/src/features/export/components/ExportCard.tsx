@@ -110,6 +110,20 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
 
       <div className="p-4 border-t border-slate-100 bg-slate-50/70 rounded-b-2xl">
         <div className="flex flex-wrap items-center gap-2">
+          {/* CSV Export Button (Primary for Government Officers) */}
+          <Button
+            id={`export-${option.id}-csv`}
+            size="sm"
+            variant="secondary"
+            loading={isExporting}
+            onClick={() => onExport(option.id, 'csv')}
+            className="text-xs font-bold shadow-2xs bg-white hover:bg-slate-100 text-[#0A783C] border border-slate-200"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#0A783C]" />
+            <span>Download CSV Spreadsheet</span>
+            <Download className="w-3 h-3 text-slate-400 ml-0.5" />
+          </Button>
+
           {/* JSON Export Button */}
           <Button
             id={`export-${option.id}-json`}
@@ -120,32 +134,18 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
             className="text-xs font-bold shadow-2xs bg-white hover:bg-slate-100 text-[#0B3064] border border-slate-200"
           >
             <FileJson className="w-3.5 h-3.5 text-[#0B3064]" />
-            <span>JSON</span>
+            <span>Full Dataset (JSON)</span>
             <Download className="w-3 h-3 text-slate-400 ml-0.5" />
           </Button>
 
-          {/* CSV Export Button */}
-          <Button
-            id={`export-${option.id}-csv`}
-            size="sm"
-            variant="secondary"
-            loading={isExporting}
-            onClick={() => onExport(option.id, 'csv')}
-            className="text-xs font-bold shadow-2xs bg-white hover:bg-slate-100 text-[#0A783C] border border-slate-200"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-[#0A783C]" />
-            <span>CSV Table</span>
-            <Download className="w-3 h-3 text-slate-400 ml-0.5" />
-          </Button>
-
-          {/* Copy Endpoint URL Button */}
+          {/* Copy Feed Link Button */}
           <Button
             id={`copy-${option.id}`}
             size="sm"
             variant="ghost"
             onClick={handleCopyEndpoint}
             className="text-xs font-medium text-slate-600 hover:text-slate-900 ml-auto"
-            title="Copy REST API Endpoint URL"
+            title="Copy Direct Data Feed Link"
           >
             {copied ? (
               <>
@@ -155,12 +155,12 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-slate-400" />
-                <span>Copy URL</span>
+                <span>Copy Feed Link</span>
               </>
             )}
           </Button>
 
-          {/* REST API Button */}
+          {/* View Live Feed Button */}
           <Button
             id={`export-${option.id}-rest`}
             size="sm"
@@ -168,9 +168,8 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
             onClick={() => window.open(`/api/export?type=${option.id}`, '_blank')}
             className="text-xs font-bold text-slate-600 hover:text-[#0B3064] flex items-center gap-1"
           >
-            <Code2 className="w-3.5 h-3.5 text-[#0B3064]" />
-            <span>REST API</span>
-            <ExternalLink className="w-3 h-3 text-slate-400" />
+            <ExternalLink className="w-3.5 h-3.5 text-[#0B3064]" />
+            <span>Open Data Feed</span>
           </Button>
         </div>
       </div>

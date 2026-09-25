@@ -334,30 +334,74 @@ async function sendViaAndroidGateway(to, message) {
 
   let targetUrl = gwUrl.trim();
   if (!targetUrl.endsWith('/message') && !targetUrl.endsWith('/messages') && !targetUrl.endsWith('/send')) {
-    targetUrl = targetUrl.replace(/\/$/, '') + '/message';
+    targetUrl = targetUrl.replace(/\/$/, '') + '/messages';
   }
   const formattedPhone = to.startsWith('+') ? to : `+${to}`;
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+  };
   const login = getEnvVar('ANDROID_SMS_GATEWAY_LOGIN');
   const password = getEnvVar('ANDROID_SMS_GATEWAY_PASSWORD');
+  const deviceId = getEnvVar('ANDROID_SMS_GATEWAY_DEVICE_ID');
+
   if (login && password) {
     const creds = Buffer.from(`${login}:${password}`).toString('base64');
     headers['Authorization'] = `Basic ${creds}`;
   }
-  const res = await fetch(targetUrl, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      message: message.slice(0, 160),
-      phoneNumbers: [formattedPhone],
-    }),
-    signal: AbortSignal.timeout(6000),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (res.ok) {
-    return { ok: true, data };
+
+  const payload = {
+    message: message.slice(0, 160),
+    phoneNumbers: [formattedPhone],
+  };
+  if (deviceId) payload.deviceId = deviceId;
+
+  // Attempt 1: Native fetch
+  try {
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(6000),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      return { ok: true, data };
+    }
+    if (res.status === 401 || res.status === 403) {
+      return { ok: false, error: data.message || `HTTP ${res.status}` };
+    }
+  } catch (fetchErr) {
+    // If native fetch failed (e.g. Cloudflare HTTP/2 requirement), fallback to Python httpx
   }
-  return { ok: false, error: data.message || `HTTP ${res.status}` };
+
+  // Attempt 2: Python HTTP/2 fallback (seamless for Cloudflare / api.sms-gate.app)
+  const pythonPath = path.resolve(__dirname, '../voice-api/.venv/bin/python');
+  if (fs.existsSync(pythonPath)) {
+    return new Promise((resolve) => {
+      const pyScript = `
+import httpx, json, sys
+try:
+    auth = ('${login}', '${password}') if '${login}' and '${password}' else None
+    with httpx.Client(http2=True, timeout=8.0, headers={'User-Agent': 'Mozilla/5.0'}) as client:
+        r = client.post('${targetUrl}', auth=auth, json=${JSON.stringify(payload)})
+        print(json.dumps({'ok': r.status_code in (200, 201, 202), 'status': r.status_code, 'data': r.json() if r.text else {}}))
+except Exception as e:
+    print(json.dumps({'ok': False, 'error': str(e)}))
+`;
+      execFile(pythonPath, ['-c', pyScript], { timeout: 9000 }, (err, stdout) => {
+        if (!err && stdout) {
+          try {
+            const parsed = JSON.parse(stdout.trim());
+            return resolve(parsed);
+          } catch (_) {}
+        }
+        resolve({ ok: false, error: err ? err.message : 'Python dispatch failed' });
+      });
+    });
+  }
+
+  return { ok: false, error: 'Connection failed' };
 }
 
 function sendViaAdb(deviceSerial, to, message) {
@@ -548,12 +592,32 @@ app.get('/sms', async (req, res) => {
         </div>
 
         <div class="card">
-          <h3 style="margin-top:0; color:#cbd5e1;">Option B: Free Android SMS Gateway App (Wi-Fi)</h3>
+          <h3 style="margin-top:0; color:#38bdf8;">Option B: Cloud Mode (Anywhere on 4G/5G / Wi-Fi &mdash; Like WhatsApp)</h3>
+          <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px;">No need to be on the same Wi-Fi network! Works over mobile data anywhere in the world.</p>
           <ol>
-            <li>Download the free open-source app: <a href="https://github.com/capcom6/android-sms-gateway/releases" target="_blank">Android SMS Gateway (GitHub)</a> or from F-Droid.</li>
-            <li>Open the app &rarr; Tap <b>Start Server</b>.</li>
+            <li>In the Android SMS Gateway app, open <b>Settings &rarr; Mode</b> and select <b>Cloud</b> (or register an account).</li>
+            <li>Copy the <b>Login</b> and <b>Password</b> shown on the app's screen.</li>
+            <li>In your <code>.env</code> file, set:
+              <br/><code style="display:inline-block; background:#0f172a; padding:6px 10px; border-radius:6px; margin:4px 0;">ANDROID_SMS_GATEWAY_URL=https://api.sms-gate.app/3rdparty/v1/message<br/>ANDROID_SMS_GATEWAY_LOGIN=&lt;your_login&gt;<br/>ANDROID_SMS_GATEWAY_PASSWORD=&lt;your_password&gt;</code>
+            </li>
+            <li>Done! Your phone receives and sends SMS over the cloud via push notifications, exactly like WhatsApp!</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0; color:#cbd5e1;">Option C: Local Wi-Fi (Same Network)</h3>
+          <ol>
+            <li>In the app, select <b>Local Mode</b> &rarr; Tap <b>Start Server</b>.</li>
             <li>Set <code>ANDROID_SMS_GATEWAY_URL=http://&lt;phone-ip&gt;:8080</code> in your <code>.env</code>.</li>
-            <li>Done! SMS messages will send wirelessly through your Android phone's active SIM.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0; color:#cbd5e1;">Option D: Free Virtual Mesh (Tailscale)</h3>
+          <ol>
+            <li>Install free open-source <a href="https://tailscale.com" target="_blank">Tailscale</a> on your Mac and on your Android phone.</li>
+            <li>Set <code>ANDROID_SMS_GATEWAY_URL=http://&lt;phone-tailscale-ip&gt;:8080</code>.</li>
+            <li>Works securely over 4G/5G mobile data anywhere without any port forwarding.</li>
           </ol>
         </div>
 

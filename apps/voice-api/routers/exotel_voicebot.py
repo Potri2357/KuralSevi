@@ -141,7 +141,8 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
     stream_id: Optional[str] = None
     call_sid: str = "voicebot_call"
     target_phone: str = "+919342900638"
-    current_lang: str = "en"
+    query_lang = websocket.query_params.get("language") or websocket.query_params.get("lang") or "ta"
+    current_lang: str = query_lang
     sample_rate: int = 8000
 
     # Acoustic Echo Guard: timestamp until which incoming audio must be discarded
@@ -150,7 +151,9 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
     # Speech buffering and VAD state
     caller_buffer = bytearray()
     speech_detected = False
-    silence_frames_count = 0
+    speech_start_time = 0.0
+    last_speech_time = 0.0
+    speech_consecutive_frames = 0
     processing_turn = False
     initial_greeting_sent = False
 
@@ -175,18 +178,27 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                     except Exception:
                         pass
 
-                logger.info(f"[Voicebot WS] Call started: stream={stream_id} sid={call_sid} phone={target_phone} rate={sample_rate}")
+                start_lang = start_data.get("language") or start_data.get("lang") or data.get("language") or data.get("lang")
+                if start_lang:
+                    current_lang = start_lang
 
-                # Send initial welcome greeting
+                logger.info(f"[Voicebot WS] Call started: stream={stream_id} sid={call_sid} phone={target_phone} lang={current_lang} rate={sample_rate}")
+
+                # Send initial welcome greeting in selected language
                 if not initial_greeting_sent:
                     initial_greeting_sent = True
-                    consent_path = _STATIC_AUDIO_DIR / "consent_en.wav"
+                    consent_file = f"consent_{current_lang}.wav"
+                    consent_path = _STATIC_AUDIO_DIR / consent_file
+                    if not consent_path.exists():
+                        consent_path = _STATIC_AUDIO_DIR / "consent_ta.wav"
+                    if not consent_path.exists():
+                        consent_path = _STATIC_AUDIO_DIR / "consent_en.wav"
                     if consent_path.exists():
                         greeting_wav = consent_path.read_bytes()
                         greeting_pcm = audio_to_pcm8k(greeting_wav, target_rate=sample_rate)
                         duration_sec = len(greeting_pcm) / (sample_rate * 2)
-                        playback_guard_until = time.time() + duration_sec + 0.075
-                        logger.info(f"[Voicebot WS] Playing English greeting ({duration_sec:.1f}s)...")
+                        playback_guard_until = time.time() + duration_sec + 0.12
+                        logger.info(f"[Voicebot WS] Playing {current_lang} greeting ({duration_sec:.1f}s)...")
                         await _stream_pcm_to_exotel(websocket, stream_id, greeting_pcm, sample_rate)
                         logger.info("[Voicebot WS] Greeting finished. Now listening for caller response...")
 
@@ -196,7 +208,9 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                 if now < playback_guard_until or processing_turn:
                     caller_buffer.clear()
                     speech_detected = False
-                    silence_frames_count = 0
+                    speech_start_time = 0.0
+                    last_speech_time = 0.0
+                    speech_consecutive_frames = 0
                     continue
 
                 media_obj = data.get("media", {})
@@ -211,32 +225,49 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
 
                 energy = _calculate_rms(chunk)
 
-                # Human voice energy threshold (filters out telephone line hum & ambient background)
-                if energy > 550.0:
-                    speech_frames_count = getattr(handle_exotel_voicebot_stream, "_speech_frames_count", 0) + 1
-                    handle_exotel_voicebot_stream._speech_frames_count = speech_frames_count
-                    if speech_frames_count >= 2:
+                # Two-tier hysteresis energy threshold:
+                # 380 RMS onset to start speech detection (filters telephone line hum ~100-250 RMS)
+                # 280 RMS continuation to keep tracking soft sentence endings/trailing syllables
+                threshold = 280.0 if speech_detected else 380.0
+
+                if energy >= threshold:
+                    speech_consecutive_frames += 1
+                    # Require 2 consecutive frames (~40-80ms) above threshold to trigger onset
+                    if speech_consecutive_frames >= 2:
                         if not speech_detected:
-                            logger.info(f"[Voicebot WS] Caller speech detected (energy={energy:.0f})...")
-                        speech_detected = True
-                        silence_frames_count = 0
+                            speech_detected = True
+                            speech_start_time = now
+                            logger.info(f"[Voicebot WS] Caller speech started (energy={energy:.0f})...")
+                        last_speech_time = now
                         caller_buffer.extend(chunk)
                 else:
-                    handle_exotel_voicebot_stream._speech_frames_count = 0
+                    speech_consecutive_frames = 0
                     if speech_detected:
+                        # Append the trailing quiet chunk so audio isn't chopped abruptly
                         caller_buffer.extend(chunk)
-                        silence_frames_count += 1
+                        
+                        silence_duration = now - last_speech_time
+                        spoken_duration = last_speech_time - speech_start_time
 
-                        # Require ~0.72s of continuous silence after speech to conclude utterance (18 frames at ~40ms)
-                        if silence_frames_count >= 18:
+                        # Natural Indian vernacular conversational silence threshold:
+                        # If caller spoke > 0.8s, require 1.9s of continuous silence before concluding utterance
+                        # If caller spoke very briefly (< 0.8s, e.g. "ஹலோ" or "ஆ..."), require 2.3s so they aren't cut off mid-thought
+                        required_silence = 1.9 if spoken_duration >= 0.8 else 2.3
+
+                        # Safety max utterance: 25 seconds
+                        is_max_timeout = (now - speech_start_time) > 25.0
+
+                        if silence_duration >= required_silence or is_max_timeout:
                             full_pcm = bytes(caller_buffer)
                             caller_buffer.clear()
                             speech_detected = False
-                            silence_frames_count = 0
+                            speech_start_time = 0.0
+                            last_speech_time = 0.0
+                            speech_consecutive_frames = 0
 
-                            # Ignore brief electrical clicks, coughs, and breath noise (< 0.40s)
+                            # Ignore brief electrical clicks, coughs, and breath noise (< 0.35s)
                             # Real spoken answers like "பத்து", "டைலர்", "டிரைவர்" (~0.45s-1.2s) are preserved
-                            min_speech_bytes = int(sample_rate * 2 * 0.40)
+                            min_speech_bytes = int(sample_rate * 2 * 0.35)
                             if len(full_pcm) < min_speech_bytes:
                                 logger.info(f"[Voicebot WS] Ignored brief acoustic noise/breath ({len(full_pcm)} bytes)")
                                 continue
@@ -277,6 +308,7 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                                 logger.info(f"[Voicebot WS] AI response: '{res.spoken_response}'")
 
                                 dur_sec = 0.0
+                                stream_start = time.time()
                                 if res.audio_bytes and stream_id:
                                     reply_pcm = audio_to_pcm8k(res.audio_bytes, target_rate=sample_rate)
                                     dur_sec = len(reply_pcm) / (sample_rate * 2)
@@ -286,10 +318,18 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                                     logger.info("[Voicebot WS] Finished speaking question. Listening for caller response...")
 
                                 if res.is_completed:
-                                    logger.info("[Voicebot WS] Interview completed! Allowing full wrap-up audio to play...")
-                                    wait_sec = max(dur_sec + 1.2, 2.0)
+                                    logger.info("[Voicebot WS] Interview completed! Waiting for final audio to finish playing on phone speaker...")
+                                    elapsed = time.time() - stream_start
+                                    remaining = max(dur_sec - elapsed, 0.0)
+                                    # Wait only for remaining playout time plus small 0.35s grace for phone speaker DAC buffer
+                                    wait_sec = min(remaining + 0.35, 2.5)
+                                    logger.info(f"[Voicebot WS] Audio {dur_sec:.1f}s, elapsed {elapsed:.2f}s, waiting {wait_sec:.2f}s before immediate hangup.")
                                     await asyncio.sleep(wait_sec)
-                                    logger.info("[Voicebot WS] Wrap-up complete. Closing call.")
+                                    logger.info("[Voicebot WS] Wrap-up complete. Hanging up immediately.")
+                                    try:
+                                        await websocket.send_text(json.dumps({"event": "stop", "stream_id": stream_id}))
+                                    except Exception:
+                                        pass
                                     await websocket.close()
                                     break
                             except WebSocketDisconnect:
@@ -322,11 +362,27 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                         session_key=call_sid,
                     )
                     current_lang = getattr(res, "language_code", None) or current_lang
+                    dur_sec = 0.0
+                    stream_start = time.time()
                     if res.audio_bytes and stream_id:
                         reply_pcm = audio_to_pcm8k(res.audio_bytes, target_rate=sample_rate)
                         dur_sec = len(reply_pcm) / (sample_rate * 2)
                         playback_guard_until = time.time() + dur_sec + 0.075
                         await _stream_pcm_to_exotel(websocket, stream_id, reply_pcm, sample_rate)
+
+                    if res.is_completed:
+                        logger.info("[Voicebot WS] Interview completed via DTMF! Waiting for final audio to finish on speaker...")
+                        elapsed = time.time() - stream_start
+                        remaining = max(dur_sec - elapsed, 0.0)
+                        wait_sec = min(remaining + 0.35, 2.5)
+                        await asyncio.sleep(wait_sec)
+                        logger.info("[Voicebot WS] Wrap-up complete. Hanging up immediately.")
+                        try:
+                            await websocket.send_text(json.dumps({"event": "stop", "stream_id": stream_id}))
+                        except Exception:
+                            pass
+                        await websocket.close()
+                        break
                 except WebSocketDisconnect:
                     logger.info(f"[Voicebot WS] Caller {target_phone} disconnected during DTMF turn")
                     break

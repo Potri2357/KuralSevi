@@ -210,6 +210,7 @@ class NotificationService:
         self.android_gateway_url = getattr(settings, "android_sms_gateway_url", None) or os.getenv("ANDROID_SMS_GATEWAY_URL")
         self.android_gateway_login = getattr(settings, "android_sms_gateway_login", None) or os.getenv("ANDROID_SMS_GATEWAY_LOGIN")
         self.android_gateway_password = getattr(settings, "android_sms_gateway_password", None) or os.getenv("ANDROID_SMS_GATEWAY_PASSWORD")
+        self.android_gateway_device_id = getattr(settings, "android_sms_gateway_device_id", None) or os.getenv("ANDROID_SMS_GATEWAY_DEVICE_ID")
         self.sms_provider = getattr(settings, "sms_provider", "open-source") or os.getenv("SMS_PROVIDER", "open-source")
         self.whatsapp_bot_url = getattr(settings, "whatsapp_bot_url", None) or os.getenv("WHATSAPP_BOT_URL", "http://localhost:5005")
         self.fast2sms_api_key = getattr(settings, "fast2sms_api_key", None) or os.getenv("FAST2SMS_API_KEY")
@@ -383,33 +384,41 @@ class NotificationService:
 
         clean_edu = to_ascii_val("educational_background", "Recorded", 22)
         clean_work = to_ascii_val("current_livelihood", to_ascii_val("family_occupation", "Recorded", 22), 22)
-        clean_skills = to_ascii_val("skills_and_interests", "", 22)
+        clean_skills = to_ascii_val("skills_and_interests", "", 20)
 
-        lines = [
-            f"Kural Sevi Ref: {cid}",
-            f"Citizen: {display_phone}",
-            f"Edu: {clean_edu}",
-            f"Work: {clean_work}",
-        ]
-        if clean_skills and clean_skills != "Recorded":
-            lines.append(f"Skill: {clean_skills}")
-
+        # 1. Resolve Course Name cleanly and prominently
+        course_display = None
         if selected_course:
             cd = find_course_in_catalog(str(selected_course))
             course_str = cd.get("qp_name", str(selected_course)) if cd else str(selected_course)
-            clean_c = "".join(c for c in course_str if ord(c) < 128).strip(" ,.-") or "Vocational Training"
-            lines.append(f"Course: {clean_c[:28]}")
-            lines.append("Status: Confirmed via Voice Call")
-        else:
-            courses = recommended_courses or []
-            if courses and len(courses) >= 1:
-                c1 = courses[0]
-                c_name = get_short_english_name(c1) if isinstance(c1, dict) else str(c1)
-                clean_cn = "".join(ch for ch in c_name if ord(ch) < 128).strip(" ,.-")
-                lines.append(f"Course: {clean_cn[:28]}")
-                lines.append("Status: Recorded via Voice Call")
-            else:
-                lines.append("Status: Recorded via Voice Call")
+            clean_c = "".join(c for c in course_str if ord(c) < 128).strip(" ,.-")
+            course_display = clean_c or str(selected_course)
+        elif recommended_courses:
+            c1 = recommended_courses[0]
+            c_name = get_short_english_name(c1) if isinstance(c1, dict) else str(c1)
+            course_display = "".join(ch for ch in c_name if ord(ch) < 128).strip(" ,.-")
+
+        lines = [
+            f"PM-AJAY Ref: {cid}",
+        ]
+        if caller_name:
+            clean_name = "".join(c for c in str(caller_name) if ord(c) < 128).strip()
+            if clean_name and clean_name.lower() not in ("beneficiary", "citizen"):
+                lines.append(f"Beneficiary: {clean_name[:24]}")
+
+        # Place Course directly near the top so it is guaranteed delivered and never truncated
+        if course_display:
+            course_label = "Chosen Course" if selected_course else "Course"
+            lines.append(f"{course_label}: {course_display[:38]}")
+
+        lines.append(f"Edu: {clean_edu}")
+        lines.append(f"Work: {clean_work}")
+
+        if clean_skills and clean_skills != "Recorded":
+            lines.append(f"Skill: {clean_skills}")
+
+        status_str = "CONFIRMED via Voice Call" if selected_course else "Recorded via Voice Call"
+        lines.append(f"Status: {status_str}")
 
         msg = "\n".join(lines)
         clean_ascii = "".join(c for c in msg if ord(c) < 128).strip()
@@ -481,18 +490,53 @@ class NotificationService:
             import json
             import base64
 
-            # Attempt 1: Direct dispatch to Android SMS Gateway (Fastest, zero intermediate hops)
+            # Attempt 1: Direct dispatch to Android SMS Gateway (Cloud or Local Mode)
             if self.android_gateway_url:
+                gw_url = self.android_gateway_url.rstrip("/")
+                if not gw_url.endswith("/message") and not gw_url.endswith("/messages") and not gw_url.endswith("/send"):
+                    gw_url += "/messages"
+                
+                gw_data = {
+                    "message": body[:320],
+                    "phoneNumbers": [target_phone],
+                }
+                if getattr(self, "android_gateway_device_id", None):
+                    gw_data["deviceId"] = self.android_gateway_device_id
+
+                auth_tuple = None
+                if self.android_gateway_login and self.android_gateway_password:
+                    auth_tuple = (self.android_gateway_login, self.android_gateway_password)
+
+                # Priority 1A: Modern HTTP/2 with httpx (Required for Cloud Gateway api.sms-gate.app & fast for local)
                 try:
-                    gw_url = self.android_gateway_url.rstrip("/") + "/message"
-                    gw_payload = json.dumps({
-                        "message": body[:160],
-                        "phoneNumbers": [target_phone]
-                    }).encode("utf-8")
+                    import httpx
+                    for attempt in range(2):
+                        try:
+                            with httpx.Client(http2=True, timeout=6.0, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}) as client:
+                                resp = client.post(gw_url, json=gw_data, auth=auth_tuple)
+                                if resp.status_code in (200, 201, 202):
+                                    resp_data = resp.json() if resp.text else {}
+                                    msg_id = resp_data.get("id", "sent")
+                                    logger.info(f"Android Cloud/Cellular SMS dispatched to {target_phone} via HTTP/2 (ID: {msg_id})")
+                                    return f"ANDROID_GW_SENT:{resp.status_code}:{msg_id}"
+                                else:
+                                    logger.warning(f"Android gateway HTTP {resp.status_code}: {resp.text[:120]}")
+                        except Exception as h_err:
+                            if attempt == 0:
+                                time.sleep(0.3)
+                                continue
+                            raise h_err
+                except Exception as httpx_err:
+                    logger.warning(f"Direct Android HTTP/2 gateway notice ({httpx_err}), trying urllib fallback...")
+
+                # Priority 1B: urllib fallback for local network IP gateways
+                try:
+                    gw_payload = json.dumps(gw_data).encode("utf-8")
                     gw_req = urllib.request.Request(gw_url, data=gw_payload, method="POST")
                     gw_req.add_header("Content-Type", "application/json")
-                    if self.android_gateway_login and self.android_gateway_password:
-                        creds = f"{self.android_gateway_login}:{self.android_gateway_password}"
+                    gw_req.add_header("User-Agent", "Mozilla/5.0")
+                    if auth_tuple:
+                        creds = f"{auth_tuple[0]}:{auth_tuple[1]}"
                         gw_req.add_header("Authorization", f"Basic {base64.b64encode(creds.encode()).decode()}")
                     with urllib.request.urlopen(gw_req, timeout=3.0) as resp:
                         resp_data = json.loads(resp.read().decode("utf-8"))
@@ -508,7 +552,7 @@ class NotificationService:
                 clean_digits = "".join(c for c in target_phone if c.isdigit())
                 payload = json.dumps({
                     "to": clean_digits,
-                    "message": body[:160],
+                    "message": body[:320],
                     "mirrorWhatsApp": False
                 }).encode("utf-8")
 

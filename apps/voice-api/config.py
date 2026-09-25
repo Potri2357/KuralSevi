@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     android_sms_gateway_url: Optional[str] = None
     android_sms_gateway_login: Optional[str] = None
     android_sms_gateway_password: Optional[str] = None
+    android_sms_gateway_device_id: Optional[str] = None
     sms_provider: str = "open-source"
     fast2sms_api_key: Optional[str] = None
     

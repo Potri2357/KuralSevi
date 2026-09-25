@@ -77,17 +77,86 @@ from services.course_catalog import (
 )
 
 
-def detect_spoken_language(user_speech: str, current_lang: str = "en") -> str:
+def is_explicit_language_switch_request(user_speech: str) -> Optional[str]:
     """
-    Detects language from user speech using Unicode ranges and vernacular keywords.
-    Supported: 'ta' (Tamil), 'hi' (Hindi), 'te' (Telugu), 'ml' (Malayalam), 'en' (English).
+    Detects if the user is explicitly requesting a language switch or pressing a language digit.
+    Returns language code ('ta', 'en', 'hi', 'te', 'ml') or None.
+    """
+    if not user_speech:
+        return None
+    lower = user_speech.lower().strip()
+    clean = lower.replace(".", " ").replace(",", " ").replace("!", " ").replace("?", " ").strip()
+    
+    # 1. DTMF or verbalized menu choices (from "For English press 1, for Tamil press 2...")
+    if clean in ("1", "one", "ondru", "onnu", "ஒன்று"):
+        return "en"
+    if clean in ("2", "two", "rendu", "irandu", "இரண்டு"):
+        return "ta"
+    if clean in ("3", "three", "teen", "மூன்று"):
+        return "hi"
+    if clean in ("4", "four", "naalu", "நான்கு"):
+        return "te"
+    if clean in ("5", "five", "anchu", "ஐந்து"):
+        return "ml"
+
+    # 2. Tamil explicit requests
+    ta_patterns = [
+        "tamil", "thamizh", "thamil", "tamizh", "தமிழ்", "தமிழில்", "தமிழ்ல",
+        "tamil la", "tamilil", "in tamil", "speak in tamil", "tell in tamil",
+        "talk in tamil", "tamil please", "tamil language", "change to tamil",
+        "switch to tamil", "tamil venum", "tamil thaanga", "tamil sollunga",
+        "tamil pesunga", "tamilil pesavum", "tamil pesu", "tamil solla"
+    ]
+    if any(p in lower for p in ta_patterns):
+        if not ("not tamil" in lower or "english only" in lower):
+            return "ta"
+
+    # 3. English explicit requests
+    en_patterns = [
+        "english", "in english", "speak in english", "tell in english",
+        "talk in english", "english please", "change to english", "switch to english",
+        "english language", "ஆங்கிலம்", "ஆங்கிலத்தில்", "ஆங்கிலத்தில் பேசுங்கள்"
+    ]
+    if any(p in lower for p in en_patterns):
+        if not ("not english" in lower or "tamil only" in lower):
+            return "en"
+
+    # 4. Hindi explicit requests
+    hi_patterns = ["hindi", "hindi me", "speak in hindi", "हिंदी", "हिंदी में", "हिंदी बोलिए"]
+    if any(p in lower for p in hi_patterns):
+        return "hi"
+
+    # 5. Telugu explicit requests
+    te_patterns = ["telugu", "telugulo", "speak in telugu", "తెలుగు", "తెలుగులో", "తెలుగు మాట్లాడండి"]
+    if any(p in lower for p in te_patterns):
+        return "te"
+
+    # 6. Malayalam explicit requests
+    ml_patterns = ["malayalam", "malayalathil", "speak in malayalam", "മലയാളം", "മലയാളത്തിൽ", "മലയാളം പറയൂ"]
+    if any(p in lower for p in ml_patterns):
+        return "ml"
+
+    return None
+
+
+def detect_spoken_language(user_speech: str, current_lang: str = "ta") -> str:
+    """
+    Detects language from user speech using Unicode ranges, explicit requests,
+    and vernacular keywords. Sticky for Indic languages: does not accidentally
+    revert to English when the speaker uses common English loanwords like
+    'tailor', 'driver', 'work', 'job', 'course', 'training', 'yes', 'ok'.
     """
     if not user_speech:
         return current_lang
 
     text = user_speech.strip()
 
-    # 1. Unicode Range Checks (Highest Precision)
+    # 1. Check for explicit language switch requests first
+    req = is_explicit_language_switch_request(text)
+    if req:
+        return req
+
+    # 2. Unicode Range Checks (Highest Precision)
     tamil_chars = len([c for c in text if '\u0B80' <= c <= '\u0BFF'])
     hindi_chars = len([c for c in text if '\u0900' <= c <= '\u097F'])
     telugu_chars = len([c for c in text if '\u0C00' <= c <= '\u0C7F'])
@@ -100,18 +169,40 @@ def detect_spoken_language(user_speech: str, current_lang: str = "en") -> str:
         (malayalam_chars, "ml"),
     ]
     counts.sort(key=lambda x: x[0], reverse=True)
-    if counts[0][0] >= 2:
+    if counts[0][0] >= 1:
         return counts[0][1]
 
-    # 2. Phonetic / Romanized Transliteration & Keyword Matching
+    # 3. If currently in an Indic language (e.g. Tamil), protect against accidental English reverts
+    # Beneficiaries routinely use English loanwords: "Tailor", "Driver", "Course", "10th", "Yes", "Ok".
+    # DO NOT revert to English unless caller explicitly asks to switch to English.
+    if current_lang in ("ta", "hi", "te", "ml"):
+        lower = text.lower()
+        clean_words = set(lower.replace(",", " ").replace(".", " ").replace("!", " ").replace("?", " ").split())
+        
+        ta_keywords = {
+            "vanakkam", "pesalam", "pesunga", "pesalaam", "aama", "aamanga", "aamaa",
+            "seri", "sari", "tamil", "thamizh", "thamil", "enakku", "solunga", "sollunga",
+            "solren", "puriyala", "kekkudhu", "kekudhu", "vaanga", "illai", "illa", "kedaikkum",
+            "irukku", "iruken", "theriyum", "theriyadhu", "thozhil", "padipu", "padichen",
+            "velai", "vela", "oor", "enga", "neenga", "naan", "romba", "nandri", "venum",
+            "vivasayam", "kooli", "veedu", "pasanga", "ponnu", "payyan", "ayya", "amma", "anna"
+        }
+        if current_lang == "ta" and any(w in clean_words for w in ta_keywords):
+            return "ta"
+            
+        return current_lang
+
+    # 4. If current_lang is "en", detect if caller speaks an Indic language in Romanized script
     lower = text.lower()
     words = set(lower.replace(",", " ").replace(".", " ").replace("!", " ").replace("?", " ").split())
 
     ta_keywords = {
         "vanakkam", "pesalam", "pesunga", "pesalaam", "aama", "aamanga", "aamaa",
         "seri", "sari", "tamil", "thamizh", "thamil", "enakku", "solunga", "sollunga",
-        "puriyala", "kekkudhu", "vaanga", "illai", "kedaikkum", "irukku", "theriyum",
-        "thozhil", "padipu", "velai", "oor", "enga", "neenga", "romba", "nandri"
+        "solren", "puriyala", "kekkudhu", "kekudhu", "vaanga", "illai", "illa", "kedaikkum",
+        "irukku", "iruken", "theriyum", "theriyadhu", "thozhil", "padipu", "padichen",
+        "velai", "vela", "oor", "enga", "neenga", "naan", "romba", "nandri", "venum",
+        "vivasayam", "kooli", "veedu", "pasanga", "ponnu", "payyan", "ayya", "amma", "anna"
     }
     hi_keywords = {
         "namaste", "namaskar", "shuru", "kariye", "kijiye", "boliye", "bataiye",
@@ -128,12 +219,11 @@ def detect_spoken_language(user_speech: str, current_lang: str = "en") -> str:
     }
     en_keywords = {
         "yes", "proceed", "continue", "hello", "hi", "sure", "start", "go ahead",
-        "i want", "english", "okay", "ok", "speak", "tell", "listen", "course",
-        "training", "work", "job", "myself", "fine", "ready", "confirm"
+        "english", "okay", "ok", "fine", "ready", "confirm"
     }
 
     scores = {
-        "ta": sum(1 for w in words if w in ta_keywords or any(k in w for k in ["vanakk", "pesal", "aama", "thamizh"])),
+        "ta": sum(1 for w in words if w in ta_keywords or any(k in w for k in ["vanakk", "pesal", "aama", "thamizh", "sollu"])),
         "hi": sum(1 for w in words if w in hi_keywords or any(k in w for k in ["namas", "kariy", "theek"])),
         "te": sum(1 for w in words if w in te_keywords or any(k in w for k in ["namask", "matlad", "chepp"])),
         "ml": sum(1 for w in words if w in ml_keywords or any(k in w for k in ["namask", "paray", "athe"])),
@@ -437,9 +527,55 @@ def _infer_semantic_fields_fast(user_speech: str, language_code: str) -> Dict[st
 
 def _generate_conversational_acknowledgement(user_speech: str, lang: str) -> Optional[str]:
     """
-    Disabled to prevent premature call-completed feeling.
-    Citizen questions must be direct, crisp, and focused on the next field.
+    Generates dynamic empathetic active-listening acknowledgement based on user speech.
     """
+    if not user_speech or not user_speech.strip():
+        return None
+
+    text = user_speech.lower()
+
+    if lang == "ta":
+        if any(w in text for w in ("ஆட்டோ", "டிரைவர்", "ஓட்டுனர்", "வண்டி", "driver", "auto")):
+            return "வாகனம் ஓட்டுவதில் உங்களுக்கு உள்ள அனுபவம் மிகவும் பாராட்டுக்குரியது!"
+        if any(w in text for w in ("தையல்", "ஆடை", "தையற்கலை", "துணி", "stitch", "tailor")):
+            return "தையல் மற்றும் ஆடை வடிவமைப்பில் உங்களுக்கு உள்ள அனுபவம் மிகச் சிறப்பானது!"
+        if any(w in text for w in ("எலக்ட்ரீசியன்", "கரண்ட்", "மின்சாரம்", "electric")):
+            return "மின்சார உபகரணங்கள் மற்றும் வயரிங் வேலைகளில் உங்களுக்கு உள்ள ஈடுபாடு அருமை!"
+        if any(w in text for w in ("தோல்", "காலணி", "செருப்பு", "leather", "shoe")):
+            return "தோல் மற்றும் காலணி உற்பத்தித் துறையில் உங்களுக்கு உள்ள அனுபவம் மிக முக்கியமானது!"
+        if any(w in text for w in ("விவசாயம்", "வேளாண்மை", "பண்ணை", "farm", "agri")):
+            return "விவசாயம் மற்றும் களப்பணிகளில் உங்கள் அர்ப்பணிப்பு போற்றத்தக்கது!"
+        return "உங்கள் தகவலைப் பகிர்ந்தமைக்கு மிக்க நன்றி!"
+
+    elif lang == "en":
+        if any(w in text for w in ("auto", "driver", "driving", "transport", "cab")):
+            return "Driving and vehicle management is an indispensable practical skill!"
+        if any(w in text for w in ("tailor", "stitching", "garment", "sewing")):
+            return "Tailoring and garment construction is a highly valuable livelihood domain!"
+        if any(w in text for w in ("electric", "wire", "appliance", "wiring")):
+            return "Electrical and appliance repair skills are always in strong market demand!"
+        if any(w in text for w in ("leather", "shoe", "footwear")):
+            return "Leather craft and footwear manufacturing is a respected artisanal trade!"
+        if any(w in text for w in ("farm", "agriculture", "crop")):
+            return "Agricultural livelihood and farm experience is vital to our rural communities!"
+        return "Thank you for sharing that with me!"
+
+    elif lang == "hi":
+        if any(w in text for w in ("auto", "driver", "ड्राइवर", "गाड़ी")):
+            return "वाहन चलाने और परिवहन में आपका अनुभव बहुत सराहनीय है!"
+        if any(w in text for w in ("सिलाई", "दर्जी", "कपड़े", "tailor")):
+            return "सिलाई और वस्त्र निर्माण में आपका कौशल बहुत उपयोगी है!"
+        if any(w in text for w in ("बिजली", "इलेक्ट्रिक", "electric")):
+            return "बिजली एवं घरेलू उपकरण मरम्मत में आपका अनुभव बहुत महत्वपूर्ण है!"
+        return "यह जानकारी साझा करने के लिए आपका धन्यवाद!"
+
+    elif lang == "te":
+        if any(w in text for w in ("auto", "driver", "డ్రైవింగ్")):
+            return "వాహనం నడపడంలో మీ అనుభవం చాలా అభినందనీయం!"
+        if any(w in text for w in ("కుట్లు", "టైలరింగ్", "tailor")):
+            return "టైలరింగ్ మరియు వస్త్ర తయారీలో మీ నైపుణ్యం చాలా గొప్పది!"
+        return "వివరాలు తెలియజేసినందుకు ధన్యవాదాలు!"
+
     return None
 
 
@@ -715,6 +851,85 @@ class InterviewCoordinator:
         key = session_key or f"{channel}_{phone}"
         user_lower = (user_speech or "").lower().strip()
         lang = session.language_code
+
+        # Explicit language change detection across ALL turns (e.g. 'Tamil la sollunga', 'speak in Tamil', digit '2')
+        explicit_lang = is_explicit_language_switch_request(user_speech)
+        if explicit_lang:
+            if explicit_lang != session.language_code:
+                logger.info(f"User explicitly requested language change from {session.language_code} to {explicit_lang}: '{user_speech}'")
+                session.language_code = explicit_lang
+                lang = explicit_lang
+
+            # If user turn was an explicit language switch request, do NOT treat it as an answer to name or fields!
+            # Warmly acknowledge the language switch and ask the current question in that language:
+            if session.state in (InterviewState.CONSENT_PENDING, InterviewState.FIELD_COLLECTION, InterviewState.COURSE_SELECTION):
+                if session.state == InterviewState.CONSENT_PENDING:
+                    fsm.transition("consent_given")
+                    session.consent_given = True
+                    asyncio.create_task(self.sm.save_consent(
+                        beneficiary_id=session.beneficiary_id,
+                        session_id=session.session_id,
+                        channel=channel,
+                        language_code=lang,
+                        consent_text=f"Consent given with language selection {lang} via {channel}",
+                        consent_given=True,
+                    ))
+
+                if lang == "ta":
+                    ack_prefix = "சரிங்க! தமிழில் தொடரலாம்."
+                elif lang == "hi":
+                    ack_prefix = "ठीक है! हम हिंदी में बात करेंगे।"
+                elif lang == "te":
+                    ack_prefix = "సరేనండీ! తెలుగులో మాట్లాడదాం।"
+                elif lang == "ml":
+                    ack_prefix = "ശരി! മലയാളത്തിൽ സംസാരിക്കാം."
+                else:
+                    ack_prefix = "Sure! Let's continue in English."
+
+                if not session.identity_asked:
+                    session.identity_asked = True
+                    if lang == "ta":
+                        q_text = f"{ack_prefix} முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
+                        q_audio = _get_static_bytes("q1_name_village.wav") or _get_static_bytes("q_name_place.wav")
+                    elif lang == "hi":
+                        q_text = f"{ack_prefix} सबसे पहले आपका शुभ नाम और आप किस गांव या शहर से हैं, यह बताइए?"
+                        q_audio = _get_static_bytes("q1_name_village_hi.wav")
+                    elif lang == "te":
+                        q_text = f"{ack_prefix} ముందుగా మీ పేరు మరియు మీ ఊరు ఏదో చెబుతారా?"
+                        q_audio = _get_static_bytes("q1_name_village_te.wav")
+                    elif lang == "ml":
+                        q_text = f"{ack_prefix} ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?"
+                        q_audio = _get_static_bytes("q1_name_village_ml.wav")
+                    else:
+                        q_text = f"{ack_prefix} To begin, could you please tell me your name and your village or town?"
+                        q_audio = await self._synthesize_safe(q_text, "en", speaker=speaker)
+
+                    q_audio = q_audio or await self._synthesize_safe(q_text, lang, speaker=speaker)
+                    return CoordinatorTurnResult(
+                        session_id=session.session_id,
+                        spoken_response=q_text,
+                        audio_bytes=q_audio,
+                        state=session.state,
+                        is_completed=False,
+                        case_id=None,
+                        current_field=session.current_field,
+                        language_code=lang,
+                    )
+                else:
+                    curr_field = session.current_field or "educational_background"
+                    q_file, base_q = _select_field_prompt(curr_field, session, lang, False)
+                    full_q = f"{ack_prefix} {base_q}"
+                    q_audio = _get_static_bytes(q_file) or await self._synthesize_safe(full_q, lang, speaker=speaker)
+                    return CoordinatorTurnResult(
+                        session_id=session.session_id,
+                        spoken_response=full_q,
+                        audio_bytes=q_audio,
+                        state=session.state,
+                        is_completed=False,
+                        case_id=None,
+                        current_field=session.current_field,
+                        language_code=lang,
+                    )
 
         # Dynamic language detection and auto-switching based on caller speech
         if user_speech:
@@ -1192,8 +1407,11 @@ class InterviewCoordinator:
 
             # 4. If user simply stated their language preference (e.g., 'Tamil', 'தமிழ்', 'English'), don't treat it as their name!
             clean_token = user_lower.strip().replace(".", "").replace("!", "")
-            is_just_lang = clean_token in (
-                "tamil", "தமிழ்", "tamizh", "thamizh", "english", "hindi", "हिंदी", "telugu", "తెలుగు", "malayalam", "മലയാളം"
+            is_just_lang = (
+                is_explicit_language_switch_request(user_speech) is not None
+                or clean_token in (
+                    "tamil", "தமிழ்", "tamizh", "thamizh", "english", "hindi", "हिंदी", "telugu", "తెలుగు", "malayalam", "മലയാളം"
+                )
             )
             if is_just_lang:
                 if lang == "ml":

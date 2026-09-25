@@ -518,13 +518,13 @@ export function WhatsAppCourseModal({
           </button>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* Send 1-Credit SMS via Fast2SMS */}
+            {/* Send Cellular SMS */}
             <button
               type="button"
               onClick={handleDispatchSms}
               disabled={isSubmittingSms || isSubmitting || !phone || phone.length < 10}
               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 hover:bg-sky-100 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
-              title="Dispatches strictly 1 single GSM-7 credit SMS (~₹0.25) to save Fast2SMS balance"
+              title="Dispatches official confirmation receipt via cellular SMS to beneficiary's phone"
             >
               {isSubmittingSms ? (
                 <>
@@ -534,7 +534,7 @@ export function WhatsAppCourseModal({
               ) : (
                 <>
                   <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
-                  <span>Instant SMS (1 Credit)</span>
+                  <span>Send Cellular SMS</span>
                 </>
               )}
             </button>

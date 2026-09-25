@@ -51,8 +51,8 @@ export function ProfileAuditTimeline({ caseId, district }: Props) {
     },
     {
       time: '09:32',
-      event: 'NSQF Match Engine Evaluated',
-      detail: 'Stage 1: Hard filters excluded 2 ineligible trades; Stage 2: Semantic vector match shortlisted 15 QP-NOS candidates; Stage 3: Multi-criteria AHP ranked top 3',
+      event: 'NSQF Pathway Alignment Evaluated',
+      detail: 'Stage 1: Eligibility criteria verified; Stage 2: Skill profile matched against QP-NOS trade catalog; Stage 3: Multi-criteria district demand ranking selected top 3 pathways',
       icon: Cpu,
       iconBg: 'bg-[#EAF1FB] border-[#BACEEB]',
       iconColor: 'text-[#0B3064]',
@@ -60,7 +60,7 @@ export function ProfileAuditTimeline({ caseId, district }: Props) {
     {
       time: '09:33',
       event: 'Recommendations Spoken in Tamil',
-      detail: 'Top 3 ranked pathways read aloud to beneficiary via Sarvam Bulbul V3 Tamil TTS',
+      detail: 'Top 3 ranked livelihood pathways read aloud to beneficiary in regional language',
       icon: Volume2,
       iconBg: 'bg-[#EAF1FB] border-[#BACEEB]',
       iconColor: 'text-[#0B3064]',

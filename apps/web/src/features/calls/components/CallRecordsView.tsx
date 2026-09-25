@@ -353,7 +353,7 @@ export function CallRecordsView({ initialCalls }: Props) {
       } else {
         setDialResult({
           success: false,
-          error: data.error || 'Failed to dispatch call. Please verify Exotel configuration or CLI script.',
+          error: data.error || 'Failed to dispatch call. Please verify telephony service connectivity.',
           command: data.command || `python3 scripts/trigger-outbound-call.py ${dialPhone} ${dialLanguage}`,
         });
       }
@@ -1116,7 +1116,7 @@ export function CallRecordsView({ initialCalls }: Props) {
                 <div>
                   <h3 className="text-lg font-extrabold tracking-tight">Telephony Outbound Dispatcher</h3>
                   <p className="text-xs text-blue-100 font-medium">
-                    Direct Beneficiary Calling & Campaign Management via Exotel
+                    Direct Beneficiary Calling & Campaign Outreach
                   </p>
                 </div>
               </div>
@@ -1200,7 +1200,7 @@ export function CallRecordsView({ initialCalls }: Props) {
                     <div className="mt-2.5 flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
                       <span className="flex items-center gap-1.5">
                         <span>ℹ️</span>
-                        <span><strong>Exotel Trial Restriction:</strong> Non-KYC accounts can only place outbound calls to verified test phone <strong>+919342900638</strong>.</span>
+                        <span><strong>Demonstration Line Notice:</strong> Outbound calling is currently routed to verified demonstration line <strong>+919342900638</strong>.</span>
                       </span>
                       <button
                         type="button"
@@ -1277,7 +1277,7 @@ export function CallRecordsView({ initialCalls }: Props) {
                     {isDialing ? (
                       <>
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Dialing via Exotel...</span>
+                        <span>Connecting Outbound Call...</span>
                       </>
                     ) : (
                       <>
@@ -1441,7 +1441,7 @@ export function CallRecordsView({ initialCalls }: Props) {
                     <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
                       <div>
                         <label className="font-bold text-slate-800 block">Outbound Dial Interval Pacing</label>
-                        <p className="text-[11px] text-slate-500">Delay between calls to balance Exotel IVR concurrency</p>
+                        <p className="text-[11px] text-slate-500">Delay between calls to manage outbound line pacing</p>
                       </div>
                       <select
                         value={campaignInterval}

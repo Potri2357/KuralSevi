@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BookOpen, Database, Sliders, Activity, PhoneCall } from 'lucide-react';
@@ -14,8 +15,7 @@ export default function AdminPage() {
       badgeVariant: 'chakra' as const,
       icon: PhoneCall,
       iconColor: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
-      href: 'http://localhost:8000/call-records',
-      external: true,
+      href: '/officer/calls',
     },
     {
       title: 'NSQF Qualification Packs Catalog',
@@ -42,9 +42,9 @@ export default function AdminPage() {
       iconColor: 'text-[#C24810] bg-[#FFF4ED] border border-[#FDD8C2]',
     },
     {
-      title: 'Infrastructure & Engine Health',
-      desc: 'Telemetry monitors for Sarvam AI Voice APIs, Gemini 2.5 embeddings, Supabase pgvector index, and Exotel IVR gateway.',
-      badge: 'All Systems Nominal',
+      title: 'Operational Telemetry & System Health',
+      desc: 'Real-time telemetry monitoring voice intake lines, AI recommendation services, and citizen registry connectivity.',
+      badge: 'All Systems Operational',
       badgeVariant: 'green' as const,
       icon: Activity,
       iconColor: 'text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB]',
@@ -88,15 +88,13 @@ export default function AdminPage() {
 
           if (mod.href) {
             return (
-              <a
+              <Link
                 key={mod.title}
                 href={mod.href}
-                target={mod.external ? '_blank' : undefined}
-                rel={mod.external ? 'noreferrer' : undefined}
                 className="block no-underline"
               >
                 {cardContent}
-              </a>
+              </Link>
             );
           }
 

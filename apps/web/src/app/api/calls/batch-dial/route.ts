@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
               language: lang,
               district: item.district,
               status: 'failed',
-              error: exotelData.RestException?.Message || `Exotel call failed (${exotelRes.status})`,
+              error: exotelData.RestException?.Message || `Telephony dispatch failed (${exotelRes.status})`,
             });
           }
         } catch (err: any) {

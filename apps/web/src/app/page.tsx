@@ -15,7 +15,6 @@ import {
   IndicCertificate,
   IndicGramSabha,
   IndicChakra,
-  IndicIconGallery,
 } from '@/components/icons/indic';
 
 export const metadata: Metadata = {
@@ -131,16 +130,11 @@ export default function HomePage() {
           })}
         </div>
 
-        {/* Custom Indic Icon Set Showcase */}
-        <div className="mb-16 text-left">
-          <IndicIconGallery />
-        </div>
-
-        {/* System info & compliance */}
+        {/* Scheme Standards & Compliance */}
         <div className="pt-6 border-t border-[var(--border-subtle)] flex flex-wrap gap-4 sm:gap-6 justify-center text-xs text-[var(--text-muted)] font-medium font-sans">
           <span className="flex items-center gap-1.5 font-bold text-slate-700">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#0A783C]" />
-            Sarvam AI (Bulbul V3 & Saaras)
+            Multilingual Voice Intake (Tamil, Hindi, Telugu)
           </span>
           <span>·</span>
           <span className="flex items-center gap-1.5 font-bold text-slate-700">
@@ -148,9 +142,9 @@ export default function HomePage() {
             DPDP Act 2023 Compliant
           </span>
           <span>·</span>
-          <span>Exotel Telephony & Fast2SMS / WhatsApp</span>
+          <span>Accessible Voice Telephony, SMS & WhatsApp</span>
           <span>·</span>
-          <span>NSQF / QP-NOS Standard</span>
+          <span>NSQF Certified Livelihood Alignment</span>
         </div>
       </div>
     </main>

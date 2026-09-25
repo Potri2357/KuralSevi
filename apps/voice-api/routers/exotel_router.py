@@ -128,7 +128,7 @@ async def start_interview(
 
     CallSid = data.get("CallSid") or data.get("CallSidLegacy") or str(uuid.uuid4())
     target_phone = data.get("From") or data.get("Caller") or data.get("To") or "+919342900638"
-    language = data.get("language") or request.query_params.get("language") or "en"
+    language = data.get("language") or request.query_params.get("language") or "ta"
 
     # Fire fresh session initialization in background
     asyncio.create_task(coordinator.process_turn(
@@ -143,22 +143,24 @@ async def start_interview(
     base_voice_url = settings.voice_api_url.rstrip("/")
     consent_file = f"consent_{language}.wav"
     if not (_STATIC_AUDIO_DIR / consent_file).exists():
+        consent_file = "consent_ta.wav"
+    if not (_STATIC_AUDIO_DIR / consent_file).exists():
         consent_file = "consent_en.wav"
 
     consent_url = f"{base_voice_url}/webhooks/exotel/audio/{consent_file}"
     turn_action_url = f"{base_voice_url}/webhooks/exotel/interview-turn?language={language}"
 
-    # ExoML: Plays English greeting first, gathers DTMF or records speech, and passes to turn handler
+    # ExoML: Plays greeting first, gathers DTMF or records speech with natural pause tolerance
     exoml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Gather action="{_escape(turn_action_url)}" method="POST" timeout="6" maxDigits="1">
         <Play>{_escape(consent_url)}</Play>
     </Gather>
-    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false" trimSilence="true"/>
+    <Record action="{_escape(turn_action_url)}" method="POST" timeout="5" maxLength="45" finishOnKey="#" playBeep="false" trimSilence="true"/>
     <Redirect method="POST">{_escape(turn_action_url)}</Redirect>
 </Response>"""
 
-    logger.info(f"[Exotel] Started {language} call {CallSid} for {target_phone} via ExoML (English First)")
+    logger.info(f"[Exotel] Started {language} call {CallSid} for {target_phone} via ExoML (Tamil First)")
     return Response(
         content=exoml, 
         media_type="text/xml",
@@ -189,7 +191,7 @@ async def handle_turn(
     CallSid = data.get("CallSid") or str(uuid.uuid4())
     raw_digits = data.get("Digits") or data.get("digits") or ""
     digits = raw_digits.replace('"', '').replace("'", "").strip()
-    language = data.get("language") or request.query_params.get("language") or "en"
+    language = data.get("language") or request.query_params.get("language") or "ta"
     phone = data.get("From") or data.get("Caller") or data.get("To") or "+919342900638"
     recording_url = (
         data.get("RecordingUrl") or data.get("recording_url") or
@@ -217,7 +219,7 @@ async def handle_turn(
 
     # DTMF keypad fallbacks (handles clean 1, 2, 3)
     if digits == "1":
-        user_text = "1 (Yes / ஆம் / हाँ - Proceed)"
+        user_text = "1 (English)"
     elif digits == "2":
         user_text = "2 (தமிழ் - Tamil)"
     elif digits == "3":
@@ -242,7 +244,7 @@ async def handle_turn(
         logger.error(f"[Exotel] Error processing turn: {e}", exc_info=True)
         res = CoordinatorTurnResult(
             session_id=CallSid,
-            spoken_response="Thank you. Please confirm to proceed.",
+            spoken_response="வணக்கம். உங்கள் விவரங்கள் பதிவு செய்யப்படுகின்றன.",
             audio_bytes=None,
             state=InterviewState.FIELD_COLLECTION,
             is_completed=False,
@@ -287,14 +289,14 @@ async def handle_turn(
     <Gather action="{_escape(turn_action_url)}" method="POST" timeout="6" maxDigits="1">
         <Play>{_escape(audio_url)}</Play>
     </Gather>
-    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false" trimSilence="true"/>
+    <Record action="{_escape(turn_action_url)}" method="POST" timeout="5" maxLength="45" finishOnKey="#" playBeep="false" trimSilence="true"/>
     <Redirect method="POST">{_escape(turn_action_url)}</Redirect>
 </Response>"""
     else:
         exoml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say>{_escape(res.spoken_response[:300])}</Say>
-    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false" trimSilence="true"/>
+    <Record action="{_escape(turn_action_url)}" method="POST" timeout="5" maxLength="45" finishOnKey="#" playBeep="false" trimSilence="true"/>
     <Redirect method="POST">{_escape(turn_action_url)}</Redirect>
 </Response>"""
 
