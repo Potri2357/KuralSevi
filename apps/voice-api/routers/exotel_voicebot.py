@@ -211,36 +211,40 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
 
                 energy = _calculate_rms(chunk)
 
-                # Human voice energy threshold (filters out telephone line hum)
-                if energy > 420.0:
-                    if not speech_detected:
-                        logger.info(f"[Voicebot WS] Caller started speaking (energy={energy:.0f})...")
-                    speech_detected = True
-                    silence_frames_count = 0
-                    caller_buffer.extend(chunk)
+                # Human voice energy threshold (filters out telephone line hum & ambient background)
+                if energy > 550.0:
+                    speech_frames_count = getattr(handle_exotel_voicebot_stream, "_speech_frames_count", 0) + 1
+                    handle_exotel_voicebot_stream._speech_frames_count = speech_frames_count
+                    if speech_frames_count >= 2:
+                        if not speech_detected:
+                            logger.info(f"[Voicebot WS] Caller speech detected (energy={energy:.0f})...")
+                        speech_detected = True
+                        silence_frames_count = 0
+                        caller_buffer.extend(chunk)
                 else:
+                    handle_exotel_voicebot_stream._speech_frames_count = 0
                     if speech_detected:
                         caller_buffer.extend(chunk)
                         silence_frames_count += 1
 
-                        # Require ~0.64s of continuous silence after speech to conclude utterance (16 frames at ~40ms)
-                        if silence_frames_count >= 16:
+                        # Require ~0.72s of continuous silence after speech to conclude utterance (18 frames at ~40ms)
+                        if silence_frames_count >= 18:
                             full_pcm = bytes(caller_buffer)
                             caller_buffer.clear()
                             speech_detected = False
                             silence_frames_count = 0
 
-                            # Ignore only ultra-brief line clicks (< 0.20s = 3200 bytes)
-                            # Short answers like "1", "2", "ஒன்று", "ஆம்", "சரி" (~4000-9000 bytes) are ALWAYS accepted
-                            min_speech_bytes = int(sample_rate * 2 * 0.20)
+                            # Ignore brief electrical clicks, coughs, and breath noise (< 0.40s)
+                            # Real spoken answers like "பத்து", "டைலர்", "டிரைவர்" (~0.45s-1.2s) are preserved
+                            min_speech_bytes = int(sample_rate * 2 * 0.40)
                             if len(full_pcm) < min_speech_bytes:
-                                logger.info(f"[Voicebot WS] Ignored brief electrical click ({len(full_pcm)} bytes)")
+                                logger.info(f"[Voicebot WS] Ignored brief acoustic noise/breath ({len(full_pcm)} bytes)")
                                 continue
 
                             try:
                                 processing_turn = True
                                 wav_payload = _pcm_to_wav(full_pcm, sample_rate=sample_rate)
-                                logger.info(f"[Voicebot WS] Caller finished sentence ({len(wav_payload)} bytes WAV). Transcribing...")
+                                logger.info(f"[Voicebot WS] Caller finished speaking ({len(wav_payload)} bytes WAV). Transcribing...")
 
                                 stt_res = await transcribe_audio(
                                     audio_bytes=wav_payload,
@@ -253,36 +257,41 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                                 transcript = (stt_res.transcript if stt_res else "").strip()
                                 logger.info(f"[Voicebot WS] Caller said: '{transcript}'")
 
-                                if transcript:
-                                    res: CoordinatorTurnResult = await _coordinator.process_turn(
-                                        phone=target_phone,
-                                        channel="ivr",
-                                        user_speech=transcript,
-                                        stt_confidence=0.95,
-                                        language=current_lang,
-                                        session_key=call_sid,
-                                    )
+                                from services.audio_filter import is_noise
+                                if not transcript or is_noise(transcript):
+                                    logger.info(f"[Voicebot WS] Filtered out acoustic noise / filler: '{transcript}'. Continuing listening...")
+                                    processing_turn = False
+                                    continue
 
-                                    current_lang = getattr(res, "language_code", None) or current_lang
-                                    logger.info(f"[Voicebot WS] AI Turn complete. Next lang: {current_lang}, State: {res.state}")
-                                    logger.info(f"[Voicebot WS] AI response: '{res.spoken_response}'")
+                                res: CoordinatorTurnResult = await _coordinator.process_turn(
+                                    phone=target_phone,
+                                    channel="ivr",
+                                    user_speech=transcript,
+                                    stt_confidence=0.95,
+                                    language=current_lang,
+                                    session_key=call_sid,
+                                )
 
-                                    dur_sec = 0.0
-                                    if res.audio_bytes and stream_id:
-                                        reply_pcm = audio_to_pcm8k(res.audio_bytes, target_rate=sample_rate)
-                                        dur_sec = len(reply_pcm) / (sample_rate * 2)
-                                        playback_guard_until = time.time() + dur_sec + 0.075
-                                        logger.info(f"[Voicebot WS] Streaming AI voice reply ({dur_sec:.1f}s)...")
-                                        await _stream_pcm_to_exotel(websocket, stream_id, reply_pcm, sample_rate)
-                                        logger.info("[Voicebot WS] Finished speaking question. Listening for caller response...")
+                                current_lang = getattr(res, "language_code", None) or current_lang
+                                logger.info(f"[Voicebot WS] AI Turn complete. Next lang: {current_lang}, State: {res.state}")
+                                logger.info(f"[Voicebot WS] AI response: '{res.spoken_response}'")
 
-                                    if res.is_completed:
-                                        logger.info("[Voicebot WS] Interview completed! Allowing full wrap-up audio to play...")
-                                        wait_sec = max(dur_sec + 1.2, 2.0)
-                                        await asyncio.sleep(wait_sec)
-                                        logger.info("[Voicebot WS] Wrap-up complete. Closing call.")
-                                        await websocket.close()
-                                        break
+                                dur_sec = 0.0
+                                if res.audio_bytes and stream_id:
+                                    reply_pcm = audio_to_pcm8k(res.audio_bytes, target_rate=sample_rate)
+                                    dur_sec = len(reply_pcm) / (sample_rate * 2)
+                                    playback_guard_until = time.time() + dur_sec + 0.075
+                                    logger.info(f"[Voicebot WS] Streaming AI voice reply ({dur_sec:.1f}s)...")
+                                    await _stream_pcm_to_exotel(websocket, stream_id, reply_pcm, sample_rate)
+                                    logger.info("[Voicebot WS] Finished speaking question. Listening for caller response...")
+
+                                if res.is_completed:
+                                    logger.info("[Voicebot WS] Interview completed! Allowing full wrap-up audio to play...")
+                                    wait_sec = max(dur_sec + 1.2, 2.0)
+                                    await asyncio.sleep(wait_sec)
+                                    logger.info("[Voicebot WS] Wrap-up complete. Closing call.")
+                                    await websocket.close()
+                                    break
                             except WebSocketDisconnect:
                                 logger.info(f"[Voicebot WS] Caller {target_phone} disconnected during turn processing")
                                 break

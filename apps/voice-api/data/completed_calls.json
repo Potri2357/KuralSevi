@@ -1,47 +1,172 @@
 [
   {
-    "session_id": "01fc8779-2f26-441f-b2bb-3f782ce2a865",
-    "case_id": "01FC8779-2F2",
-    "phone": "8618437517",
-    "beneficiary_name": "குமார்",
+    "session_id": "62a9deda-6183-4a64-9611-55d4cef17e9b",
+    "case_id": "62A9DEDA-618",
+    "phone": "08618437517",
     "channel": "ivr",
     "language": "ta",
-    "status": "BENEFICIARY_AUTO_RECORDED",
+    "status": "BENEFICIARY_CONFIRMED",
     "citizen_confirmed": true,
-    "confirmed_at": "2026-09-24 16:01:25 UTC",
+    "confirmed_via": "VOICE_CALL",
+    "confirmed_at": "2026-09-25 06:51:45 UTC",
     "notification_status": "DISPATCHED",
-    "completed_at": "2026-09-24 16:01:25 UTC",
+    "completed_at": "2026-09-25 06:51:45 UTC",
     "confirmed_fields": {
-      "educational_background": "Class 10 completed",
-      "family_occupation": "Running a Biryani shop",
-      "current_livelihood": "Running a Biryani shop"
+      "educational_background": "நான் வந்து பன்னிரண்டாம் வகுப்பு வரை படித்திருக்கிறேன்.",
+      "family_occupation": "எங்கள் குடும்பத்தில் வந்து பாரம்பரியமாக வந்து விவசாயம் பண்ணிகிட்டு இருக்கோம்.",
+      "current_livelihood": "நான் வந்து தினசரி வந்து மல்லிகை கடை வச்சுட்டு இருக்கேன்",
+      "skills_and_interests": "எனது விருப்பமான திறமை வந்து கோழி பண்ணை வச்சுட்டு இருக்கேன். அதுதான் என்னுடைய ஆசையும் கூட.",
+      "mobility_constraints": "வேலைக்கு வெளியில் போக முடியும்.",
+      "employment_preference": "சொந்த தொழில் தொடங்க விருப்பம்.",
+      "local_economic_context": "காய்கறி கடை."
     },
-    "turns_count": 4,
+    "turns_count": 10,
     "transcript": [
       {
-        "user": "வணக்கம், பேசலாம்",
+        "user": "தமிழ்.",
         "assistant": "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?",
-        "timestamp": "16:01:25"
+        "timestamp": "06:50:08"
       },
       {
-        "user": "என் பேரு குமார், தர்மபுரி",
+        "user": "என்னோட பேர் வந்து செந்தில்குமார். எனது ஊர் வந்து வனமாதிமங்கலம்.",
         "assistant": "உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?",
-        "timestamp": "16:01:25"
+        "timestamp": "06:50:18"
       },
       {
-        "user": "பத்தாவது வரைக்கும் படிச்சிருக்கேன்",
+        "user": "நான் வந்து பன்னிரண்டாம் வகுப்பு வரை படித்திருக்கிறேன்.",
         "assistant": "உங்க குடும்பத்தில் என்ன பாரம்பரிய தொழில் அல்லது வேலை செய்றாங்க?",
-        "timestamp": "16:01:25"
+        "timestamp": "06:50:25"
       },
       {
-        "user": "நான் வந்து இப்போ வந்து பிரியாணி கடை வச்சுட்டு இருக்கேன்",
+        "user": "எங்கள் குடும்பத்தில் வந்து பாரம்பரியமாக வந்து விவசாயம் பண்ணிகிட்டு இருக்கோம்.",
         "assistant": "தற்போது உங்கள் தினசரி வருமானத்திற்கு என்ன வேலை செய்றீங்க?",
-        "timestamp": "16:01:25"
+        "timestamp": "06:50:35"
+      },
+      {
+        "user": "நான் வந்து தினசரி வந்து மல்லிகை கடை வச்சுட்டு இருக்கேன்",
+        "assistant": "உங்களுக்கு தெரிந்த தொழில் அல்லது செய்ய விரும்பும் வேலை என்னங்க?",
+        "timestamp": "06:50:44"
+      },
+      {
+        "user": "எனது விருப்பமான திறமை வந்து கோழி பண்ணை வச்சுட்டு இருக்கேன். அதுதான் என்னுடைய ஆசையும் கூட.",
+        "assistant": "வேலை வாய்ப்புக்காக பக்கத்து ஊர்களுக்கு போக முடியுமா?",
+        "timestamp": "06:50:54"
+      },
+      {
+        "user": "வேலைக்கு வெளியில் போக முடியும்.",
+        "assistant": "உங்களுக்கு சொந்தமாக தொழில் செய்ய விருப்பமா அல்லது மாத சம்பள வேலையா?",
+        "timestamp": "06:51:02"
+      },
+      {
+        "user": "சொந்த தொழில் தொடங்க விருப்பம்.",
+        "assistant": "உங்கள் ஊரில் என்ன கடைகள் அல்லது தொழில்கள் நல்லா நடக்குதுங்க?",
+        "timestamp": "06:51:10"
+      },
+      {
+        "user": "காய்கறி கடை.",
+        "assistant": "மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க திறனுக்கும் விருப்பத்திற்கும் ஏற்ற மூன்று சிறந்த பயிற்சிகள்: ஒன்று, கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி. இரண்டு, கால்நடை வளர்ப்பு மற்றும் பால் பண்ணை பயிற்சி. மூன்று, உணவு தயாரிப்பு மற்றும் கேட்டரிங் பயிற்சி. இந்த மூன்றில் உங்களுக்கு எந்த பயிற்சியில் அதிக விருப்பம் உள்ளது?",
+        "timestamp": "06:51:15"
+      },
+      {
+        "user": "உணவு தயாரிப்பு.",
+        "assistant": "ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான உணவு தயாரிப்பு மற்றும் கேட்டரிங் பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!",
+        "timestamp": "06:51:45"
       }
     ],
     "recommended_courses": [
       {
         "rank": 1,
+        "qp_code": "AGR/Q4301",
+        "qp_name": "Small Poultry Farmer & Meat Retailer",
+        "short_en": "Poultry Farmer",
+        "en_name": "Small Poultry Farming & Meat Retail Training",
+        "ta_name": "கோழிப்பண்ணை மற்றும் இறைச்சி விற்பனை பயிற்சி",
+        "hi_name": "मुर्गी पालन और पोल्ट्री व्यवसाय प्रशिक्षण",
+        "ml_name": "കോഴി വളർത്തൽ പരിശീലനം",
+        "te_name": "కోళ్ల పెంపకం మరియు వ్యాపార శిక్షణ",
+        "nsqf_level": 3,
+        "pathway_type": "self_employment",
+        "keywords": [
+          "poultry",
+          "chicken",
+          "broiler",
+          "egg",
+          "hen",
+          "birds",
+          "farm",
+          "meat",
+          "கோழி",
+          "பண்ணை",
+          "கோழிப்பண்ணை",
+          "முட்டை",
+          "இறைச்சி",
+          "பிராய்லர்",
+          "நாட்டுக்கோழி",
+          "मुर्गी पालन",
+          "पोल्ट्री",
+          "चिकन",
+          "अंडा",
+          "मुर्गी फॉर्म",
+          "కోళ్ల పెంపకం",
+          "కోళ్లు",
+          "గుడ్లు",
+          "పౌల్ట్రీ",
+          "കോഴി വളർത്തൽ",
+          "മുട്ട",
+          "ഫാം"
+        ],
+        "duration_hours": 160
+      },
+      {
+        "rank": 2,
+        "qp_code": "AHC/Q0401",
+        "qp_name": "Dairy Farmer & Milk Processing Operator",
+        "short_en": "Dairy Farmer",
+        "en_name": "Dairy Farming & Livestock Management Course",
+        "ta_name": "கால்நடை வளர்ப்பு மற்றும் பால் பண்ணை பயிற்சி",
+        "hi_name": "डेयरी फार्मिंग और दुग्ध व्यवसाय प्रशिक्षण",
+        "ml_name": "ക്ഷീരകർഷക, പാൽ സംസ്കരണ പരിശീലനം",
+        "te_name": "పాడి పరిశ్రమ మరియు పాల వ్యాపార శిక్షణ",
+        "nsqf_level": 3,
+        "pathway_type": "self_employment",
+        "keywords": [
+          "dairy",
+          "milk",
+          "cow",
+          "cattle",
+          "buffalo",
+          "goat",
+          "livestock",
+          "butter",
+          "ghee",
+          "பால்",
+          "மாடு",
+          "கறவை",
+          "கால்நடை",
+          "ஆடு",
+          "பண்ணை",
+          "நெய்",
+          "வெண்ணெய்",
+          "डेयरी",
+          "दूध",
+          "गाय",
+          "भैंस",
+          "पशुपालन",
+          "बकरी",
+          "పాడి పరిశ్రమ",
+          "పాలు",
+          "ఆవు",
+          "గేదె",
+          "పశువుల పెంపకం",
+          "പാൽ",
+          "പശു",
+          "ക്ഷീരകർഷകൻ",
+          "കന്നുകാലി"
+        ],
+        "duration_hours": 150
+      },
+      {
+        "rank": 3,
         "qp_code": "FIC/Q0201",
         "qp_name": "Food Catering & Culinary Products Specialist",
         "short_en": "Food & Catering",
@@ -95,55 +220,146 @@
           "ഭക്ഷണം"
         ],
         "duration_hours": 180
+      }
+    ],
+    "citizen_selected_choice": 3,
+    "citizen_selected_course": "Food Catering & Culinary Products Specialist",
+    "notification_results": {
+      "whatsapp": "BOT_SENT:3EB02D754A89764FAE9736",
+      "sms": "ANDROID_GW_SENT:202:t6EQYe4SEHtXuhdT4xg95",
+      "whatsapp_link": "https://wa.me/918618437517?text=%2APM-AJAY%20%E0%AE%85%E0%AE%B0%E0%AE%9A%E0%AF%81%20%E0%AE%A8%E0%AE%B2%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%B0%E0%AE%9A%E0%AF%80%E0%AE%A4%E0%AF%81%2A%0A--------------------------------------------------%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%8E%E0%AE%A3%E0%AF%8D%20%28Case%20ID%29%3A%2A%2062A9DEDA-618%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AE%BE%E0%AE%B0%E0%AE%B0%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AF%8B%E0%AE%9F%20%E0%AE%AA%E0%AF%87%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%9A%E0%AF%86%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%E0%AE%95%E0%AF%81%E0%AE%AE%E0%AE%BE%E0%AE%B0%E0%AF%8D.%20%E0%AE%8E%E0%AE%A9%E0%AE%A4%E0%AF%81%20%E0%AE%8A%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%A9%E0%AE%AE%E0%AE%BE%E0%AE%A4%E0%AE%BF%E0%AE%AE%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B2%E0%AE%AE%E0%AF%8D.%0A%2APhone%3A%2A%20%2B918618437517%0A%0A%2A%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%B0%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AF%8D%20%28Tamil%20Summary%29%3A%2A%0A%E2%80%A2%20%2A%E0%AE%95%E0%AE%B2%E0%AF%8D%E0%AE%B5%E0%AE%BF%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AE%95%E0%AF%81%E0%AE%A4%E0%AE%BF%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AA%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AE%BF%E0%AE%B0%E0%AE%A3%E0%AF%8D%E0%AE%9F%E0%AE%BE%E0%AE%AE%E0%AF%8D%20%E0%AE%B5%E0%AE%95%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%20%E0%AE%B5%E0%AE%B0%E0%AF%88%20%E0%AE%AA%E0%AE%9F%E0%AE%BF%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%BF%E0%AE%B1%E0%AF%87%E0%AE%A9%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AF%8D%20%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AA%E0%AE%BE%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%B0%E0%AE%BF%E0%AE%AF%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%9A%E0%AE%BE%E0%AE%AF%E0%AE%AE%E0%AF%8D%20%E0%AE%AA%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%BF%E0%AE%95%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%8B%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AE%B1%E0%AF%8D%E0%AE%AA%E0%AF%8B%E0%AE%A4%E0%AF%88%E0%AE%AF%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%A4%E0%AE%BF%E0%AE%A9%E0%AE%9A%E0%AE%B0%E0%AE%BF%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AE%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AE%BF%E0%AE%95%E0%AF%88%20%E0%AE%95%E0%AE%9F%E0%AF%88%20%E0%AE%B5%E0%AE%9A%E0%AF%8D%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%87%E0%AE%A9%E0%AF%8D%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%86%E0%AE%B0%E0%AF%8D%E0%AE%B5%E0%AE%AE%E0%AF%8D%20%26%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%A9%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%A9%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AE%BE%E0%AE%A9%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%AE%E0%AF%88%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%95%E0%AF%8B%E0%AE%B4%E0%AE%BF%20%E0%AE%AA%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AF%88%20%E0%AE%B5%E0%AE%9A%E0%AF%8D%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%87%E0%AE%A9%E0%AF%8D.%20%E0%AE%85%E0%AE%A4%E0%AF%81%E0%AE%A4%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%8E%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AF%81%E0%AE%9F%E0%AF%88%E0%AE%AF%20%E0%AE%86%E0%AE%9A%E0%AF%88%E0%AE%AF%E0%AF%81%E0%AE%AE%E0%AF%8D%20%E0%AE%95%E0%AF%82%E0%AE%9F.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%AA%E0%AE%AF%E0%AE%A3%20%E0%AE%B5%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AF%81%3A%2A%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%81%20%E0%AE%B5%E0%AF%86%E0%AE%B3%E0%AE%BF%E0%AE%AF%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AA%E0%AF%8B%E0%AE%95%20%E0%AE%AE%E0%AF%81%E0%AE%9F%E0%AE%BF%E0%AE%AF%E0%AF%81%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AF%8D%3A%2A%20%E0%AE%9A%E0%AF%8A%E0%AE%A8%E0%AF%8D%E0%AE%A4%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%A4%E0%AF%8A%E0%AE%9F%E0%AE%99%E0%AF%8D%E0%AE%95%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%89%E0%AE%B3%E0%AF%8D%E0%AE%B3%E0%AF%82%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%B0%E0%AF%8D%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%95%20%E0%AE%9A%E0%AF%82%E0%AE%B4%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%95%E0%AE%BE%E0%AE%AF%E0%AF%8D%E0%AE%95%E0%AE%B1%E0%AE%BF%20%E0%AE%95%E0%AE%9F%E0%AF%88.%0A%0A%2AOfficial%20Administrative%20Record%20%28English%29%3A%2A%0A%E2%80%A2%20Education%20Level%3A%20Class%2012%20completed%20%28Higher%20Secondary%29%0A%E2%80%A2%20Family%20Occupation%3A%20Agriculture%20/%20Farming%0A%E2%80%A2%20Current%20Livelihood%3A%20Small%20Retail%20Shop%20/%20Vendor%0A%E2%80%A2%20Skills%20%26%20Interests%3A%20Small%20Poultry%20Farming%20%26%20Livestock%0A%E2%80%A2%20Mobility%20/%20Work%20Radius%3A%20Can%20travel%20to%20nearby%20towns%20/%20districts%0A%E2%80%A2%20Employment%20Preference%3A%20Self-Employment%20%28Own%20shop%20/%20enterprise%29%0A%E2%80%A2%20Local%20Economic%20Context%3A%20Local%20Village%20Commerce%20%28Retail%20trade%29%0A%0A%2A%E0%AE%89%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AE%BE%E0%AE%B2%E0%AF%8D%20%E0%AE%A4%E0%AF%87%E0%AE%B0%E0%AF%8D%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%86%E0%AE%9F%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%3A%2A%0A%F0%9F%8E%AF%20%2A%E0%AE%89%E0%AE%A3%E0%AE%B5%E0%AF%81%20%E0%AE%A4%E0%AE%AF%E0%AE%BE%E0%AE%B0%E0%AE%BF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%20%E0%AE%AE%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%81%E0%AE%AE%E0%AF%8D%20%E0%AE%95%E0%AF%87%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AE%B0%E0%AE%BF%E0%AE%99%E0%AF%8D%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%2A%0A_%28Food%20Catering%20%26%20Culinary%20Products%20Specialist%20%7C%20QP%20Code%3A%20FIC/Q0201%29_%0A%E2%80%A2%20QP%20Code%3A%20FIC/Q0201%20%7C%20NSQF%20Level%3A%203%0A%E2%80%A2%20Training%20Duration%3A%20180%20Hours%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%A8%E0%AE%BF%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%95%E0%AF%81%E0%AE%B0%E0%AE%B2%0A...",
+      "sms_text": "Kural Sevi Ref: 62A9DEDA\nCitizen: 8618437517\nEdu: Class 12 completed\nWork: Small Retail Shop / Ve\nSkill: Small Poultry Farming \nCourse: Food Catering & Culinary Pro\nStatus: Confirmed via Voice Call",
+      "wa_text": "*PM-AJAY அரசு நலத்திட்ட பதிவு ரசீது*\n--------------------------------------------------\n*விண்ணப்ப எண் (Case ID):* 62A9DEDA-618\n*விண்ணப்பதாரர்:* என்னோட பேர் வந்து செந்தில்குமார். எனது ஊர் வந்து வனமாதிமங்கலம்.\n*Phone:* +918618437517\n\n*பதிவு செய்யப்பட்ட விவரங்கள் (Tamil Summary):*\n• *கல்வித் தகுதி:* நான் வந்து பன்னிரண்டாம் வகுப்பு வரை படித்திருக்கிறேன்.\n• *குடும்பத் தொழில்:* எங்கள் குடும்பத்தில் வந்து பாரம்பரியமாக வந்து விவசாயம் பண்ணிகிட்டு இருக்கோம்.\n• *தற்போதைய வேலை:* நான் வந்து தினசரி வந்து மல்லிகை கடை வச்சுட்டு இருக்கேன்\n• *தொழில் ஆர்வம் & திறன்:* எனது விருப்பமான திறமை வந்து கோழி பண்ணை வச்சுட்டு இருக்கேன். அதுதான் என்னுடைய ஆசையும் கூட.\n• *வேலை பயண வரம்பு:* வேலைக்கு வெளியில் போக முடியும்.\n• *வேலை விருப்பம்:* சொந்த தொழில் தொடங்க விருப்பம்.\n• *உள்ளூர் வர்த்தக சூழல்:* காய்கறி கடை.\n\n*Official Administrative Record (English):*\n• Education Level: Class 12 completed (Higher Secondary)\n• Family Occupation: Agriculture / Farming\n• Current Livelihood: Small Retail Shop / Vendor\n• Skills & Interests: Small Poultry Farming & Livestock\n• Mobility / Work Radius: Can travel to nearby towns / districts\n• Employment Preference: Self-Employment (Own shop / enterprise)\n• Local Economic Context: Local Village Commerce (Retail trade)\n\n*உங்களால் தேர்ந்தெடுக்கப்பட்ட பயிற்சி:*\n🎯 *உணவு தயாரிப்பு மற்றும் கேட்டரிங் பயிற்சி*\n_(Food Catering & Culinary Products Specialist | QP Code: FIC/Q0201)_\n• QP Code: FIC/Q0201 | NSQF Level: 3\n• Training Duration: 180 Hours\n• *விண்ணப்ப நிலை:* குரல\n..."
+    },
+    "whatsapp_link": "https://wa.me/918618437517?text=%2APM-AJAY%20%E0%AE%85%E0%AE%B0%E0%AE%9A%E0%AF%81%20%E0%AE%A8%E0%AE%B2%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%B0%E0%AE%9A%E0%AF%80%E0%AE%A4%E0%AF%81%2A%0A--------------------------------------------------%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%8E%E0%AE%A3%E0%AF%8D%20%28Case%20ID%29%3A%2A%2062A9DEDA-618%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AE%BE%E0%AE%B0%E0%AE%B0%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AF%8B%E0%AE%9F%20%E0%AE%AA%E0%AF%87%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%9A%E0%AF%86%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%E0%AE%95%E0%AF%81%E0%AE%AE%E0%AE%BE%E0%AE%B0%E0%AF%8D.%20%E0%AE%8E%E0%AE%A9%E0%AE%A4%E0%AF%81%20%E0%AE%8A%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%A9%E0%AE%AE%E0%AE%BE%E0%AE%A4%E0%AE%BF%E0%AE%AE%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B2%E0%AE%AE%E0%AF%8D.%0A%2APhone%3A%2A%20%2B918618437517%0A%0A%2A%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%B0%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AF%8D%20%28Tamil%20Summary%29%3A%2A%0A%E2%80%A2%20%2A%E0%AE%95%E0%AE%B2%E0%AF%8D%E0%AE%B5%E0%AE%BF%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AE%95%E0%AF%81%E0%AE%A4%E0%AE%BF%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AA%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AE%BF%E0%AE%B0%E0%AE%A3%E0%AF%8D%E0%AE%9F%E0%AE%BE%E0%AE%AE%E0%AF%8D%20%E0%AE%B5%E0%AE%95%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%20%E0%AE%B5%E0%AE%B0%E0%AF%88%20%E0%AE%AA%E0%AE%9F%E0%AE%BF%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%BF%E0%AE%B1%E0%AF%87%E0%AE%A9%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AF%8D%20%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AA%E0%AE%BE%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%B0%E0%AE%BF%E0%AE%AF%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%9A%E0%AE%BE%E0%AE%AF%E0%AE%AE%E0%AF%8D%20%E0%AE%AA%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%BF%E0%AE%95%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%8B%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AE%B1%E0%AF%8D%E0%AE%AA%E0%AF%8B%E0%AE%A4%E0%AF%88%E0%AE%AF%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%A4%E0%AE%BF%E0%AE%A9%E0%AE%9A%E0%AE%B0%E0%AE%BF%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AE%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AE%BF%E0%AE%95%E0%AF%88%20%E0%AE%95%E0%AE%9F%E0%AF%88%20%E0%AE%B5%E0%AE%9A%E0%AF%8D%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%87%E0%AE%A9%E0%AF%8D%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%86%E0%AE%B0%E0%AF%8D%E0%AE%B5%E0%AE%AE%E0%AF%8D%20%26%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%A9%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%A9%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AE%BE%E0%AE%A9%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%AE%E0%AF%88%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%95%E0%AF%8B%E0%AE%B4%E0%AE%BF%20%E0%AE%AA%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AF%88%20%E0%AE%B5%E0%AE%9A%E0%AF%8D%E0%AE%9A%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%87%E0%AE%A9%E0%AF%8D.%20%E0%AE%85%E0%AE%A4%E0%AF%81%E0%AE%A4%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%8E%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AF%81%E0%AE%9F%E0%AF%88%E0%AE%AF%20%E0%AE%86%E0%AE%9A%E0%AF%88%E0%AE%AF%E0%AF%81%E0%AE%AE%E0%AF%8D%20%E0%AE%95%E0%AF%82%E0%AE%9F.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%AA%E0%AE%AF%E0%AE%A3%20%E0%AE%B5%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AF%81%3A%2A%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%81%20%E0%AE%B5%E0%AF%86%E0%AE%B3%E0%AE%BF%E0%AE%AF%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AA%E0%AF%8B%E0%AE%95%20%E0%AE%AE%E0%AF%81%E0%AE%9F%E0%AE%BF%E0%AE%AF%E0%AF%81%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AF%8D%3A%2A%20%E0%AE%9A%E0%AF%8A%E0%AE%A8%E0%AF%8D%E0%AE%A4%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%A4%E0%AF%8A%E0%AE%9F%E0%AE%99%E0%AF%8D%E0%AE%95%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%89%E0%AE%B3%E0%AF%8D%E0%AE%B3%E0%AF%82%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%B0%E0%AF%8D%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%95%20%E0%AE%9A%E0%AF%82%E0%AE%B4%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%95%E0%AE%BE%E0%AE%AF%E0%AF%8D%E0%AE%95%E0%AE%B1%E0%AE%BF%20%E0%AE%95%E0%AE%9F%E0%AF%88.%0A%0A%2AOfficial%20Administrative%20Record%20%28English%29%3A%2A%0A%E2%80%A2%20Education%20Level%3A%20Class%2012%20completed%20%28Higher%20Secondary%29%0A%E2%80%A2%20Family%20Occupation%3A%20Agriculture%20/%20Farming%0A%E2%80%A2%20Current%20Livelihood%3A%20Small%20Retail%20Shop%20/%20Vendor%0A%E2%80%A2%20Skills%20%26%20Interests%3A%20Small%20Poultry%20Farming%20%26%20Livestock%0A%E2%80%A2%20Mobility%20/%20Work%20Radius%3A%20Can%20travel%20to%20nearby%20towns%20/%20districts%0A%E2%80%A2%20Employment%20Preference%3A%20Self-Employment%20%28Own%20shop%20/%20enterprise%29%0A%E2%80%A2%20Local%20Economic%20Context%3A%20Local%20Village%20Commerce%20%28Retail%20trade%29%0A%0A%2A%E0%AE%89%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AE%BE%E0%AE%B2%E0%AF%8D%20%E0%AE%A4%E0%AF%87%E0%AE%B0%E0%AF%8D%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%86%E0%AE%9F%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%3A%2A%0A%F0%9F%8E%AF%20%2A%E0%AE%89%E0%AE%A3%E0%AE%B5%E0%AF%81%20%E0%AE%A4%E0%AE%AF%E0%AE%BE%E0%AE%B0%E0%AE%BF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%20%E0%AE%AE%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%81%E0%AE%AE%E0%AF%8D%20%E0%AE%95%E0%AF%87%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AE%B0%E0%AE%BF%E0%AE%99%E0%AF%8D%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%2A%0A_%28Food%20Catering%20%26%20Culinary%20Products%20Specialist%20%7C%20QP%20Code%3A%20FIC/Q0201%29_%0A%E2%80%A2%20QP%20Code%3A%20FIC/Q0201%20%7C%20NSQF%20Level%3A%203%0A%E2%80%A2%20Training%20Duration%3A%20180%20Hours%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%A8%E0%AE%BF%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%95%E0%AF%81%E0%AE%B0%E0%AE%B2%0A...",
+    "sms_status": "ANDROID_GW_SENT:202:t6EQYe4SEHtXuhdT4xg95"
+  },
+  {
+    "session_id": "c315085a-b507-4479-b284-5fc7b6581e50",
+    "case_id": "C315085A-B50",
+    "phone": "08618437517",
+    "channel": "ivr",
+    "language": "ta",
+    "status": "BENEFICIARY_CONFIRMED",
+    "citizen_confirmed": true,
+    "confirmed_via": "VOICE_CALL",
+    "confirmed_at": "2026-09-25 06:47:47 UTC",
+    "notification_status": "DISPATCHED",
+    "completed_at": "2026-09-25 06:47:47 UTC",
+    "confirmed_fields": {
+      "educational_background": "நான் வந்து பன்னிரண்டாம் வகுப்புல படித்திருக்கிறேன்.",
+      "family_occupation": "எங்க குடும்பத்தில் பாரம்பரியமாக வந்து விவசாயம் செய்துட்டு இருக்கோம்.",
+      "current_livelihood": "நான் தினசரி மளிகை கடை வச்சுக்கிட்டு இருக்கேன்.",
+      "skills_and_interests": "என்னோட விருப்பமான திறமை வந்து.",
+      "mobility_constraints": "ஆ.",
+      "employment_preference": "சொந்தமாக தொழில்.",
+      "local_economic_context": "காய்கறி கடை, மல்லிகை கடை, பேக்கரி, பிரியாணி கடை."
+    },
+    "turns_count": 10,
+    "transcript": [
+      {
+        "user": "I'm in",
+        "assistant": "Thank you! To begin, could you please tell me your name and your village or town?",
+        "timestamp": "06:46:01"
       },
       {
-        "rank": 2,
-        "qp_code": "FIC/Q0103",
-        "qp_name": "Food Processing Technician - Pickles, Jams & Ready-to-Eat Products",
-        "short_en": "Food Processing & Pickles",
-        "en_name": "Pickle Making & Ready-to-Eat Food Processing Course",
-        "ta_name": "ஊறுகாய் தயாரிப்பு மற்றும் உணவு பதப்படுத்துதல் பயிற்சி",
-        "hi_name": "अचार, जैम और रेडी-टू-ईट खाद्य प्रसंस्करण प्रशिक्षण",
-        "ml_name": "അച്ചാർ നിർമ്മാണവും ഭക്ഷ്യ സംസ്കരണ പരിശീലനവും",
-        "te_name": "ఊరగాయలు మరియు ఆహార ప్రాసెసింగ్ శిక్షణ",
-        "nsqf_level": 3,
+        "user": "நோ நோ.",
+        "assistant": "உங்க படிப்பு என்னங்க, பள்ளிக்கூடம் போயிருக்கீங்களா?",
+        "timestamp": "06:46:09"
+      },
+      {
+        "user": "நான் வந்து பன்னிரண்டாம் வகுப்புல படித்திருக்கிறேன்.",
+        "assistant": "உங்க குடும்பத்தில் என்ன பாரம்பரிய தொழில் அல்லது வேலை செய்றாங்க?",
+        "timestamp": "06:46:17"
+      },
+      {
+        "user": "எங்க குடும்பத்தில் பாரம்பரியமாக வந்து விவசாயம் செய்துட்டு இருக்கோம்.",
+        "assistant": "தற்போது உங்கள் தினசரி வருமானத்திற்கு என்ன வேலை செய்றீங்க?",
+        "timestamp": "06:46:26"
+      },
+      {
+        "user": "நான் தினசரி மளிகை கடை வச்சுக்கிட்டு இருக்கேன்.",
+        "assistant": "உங்களுக்கு தெரிந்த தொழில் அல்லது செய்ய விரும்பும் வேலை என்னங்க?",
+        "timestamp": "06:46:33"
+      },
+      {
+        "user": "என்னோட விருப்பமான திறமை வந்து.",
+        "assistant": "வேலை வாய்ப்புக்காக பக்கத்து ஊர்களுக்கு போக முடியுமா?",
+        "timestamp": "06:46:42"
+      },
+      {
+        "user": "ஆ.",
+        "assistant": "உங்களுக்கு சொந்தமாக தொழில் செய்ய விருப்பமா அல்லது மாத சம்பள வேலையா?",
+        "timestamp": "06:46:48"
+      },
+      {
+        "user": "சொந்தமாக தொழில்.",
+        "assistant": "உங்கள் ஊரில் என்ன கடைகள் அல்லது தொழில்கள் நல்லா நடக்குதுங்க?",
+        "timestamp": "06:46:55"
+      },
+      {
+        "user": "காய்கறி கடை, மல்லிகை கடை, பேக்கரி, பிரியாணி கடை.",
+        "assistant": "மிக்க நன்றிங்க! உங்க அனைத்து விவரங்களும் முறையாக பதிவாகிவிட்டது. உங்க திறனுக்கும் விருப்பத்திற்கும் ஏற்ற மூன்று சிறந்த பயிற்சிகள்: ஒன்று, கிராமப்புற சிறுதொழில் மற்றும் சுயதொழில் பயிற்சி. இரண்டு, மளிகை மற்றும் சில்லறை விற்பனைக் கடை பயிற்சி. மூன்று, தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி. இந்த மூன்றில் உங்களுக்கு எந்த பயிற்சியில் அதிக விருப்பம் உள்ளது?",
+        "timestamp": "06:47:13"
+      },
+      {
+        "user": "சையில்.",
+        "assistant": "ரொம்ப மகிழ்ச்சிங்க! உங்க விருப்பமான கிராமப்புற சிறுதொழில் மற்றும் சுயதொழில் பயிற்சி வெற்றிகரமாக பதிவாகிவிட்டது. இதன் முழு விவரங்களையும் உங்கள் வாட்ஸ்அப்பிற்கும் அனுப்பியுள்ளோம். வாழ்த்துகள்ங்க!",
+        "timestamp": "06:47:47"
+      }
+    ],
+    "recommended_courses": [
+      {
+        "rank": 1,
+        "qp_code": "MEP/Q0101",
+        "qp_name": "Micro-Enterprise & Rural Business Operator",
+        "short_en": "Micro-Enterprise",
+        "en_name": "Micro-Enterprise & Small Business Leadership",
+        "ta_name": "கிராமப்புற சிறுதொழில் மற்றும் சுயதொழில் பயிற்சி",
+        "hi_name": "ग्रामीण लघु उद्योग और स्वरोजगार प्रशिक्षण",
+        "ml_name": "ചെറുകിട സംരംഭവും സ്വയംതൊഴിലും",
+        "te_name": "చిన్న వ్యాపారం మరియు స్వయం ఉపాధి శిక్షణ",
+        "nsqf_level": 4,
         "pathway_type": "self_employment",
         "keywords": [
-          "pickle",
-          "jam",
-          "jelly",
-          "chutney",
-          "food processing",
-          "ready to eat",
-          "snacks",
-          "preserving",
-          "masala",
-          "ஊறுகாய்",
-          "தொக்கு",
-          "உணவு பதப்படுத்துதல்",
-          "ஜாம்",
-          "மசாலா",
-          "பலகாரம்",
-          "தின்பண்டம்",
-          "அப்பளம்",
-          "अचार",
-          "चटनी",
-          "जैम",
-          "खाद्य प्रसंस्करण",
-          "पापड़",
-          "नमकीन",
-          "ఊరగాయ",
-          "పచ్చళ్లు",
-          "ఆహార ప్రాసెసింగ్",
-          "అప్పడాలు",
-          "അച്ചാർ",
-          "ചമ്മന്തി",
-          "ഭക്ഷ്യ സംസ്കരണം"
+          "business",
+          "enterprise",
+          "startup",
+          "self employment",
+          "shop",
+          "own business",
+          "investment",
+          "trade",
+          "company",
+          "சுயதொழில்",
+          "தொழில்",
+          "சொந்த தொழில்",
+          "சொந்த கடை",
+          "பிசினஸ்",
+          "வியாபாரம்",
+          "முதலீடு",
+          "முயற்சி",
+          "स्वरोजगार",
+          "खुद का काम",
+          "व्यवसाय",
+          "व्यापार",
+          "लघु उद्योग",
+          "दुकान",
+          "उद्योग",
+          "స్వయం ఉపాధి",
+          "సొంత వ్యాపారం",
+          "బిజినెస్",
+          "చిన్న వ్యాపారం",
+          "పరిశ్రమ",
+          "സ്വയംതൊഴിൽ",
+          "ചെറുകിട സംരംഭം",
+          "ബിസിനസ്",
+          "സ്വന്തം സ്ഥാപനം"
         ],
         "duration_hours": 180
       },
       {
-        "rank": 3,
+        "rank": 2,
         "qp_code": "RAS/Q0104",
         "qp_name": "Retail Sales Associate / Kirana Store Operator",
         "short_en": "Retail & Store",
@@ -190,10 +406,66 @@
           "വ്യാപാരം"
         ],
         "duration_hours": 120
+      },
+      {
+        "rank": 3,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Tailor - Garment Construction",
+        "short_en": "Tailor",
+        "en_name": "Tailoring & Garment Construction Training",
+        "ta_name": "தையல் மற்றும் ஆடை வடிவமைப்பு பயிற்சி",
+        "hi_name": "सिलाई और वस्त्र निर्माण प्रशिक्षण",
+        "ml_name": "ടെയ്‌ലറിംഗ്, വസ്ത്ര നിർമ്മാണ പരിശീലനം",
+        "te_name": "టైలరింగ్ మరియు దుస్తుల తయారీ శిక్షణ",
+        "nsqf_level": 4,
+        "pathway_type": "self_employment",
+        "keywords": [
+          "tailor",
+          "tailoring",
+          "stitching",
+          "garment",
+          "sewing",
+          "cloth",
+          "dress",
+          "fashion",
+          "embroidery",
+          "தையல்",
+          "ஆடை",
+          "துணி",
+          "தையல்காரர்",
+          "சுடிதார்",
+          "ஜாக்கெட்",
+          "தைக்க",
+          "தையல் மெஷின்",
+          "सिलाई",
+          "दर्जी",
+          "कपड़े",
+          "सिलाई मशीन",
+          "वस्त्र",
+          "టైలరింగ్",
+          "కుట్లు",
+          "దుస్తులు",
+          "బట్టలు",
+          "టైలర్",
+          "ടെയ്‌ലറിംഗ്",
+          "തയ്യൽ",
+          "വസ്ത്രങ്ങൾ",
+          "തുണി"
+        ],
+        "duration_hours": 300
       }
     ],
-    "citizen_selected_choice": null,
-    "citizen_selected_course": "Food & Catering"
+    "citizen_selected_choice": 1,
+    "citizen_selected_course": "Micro-Enterprise & Rural Business Operator",
+    "notification_results": {
+      "whatsapp": "BOT_SENT:3EB09B0BC6BC9D58E07857",
+      "sms": "SMS_LOGGED_LOCAL",
+      "whatsapp_link": "https://wa.me/918618437517?text=%2APM-AJAY%20%E0%AE%85%E0%AE%B0%E0%AE%9A%E0%AF%81%20%E0%AE%A8%E0%AE%B2%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%B0%E0%AE%9A%E0%AF%80%E0%AE%A4%E0%AF%81%2A%0A--------------------------------------------------%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%8E%E0%AE%A3%E0%AF%8D%20%28Case%20ID%29%3A%2A%20C315085A-B50%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AE%BE%E0%AE%B0%E0%AE%B0%E0%AF%8D%3A%2A%20%E0%AE%A8%E0%AF%8B%20%E0%AE%A8%E0%AF%8B.%0A%2APhone%3A%2A%20%2B918618437517%0A%0A%2A%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%B0%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AF%8D%20%28Tamil%20Summary%29%3A%2A%0A%E2%80%A2%20%2A%E0%AE%95%E0%AE%B2%E0%AF%8D%E0%AE%B5%E0%AE%BF%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AE%95%E0%AF%81%E0%AE%A4%E0%AE%BF%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AA%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AE%BF%E0%AE%B0%E0%AE%A3%E0%AF%8D%E0%AE%9F%E0%AE%BE%E0%AE%AE%E0%AF%8D%20%E0%AE%B5%E0%AE%95%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%E0%AE%B2%20%E0%AE%AA%E0%AE%9F%E0%AE%BF%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%BF%E0%AE%B1%E0%AF%87%E0%AE%A9%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%99%E0%AF%8D%E0%AE%95%20%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AA%E0%AE%BE%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%B0%E0%AE%BF%E0%AE%AF%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%9A%E0%AE%BE%E0%AE%AF%E0%AE%AE%E0%AF%8D%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%A4%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%8B%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AE%B1%E0%AF%8D%E0%AE%AA%E0%AF%8B%E0%AE%A4%E0%AF%88%E0%AE%AF%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%A4%E0%AE%BF%E0%AE%A9%E0%AE%9A%E0%AE%B0%E0%AE%BF%20%E0%AE%AE%E0%AE%B3%E0%AE%BF%E0%AE%95%E0%AF%88%20%E0%AE%95%E0%AE%9F%E0%AF%88%20%E0%AE%B5%E0%AE%9A%E0%AF%8D%E0%AE%9A%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%87%E0%AE%A9%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%86%E0%AE%B0%E0%AF%8D%E0%AE%B5%E0%AE%AE%E0%AF%8D%20%26%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%A9%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AF%8B%E0%AE%9F%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AE%BE%E0%AE%A9%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%AE%E0%AF%88%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%AA%E0%AE%AF%E0%AE%A3%20%E0%AE%B5%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AF%81%3A%2A%20%E0%AE%86.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AF%8D%3A%2A%20%E0%AE%9A%E0%AF%8A%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%89%E0%AE%B3%E0%AF%8D%E0%AE%B3%E0%AF%82%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%B0%E0%AF%8D%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%95%20%E0%AE%9A%E0%AF%82%E0%AE%B4%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%95%E0%AE%BE%E0%AE%AF%E0%AF%8D%E0%AE%95%E0%AE%B1%E0%AE%BF%20%E0%AE%95%E0%AE%9F%E0%AF%88%2C%20%E0%AE%AE%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AE%BF%E0%AE%95%E0%AF%88%20%E0%AE%95%E0%AE%9F%E0%AF%88%2C%20%E0%AE%AA%E0%AF%87%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%B0%E0%AE%BF%2C%20%E0%AE%AA%E0%AE%BF%E0%AE%B0%E0%AE%BF%E0%AE%AF%E0%AE%BE%E0%AE%A3%E0%AE%BF%20%E0%AE%95%E0%AE%9F%E0%AF%88.%0A%0A%2AOfficial%20Administrative%20Record%20%28English%29%3A%2A%0A%E2%80%A2%20Education%20Level%3A%20Class%2012%20completed%20%28Higher%20Secondary%29%0A%E2%80%A2%20Family%20Occupation%3A%20Agriculture%20/%20Farming%0A%E2%80%A2%20Current%20Livelihood%3A%20Small%20Retail%20Shop%20/%20Vendor%0A%E2%80%A2%20Skills%20%26%20Interests%3A%20Vocational%20%26%20Practical%20Trade%20Skills%0A%E2%80%A2%20Mobility%20/%20Work%20Radius%3A%20Local%20area%20preferred%0A%E2%80%A2%20Employment%20Preference%3A%20Self-Employment%20%28Own%20shop%20/%20enterprise%29%0A%E2%80%A2%20Local%20Economic%20Context%3A%20Local%20Village%20Commerce%20%28Retail%20trade%29%0A%0A%2A%E0%AE%89%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AE%BE%E0%AE%B2%E0%AF%8D%20%E0%AE%A4%E0%AF%87%E0%AE%B0%E0%AF%8D%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%86%E0%AE%9F%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%3A%2A%0A%F0%9F%8E%AF%20%2A%E0%AE%95%E0%AE%BF%E0%AE%B0%E0%AE%BE%E0%AE%AE%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%E0%AE%B1%20%E0%AE%9A%E0%AE%BF%E0%AE%B1%E0%AF%81%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AE%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%81%E0%AE%AE%E0%AF%8D%20%E0%AE%9A%E0%AF%81%E0%AE%AF%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%2A%0A_%28Micro-Enterprise%20%26%20Rural%20Business%20Operator%20%7C%20QP%20Code%3A%20MEP/Q0101%29_%0A%E2%80%A2%20QP%20Code%3A%20MEP/Q0101%20%7C%20NSQF%20Level%3A%204%0A%E2%80%A2%20Training%20Duration%3A%20180%20Hours%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%A8%E0%AE%BF%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%95%E0%AF%81%E0%AE%B0%E0%AE%B2%E0%AF%8D%20%E0%AE%85%E0%AE%B4%E0%AF%88%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%20%E0%AE%AE%E0%AF%82%E0%AE%B2%E0%AE%AE%E0%AF%8D%20%E0%AE%B5%E0%AF%86%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AE%BF%E0%AE%95%E0%AE%B0%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%89%E0%AE%B1%E0%AF%81%E0%AE%A4%E0%AE%BF%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%E0%AE%B3%E0%AF%8D%E0%AE%B3%E0%AE%A4%E0%AF%81%20%28BENEFICIARY_CONFIRMED%29%0A--------------------------------------------------%0A%E0%AE%85%E0%AE%9F%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%203%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%A8%E0%AE%BE%E0%AE%9F%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%89%E0%AE%99%E0%AF%8D%E0%AE%95%0A...",
+      "sms_text": "Kural Sevi Ref: C315085A\nCitizen: 8618437517\nEdu: Class 12 completed\nWork: Small Retail Shop / Ve\nSkill: Vocational & Practical\nCourse: Micro-Enterprise & Rural Bus\nStatus: Confirmed via Voice Call",
+      "wa_text": "*PM-AJAY அரசு நலத்திட்ட பதிவு ரசீது*\n--------------------------------------------------\n*விண்ணப்ப எண் (Case ID):* C315085A-B50\n*விண்ணப்பதாரர்:* நோ நோ.\n*Phone:* +918618437517\n\n*பதிவு செய்யப்பட்ட விவரங்கள் (Tamil Summary):*\n• *கல்வித் தகுதி:* நான் வந்து பன்னிரண்டாம் வகுப்புல படித்திருக்கிறேன்.\n• *குடும்பத் தொழில்:* எங்க குடும்பத்தில் பாரம்பரியமாக வந்து விவசாயம் செய்துட்டு இருக்கோம்.\n• *தற்போதைய வேலை:* நான் தினசரி மளிகை கடை வச்சுக்கிட்டு இருக்கேன்.\n• *தொழில் ஆர்வம் & திறன்:* என்னோட விருப்பமான திறமை வந்து.\n• *வேலை பயண வரம்பு:* ஆ.\n• *வேலை விருப்பம்:* சொந்தமாக தொழில்.\n• *உள்ளூர் வர்த்தக சூழல்:* காய்கறி கடை, மல்லிகை கடை, பேக்கரி, பிரியாணி கடை.\n\n*Official Administrative Record (English):*\n• Education Level: Class 12 completed (Higher Secondary)\n• Family Occupation: Agriculture / Farming\n• Current Livelihood: Small Retail Shop / Vendor\n• Skills & Interests: Vocational & Practical Trade Skills\n• Mobility / Work Radius: Local area preferred\n• Employment Preference: Self-Employment (Own shop / enterprise)\n• Local Economic Context: Local Village Commerce (Retail trade)\n\n*உங்களால் தேர்ந்தெடுக்கப்பட்ட பயிற்சி:*\n🎯 *கிராமப்புற சிறுதொழில் மற்றும் சுயதொழில் பயிற்சி*\n_(Micro-Enterprise & Rural Business Operator | QP Code: MEP/Q0101)_\n• QP Code: MEP/Q0101 | NSQF Level: 4\n• Training Duration: 180 Hours\n• *விண்ணப்ப நிலை:* குரல் அழைப்பு மூலம் வெற்றிகரமாக உறுதி செய்யப்பட்டுள்ளது (BENEFICIARY_CONFIRMED)\n--------------------------------------------------\nஅடுத்த 3 வேலை நாட்களில் உங்க\n..."
+    },
+    "whatsapp_link": "https://wa.me/918618437517?text=%2APM-AJAY%20%E0%AE%85%E0%AE%B0%E0%AE%9A%E0%AF%81%20%E0%AE%A8%E0%AE%B2%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%B0%E0%AE%9A%E0%AF%80%E0%AE%A4%E0%AF%81%2A%0A--------------------------------------------------%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%8E%E0%AE%A3%E0%AF%8D%20%28Case%20ID%29%3A%2A%20C315085A-B50%0A%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AE%BE%E0%AE%B0%E0%AE%B0%E0%AF%8D%3A%2A%20%E0%AE%A8%E0%AF%8B%20%E0%AE%A8%E0%AF%8B.%0A%2APhone%3A%2A%20%2B918618437517%0A%0A%2A%E0%AE%AA%E0%AE%A4%E0%AE%BF%E0%AE%B5%E0%AF%81%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%B0%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AF%8D%20%28Tamil%20Summary%29%3A%2A%0A%E2%80%A2%20%2A%E0%AE%95%E0%AE%B2%E0%AF%8D%E0%AE%B5%E0%AE%BF%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AE%95%E0%AF%81%E0%AE%A4%E0%AE%BF%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%AA%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AE%BF%E0%AE%B0%E0%AE%A3%E0%AF%8D%E0%AE%9F%E0%AE%BE%E0%AE%AE%E0%AF%8D%20%E0%AE%B5%E0%AE%95%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%E0%AE%B2%20%E0%AE%AA%E0%AE%9F%E0%AE%BF%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%BF%E0%AE%B1%E0%AF%87%E0%AE%A9%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%99%E0%AF%8D%E0%AE%95%20%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AA%E0%AE%BE%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%B0%E0%AE%BF%E0%AE%AF%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81%20%E0%AE%B5%E0%AE%BF%E0%AE%B5%E0%AE%9A%E0%AE%BE%E0%AE%AF%E0%AE%AE%E0%AF%8D%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%A4%E0%AF%81%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%8B%E0%AE%AE%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AE%B1%E0%AF%8D%E0%AE%AA%E0%AF%8B%E0%AE%A4%E0%AF%88%E0%AE%AF%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%A8%E0%AE%BE%E0%AE%A9%E0%AF%8D%20%E0%AE%A4%E0%AE%BF%E0%AE%A9%E0%AE%9A%E0%AE%B0%E0%AE%BF%20%E0%AE%AE%E0%AE%B3%E0%AE%BF%E0%AE%95%E0%AF%88%20%E0%AE%95%E0%AE%9F%E0%AF%88%20%E0%AE%B5%E0%AE%9A%E0%AF%8D%E0%AE%9A%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%BF%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AF%87%E0%AE%A9%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%86%E0%AE%B0%E0%AF%8D%E0%AE%B5%E0%AE%AE%E0%AF%8D%20%26%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%A9%E0%AF%8D%3A%2A%20%E0%AE%8E%E0%AE%A9%E0%AF%8D%E0%AE%A9%E0%AF%8B%E0%AE%9F%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AE%BE%E0%AE%A9%20%E0%AE%A4%E0%AE%BF%E0%AE%B1%E0%AE%AE%E0%AF%88%20%E0%AE%B5%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%81.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%AA%E0%AE%AF%E0%AE%A3%20%E0%AE%B5%E0%AE%B0%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AF%81%3A%2A%20%E0%AE%86.%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%B5%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%AE%E0%AF%8D%3A%2A%20%E0%AE%9A%E0%AF%8A%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D.%0A%E2%80%A2%20%2A%E0%AE%89%E0%AE%B3%E0%AF%8D%E0%AE%B3%E0%AF%82%E0%AE%B0%E0%AF%8D%20%E0%AE%B5%E0%AE%B0%E0%AF%8D%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%95%20%E0%AE%9A%E0%AF%82%E0%AE%B4%E0%AE%B2%E0%AF%8D%3A%2A%20%E0%AE%95%E0%AE%BE%E0%AE%AF%E0%AF%8D%E0%AE%95%E0%AE%B1%E0%AE%BF%20%E0%AE%95%E0%AE%9F%E0%AF%88%2C%20%E0%AE%AE%E0%AE%B2%E0%AF%8D%E0%AE%B2%E0%AE%BF%E0%AE%95%E0%AF%88%20%E0%AE%95%E0%AE%9F%E0%AF%88%2C%20%E0%AE%AA%E0%AF%87%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%B0%E0%AE%BF%2C%20%E0%AE%AA%E0%AE%BF%E0%AE%B0%E0%AE%BF%E0%AE%AF%E0%AE%BE%E0%AE%A3%E0%AE%BF%20%E0%AE%95%E0%AE%9F%E0%AF%88.%0A%0A%2AOfficial%20Administrative%20Record%20%28English%29%3A%2A%0A%E2%80%A2%20Education%20Level%3A%20Class%2012%20completed%20%28Higher%20Secondary%29%0A%E2%80%A2%20Family%20Occupation%3A%20Agriculture%20/%20Farming%0A%E2%80%A2%20Current%20Livelihood%3A%20Small%20Retail%20Shop%20/%20Vendor%0A%E2%80%A2%20Skills%20%26%20Interests%3A%20Vocational%20%26%20Practical%20Trade%20Skills%0A%E2%80%A2%20Mobility%20/%20Work%20Radius%3A%20Local%20area%20preferred%0A%E2%80%A2%20Employment%20Preference%3A%20Self-Employment%20%28Own%20shop%20/%20enterprise%29%0A%E2%80%A2%20Local%20Economic%20Context%3A%20Local%20Village%20Commerce%20%28Retail%20trade%29%0A%0A%2A%E0%AE%89%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AE%BE%E0%AE%B2%E0%AF%8D%20%E0%AE%A4%E0%AF%87%E0%AE%B0%E0%AF%8D%E0%AE%A8%E0%AF%8D%E0%AE%A4%E0%AF%86%E0%AE%9F%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%3A%2A%0A%F0%9F%8E%AF%20%2A%E0%AE%95%E0%AE%BF%E0%AE%B0%E0%AE%BE%E0%AE%AE%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%E0%AE%B1%20%E0%AE%9A%E0%AE%BF%E0%AE%B1%E0%AF%81%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AE%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AF%81%E0%AE%AE%E0%AF%8D%20%E0%AE%9A%E0%AF%81%E0%AE%AF%E0%AE%A4%E0%AF%8A%E0%AE%B4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AA%E0%AE%AF%E0%AE%BF%E0%AE%B1%E0%AF%8D%E0%AE%9A%E0%AE%BF%2A%0A_%28Micro-Enterprise%20%26%20Rural%20Business%20Operator%20%7C%20QP%20Code%3A%20MEP/Q0101%29_%0A%E2%80%A2%20QP%20Code%3A%20MEP/Q0101%20%7C%20NSQF%20Level%3A%204%0A%E2%80%A2%20Training%20Duration%3A%20180%20Hours%0A%E2%80%A2%20%2A%E0%AE%B5%E0%AE%BF%E0%AE%A3%E0%AF%8D%E0%AE%A3%E0%AE%AA%E0%AF%8D%E0%AE%AA%20%E0%AE%A8%E0%AE%BF%E0%AE%B2%E0%AF%88%3A%2A%20%E0%AE%95%E0%AF%81%E0%AE%B0%E0%AE%B2%E0%AF%8D%20%E0%AE%85%E0%AE%B4%E0%AF%88%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AF%81%20%E0%AE%AE%E0%AF%82%E0%AE%B2%E0%AE%AE%E0%AF%8D%20%E0%AE%B5%E0%AF%86%E0%AE%B1%E0%AF%8D%E0%AE%B1%E0%AE%BF%E0%AE%95%E0%AE%B0%E0%AE%AE%E0%AE%BE%E0%AE%95%20%E0%AE%89%E0%AE%B1%E0%AF%81%E0%AE%A4%E0%AE%BF%20%E0%AE%9A%E0%AF%86%E0%AE%AF%E0%AF%8D%E0%AE%AF%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%8D%E0%AE%9F%E0%AF%81%E0%AE%B3%E0%AF%8D%E0%AE%B3%E0%AE%A4%E0%AF%81%20%28BENEFICIARY_CONFIRMED%29%0A--------------------------------------------------%0A%E0%AE%85%E0%AE%9F%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%203%20%E0%AE%B5%E0%AF%87%E0%AE%B2%E0%AF%88%20%E0%AE%A8%E0%AE%BE%E0%AE%9F%E0%AF%8D%E0%AE%95%E0%AE%B3%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%89%E0%AE%99%E0%AF%8D%E0%AE%95%0A...",
+    "sms_status": "SMS_LOGGED_LOCAL"
   },
   {
     "session_id": "b1832915-510a-42b8-9c35-720b10b06cf9",

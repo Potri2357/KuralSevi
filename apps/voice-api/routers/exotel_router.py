@@ -154,7 +154,7 @@ async def start_interview(
     <Gather action="{_escape(turn_action_url)}" method="POST" timeout="6" maxDigits="1">
         <Play>{_escape(consent_url)}</Play>
     </Gather>
-    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false"/>
+    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false" trimSilence="true"/>
     <Redirect method="POST">{_escape(turn_action_url)}</Redirect>
 </Response>"""
 
@@ -227,11 +227,13 @@ async def handle_turn(
     elif digits == "5":
         user_text = "5 (മലയാളം - Malayalam)"
 
+    user_speech = (user_text or "").strip()
+
     try:
         res = await coordinator.process_turn(
             phone=phone,
             channel="ivr",
-            user_speech=user_text or "Yes",
+            user_speech=user_speech,
             stt_confidence=0.95,
             language=language,
             session_key=CallSid,
@@ -285,14 +287,14 @@ async def handle_turn(
     <Gather action="{_escape(turn_action_url)}" method="POST" timeout="6" maxDigits="1">
         <Play>{_escape(audio_url)}</Play>
     </Gather>
-    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false"/>
+    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false" trimSilence="true"/>
     <Redirect method="POST">{_escape(turn_action_url)}</Redirect>
 </Response>"""
     else:
         exoml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say>{_escape(res.spoken_response[:300])}</Say>
-    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false"/>
+    <Record action="{_escape(turn_action_url)}" method="POST" timeout="4" maxLength="15" finishOnKey="#" playBeep="false" trimSilence="true"/>
     <Redirect method="POST">{_escape(turn_action_url)}</Redirect>
 </Response>"""
 

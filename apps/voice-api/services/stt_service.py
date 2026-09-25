@@ -97,19 +97,25 @@ async def transcribe_audio(
             return await _transcribe_gemini_fallback(audio_bytes, language_code, ct)
 
         res_json = response.json()
-        transcript = res_json.get("transcript", "").strip()
+        raw_transcript = res_json.get("transcript", "").strip()
     except Exception as e:
         logger.warning(f"Sarvam STT connection failed ({e}); falling back to Google Gemini 2.5 Flash STT.")
         return await _transcribe_gemini_fallback(audio_bytes, language_code, ct)
 
-    # If transcript was empty (e.g. ambient background or silence)
-    if not transcript:
-        logger.info("Sarvam STT returned empty transcript (silence or non-speech)")
+    # Filter out acoustic noise, grunts, or STT hallucinations
+    from services.audio_filter import is_noise, clean_transcript
+    if not raw_transcript or is_noise(raw_transcript):
+        if raw_transcript:
+            logger.info(f"[STT Noise Filter] Discarded noise transcript: '{raw_transcript}'")
+        else:
+            logger.info("Sarvam STT returned empty transcript (silence or non-speech)")
         return STTResult(
             transcript="",
-            confidence=0.5,
+            confidence=0.0,
             language_code=language_code
         )
+
+    transcript = clean_transcript(raw_transcript)
 
     # Sarvam returns confidence per word or overall
     words = res_json.get("words", [])
@@ -157,8 +163,13 @@ async def _transcribe_gemini_fallback(audio_bytes: bytes, language_code: str, co
             if res.status_code == 200:
                 data = res.json()
                 text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                logger.info(f"Gemini STT fallback success: {text[:60]!r}")
-                return STTResult(transcript=text, confidence=0.92, language_code=language_code)
+                from services.audio_filter import is_noise, clean_transcript
+                if not text or is_noise(text):
+                    logger.info(f"[Gemini STT Filter] Discarded noise: {text!r}")
+                    return STTResult(transcript="", confidence=0.0, language_code=language_code)
+                cleaned_text = clean_transcript(text)
+                logger.info(f"Gemini STT fallback success: {cleaned_text[:60]!r}")
+                return STTResult(transcript=cleaned_text, confidence=0.92, language_code=language_code)
             else:
                 logger.error(f"Gemini STT fallback failed: {res.status_code} {res.text[:120]}")
     except Exception as e:

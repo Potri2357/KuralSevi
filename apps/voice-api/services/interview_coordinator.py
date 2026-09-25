@@ -25,6 +25,7 @@ from .interview_fsm import InterviewFSM, InterviewSession, InterviewState, PS_FI
 from .tts_service import synthesize_speech, TTSResult
 from .field_normalizer import normalize_field_to_english, has_indic_characters
 from .notification_service import NotificationService, FIELD_LABELS
+from .audio_filter import is_noise, is_connection_check, is_affirmation_filler, is_substantive_field_answer
 from prompts.interview_system_prompt import CONSENT_SCRIPTS, WRAP_UP_SCRIPTS, REFUSAL_SCRIPTS
 from config import settings
 
@@ -756,8 +757,8 @@ class InterviewCoordinator:
 
         # ── Turn 1: Handle Consent Stage ────────────────────────────────────────
         if session.state == InterviewState.CONSENT_PENDING:
-            # If caller is silent / empty speech after the greeting was already played
-            if not user_speech:
+            # If caller is silent, empty speech, or pure noise after greeting
+            if not user_speech or is_noise(user_speech):
                 if lang == "en":
                     reprompt_text = "Hello, are you there? Can you hear me? Shall we proceed?"
                     reprompt_audio = await self._synthesize_safe(reprompt_text, "en", speaker=speaker)
@@ -902,8 +903,8 @@ class InterviewCoordinator:
                 getattr(session, "transcript_turns", [])
             )
 
-            # If user said nothing / empty audio on course question, reprompt warmly
-            if not user_speech:
+            # If user said nothing, empty audio, or noise on course question, reprompt warmly
+            if not user_speech or is_noise(user_speech) or is_connection_check(user_speech):
                 if lang == "en":
                     reprompt_course = "Hello, among the three recommended courses, which one would you prefer?"
                 elif lang == "ml":
@@ -921,6 +922,32 @@ class InterviewCoordinator:
                     session_id=session.session_id,
                     spoken_response=reprompt_course,
                     audio_bytes=reprompt_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=None,
+                    language_code=lang,
+                )
+
+            # If user merely gave a conversational affirmation filler without selecting an option
+            if is_affirmation_filler(user_speech):
+                if lang == "en":
+                    aff_course = "Sure! Between the first, second, or third - which course would you prefer?"
+                elif lang == "ml":
+                    aff_course = "ശരി! ഒന്നാമത്തെ, രണ്ടാമത്തെ, അല്ലെങ്കിൽ മൂന്നാമത്തെ - ഇതിൽ ഏതാണ് താങ്കൾക്ക് വേണ്ടത് എന്ന് പറയാമോ?"
+                elif lang == "hi":
+                    aff_course = "ठीक है! पहला, दूसरा या तीसरा - इनमें से कौन सा कोर्स आप करना चाहेंगे?"
+                elif lang == "te":
+                    aff_course = "సరేనండీ! మొదటి, రెండవ లేదా మూడవ - వీటిలో ఏ కోర్సు మీకు కావాలో చెబుతారా?"
+                else:
+                    aff_course = "சரிங்க! முதலாவது, இரண்டாவது, அல்லது மூன்றாவது - இதில் எந்த பயிற்சி உங்களுக்கு வேணும்னு சொல்லுங்க?"
+
+                aff_audio = await self._synthesize_safe(aff_course, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=aff_course,
+                    audio_bytes=aff_audio,
                     state=session.state,
                     is_completed=False,
                     case_id=None,
@@ -1080,7 +1107,90 @@ class InterviewCoordinator:
 
         # ── Turn 2: Identity Response Fast-Path ──────────────────────────────────
         if session.state == InterviewState.FIELD_COLLECTION and getattr(session, "identity_asked", False) and not getattr(session, "identity_confirmed", False):
-            # If user simply stated their language preference (e.g., 'Tamil', 'தமிழ்', 'English'), don't treat it as their name!
+            # 1. Noise, empty speech, or STT hallucination
+            if not user_speech or is_noise(user_speech):
+                if lang == "ml":
+                    q1_text = "വളരെ നന്ദി! ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?"
+                    q1_audio = _get_static_bytes("q1_name_village_ml.wav")
+                elif lang == "hi":
+                    q1_text = "बहुत-बहुत धन्यवाद! सबसे पहले आपका शुभ नाम और आप किस गांव या शहर से हैं, यह बताइए?"
+                    q1_audio = _get_static_bytes("q1_name_village_hi.wav")
+                elif lang == "te":
+                    q1_text = "చాలా ధన్యవాదాలు అండీ! ముందుగా మీ పేరు మరియు మీ ఊరు ఏదో చెబుతారా?"
+                    q1_audio = _get_static_bytes("q1_name_village_te.wav")
+                elif lang == "en":
+                    q1_text = "Thank you! To begin, could you please tell me your name and your village or town?"
+                    q1_audio = await self._synthesize_safe(q1_text, "en", speaker=speaker)
+                else:
+                    q1_text = "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
+                    q1_audio = _get_static_bytes("q_name_place.wav") or _get_static_bytes("q1_name_village.wav")
+
+                q1_audio = q1_audio or await self._synthesize_safe(q1_text, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=q1_text,
+                    audio_bytes=q1_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=session.current_field,
+                    language_code=lang,
+                )
+
+            # 2. Connection audibility checks ("ஹலோ", "கேக்குதா", "hello", "can you hear me")
+            if is_connection_check(user_speech):
+                if lang == "en":
+                    conn_text = "Hello! Can you hear me clearly? Could you please tell me your name and town?"
+                elif lang == "ml":
+                    conn_text = "നമസ്കാരം! ഞാൻ പറയുന്നത് കേൾക്കാമോ? ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?"
+                elif lang == "hi":
+                    conn_text = "नमस्ते! क्या आप मुझे सुन पा रहे हैं? कृपया पहले अपना नाम और गांव बताइए?"
+                elif lang == "te":
+                    conn_text = "నమస్కారం అండీ! నేను మాట్లాడేది వినిపిస్తుందా? ముందుగా మీ పేరు మరియు మీ ఊరు ఏదో చెబుతారా?"
+                else:
+                    conn_text = "வணக்கம்ங்க! நான் பேசுறது கேக்குதுங்களா? முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
+
+                conn_audio = await self._synthesize_safe(conn_text, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=conn_text,
+                    audio_bytes=conn_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=session.current_field,
+                    language_code=lang,
+                )
+
+            # 3. Conversational affirmation filler ("சரி", "ஆம்", "ok", "yes")
+            if is_affirmation_filler(user_speech):
+                if lang == "en":
+                    aff_text = "Sure! Could you please tell me your name and your village or town?"
+                elif lang == "ml":
+                    aff_text = "ശരി! ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?"
+                elif lang == "hi":
+                    aff_text = "ठीक है! सबसे पहले अपना नाम और गांव बताइए?"
+                elif lang == "te":
+                    aff_text = "సరేనండీ! ముందుగా మీ పేరు మరియు మీ ఊరు ఏదో చెబుతారా?"
+                else:
+                    aff_text = "சரிங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
+
+                aff_audio = await self._synthesize_safe(aff_text, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=aff_text,
+                    audio_bytes=aff_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=session.current_field,
+                    language_code=lang,
+                )
+
+            # 4. If user simply stated their language preference (e.g., 'Tamil', 'தமிழ்', 'English'), don't treat it as their name!
             clean_token = user_lower.strip().replace(".", "").replace("!", "")
             is_just_lang = clean_token in (
                 "tamil", "தமிழ்", "tamizh", "thamizh", "english", "hindi", "हिंदी", "telugu", "తెలుగు", "malayalam", "മലയാളം"
@@ -1172,17 +1282,65 @@ class InterviewCoordinator:
             )
 
         # ── Turn 3+: Standard Field Collection & Zero-Lag Immediate Playback ────────
-        if session.state == InterviewState.FIELD_COLLECTION and user_speech:
+        if session.state == InterviewState.FIELD_COLLECTION:
+            current_field = session.current_field
+            if not current_field:
+                current_field = "educational_background"
+                session.current_field = current_field
+
+            # 1. Reject pure noise or empty speech
+            if not user_speech or is_noise(user_speech):
+                q_file, q_text = _get_question_for_field(current_field, "", session)
+                reprompt_audio = _get_static_bytes(q_file) or await self._synthesize_safe(q_text, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=q_text,
+                    audio_bytes=reprompt_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=session.current_field,
+                    language_code=lang,
+                )
+
             session.turn_count = getattr(session, "turn_count", 0) + 1
 
-            # Check if caller asks for clarification or repeats an unclear phrase
+            # 2. Connection audibility check ("ஹலோ", "கேக்குதா", "hello", "can you hear me")
+            if is_connection_check(user_speech):
+                q_file, q_text = _get_question_for_field(current_field, "", session)
+                if lang == "en":
+                    conn_reply = f"Hello, I can hear you clearly! {q_text}"
+                elif lang == "ml":
+                    conn_reply = f"നമസ്കാരം, ഞാൻ പറയുന്നത് വ്യക്തമായി കേൾക്കുന്നുണ്ട്. {q_text}"
+                elif lang == "hi":
+                    conn_reply = f"नमस्ते, आपकी आवाज़ स्पष्ट आ रही है। {q_text}"
+                elif lang == "te":
+                    conn_reply = f"నమస్కారం అండీ, మీ స్వరం స్పష్టంగా వినిపిస్తోంది. {q_text}"
+                else:
+                    conn_reply = f"வணக்கம்ங்க, நான் பேசுறது தெளிவா கேக்குதுங்க! {q_text}"
+
+                conn_audio = await self._synthesize_safe(conn_reply, lang, speaker=speaker)
+                await asyncio.sleep(0.075)
+                return CoordinatorTurnResult(
+                    session_id=session.session_id,
+                    spoken_response=conn_reply,
+                    audio_bytes=conn_audio,
+                    state=session.state,
+                    is_completed=False,
+                    case_id=None,
+                    current_field=session.current_field,
+                    language_code=lang,
+                )
+
+            # 3. Check if caller asks for clarification or repeats an unclear phrase
             is_clarification = any(q in user_lower for q in [
                 "என்னங்க", "புரியல கொஞ்சம் சொல்லுங்க", "சொல்லுங்க", "சொல்லுங்கப்பா",
-                "விளங்கலங்க", "கேக்கலங்க", "கேக்கலயா", "ஹலோ", "மன்னிப்பீங்க",
+                "விளங்கலங்க", "கேக்கலங்க", "கேக்கலயா", "மன்னிப்பீங்க",
                 "ரீபீட்", "மறுபடி", "திரும்ப", "புரியல என்ன சொன்னீங்க", "மறுபடியும் சொல்லுங்க",
-                "മനസ്സിലായില്ല", "വ്യക്തമായില്ല", "ഹലോ", "എന്താണ് പറഞ്ഞത്", "വീണ്ടും പറയൂ", "ഒന്നുകൂടി പറയുമോ", "കേൾക്കുന്നില്ല",
+                "മനസ്സിലായില്ല", "വ്യക്തമായില്ല", "എന്താണ് പറഞ്ഞത്", "വീണ്ടും പറയൂ", "ഒന്നുകൂടി പറയുമോ", "കേൾക്കുന്നില്ല",
                 "समझ नहीं आया", "दोबारा बोलिए", "सुनाई नहीं दिया", "क्या कहा", "फिर से बोलो",
-                "వినపడలేదు", "మళ్ళీ చెప్పండి", "అర్థం కాలేదు", "ఏమన్నారు", "హలో",
+                "వినపడలేదు", "మళ్ళీ చెప్పండి", "అర్థం కాలేదు", "ఏమన్నారు",
                 "repeat", "could you repeat", "say that again", "pardon", "did not hear", "couldn't hear", "what did you say", "sorry what", "what was that", "can you repeat"
             ])
 
@@ -1239,16 +1397,103 @@ class InterviewCoordinator:
                     language_code=lang,
                 )
 
-            current_field = session.current_field
+            # 4. Validate substantive answer for the current field
+            is_valid_ans, reason = is_substantive_field_answer(current_field, user_speech, lang)
+            if not is_valid_ans:
+                if reason == "affirmation_filler":
+                    # Caller acknowledged with 'சரி' / 'yes' / 'ok' without providing substantive details
+                    if lang == "en":
+                        field_prompts = {
+                            "educational_background": "Sure! Could you tell me how far you studied in school or college?",
+                            "family_occupation": "Sure! What work or occupation do people in your family usually do?",
+                            "current_livelihood": "Sure! What work or business are you currently doing?",
+                            "skills_and_interests": "Sure! What skills, training, or fields are you interested in?",
+                            "local_economic_context": "Sure! What kinds of work or businesses are common in your local area?",
+                            "employment_preference": "Sure! Would you prefer a regular wage job or running your own business?",
+                        }
+                    elif lang == "ml":
+                        field_prompts = {
+                            "educational_background": "ശരി! സ്കൂളിലോ കോളേജിലോ എത്ര വരെ പഠിച്ചിട്ടുണ്ടെന്ന് പറയാമോ?",
+                            "family_occupation": "ശരി! കുടുംബത്തിൽ സാധാരണയായി എന്ത് ജോലിയാണ് ചെയ്യുന്നത് എന്ന് പറയാമോ?",
+                            "current_livelihood": "ശരി! ഇപ്പോൾ താങ്കൾ എന്തെങ്കിലും ജോലിയോ ബിസിനസ്സോ ചെയ്യുന്നുണ്ടോ?",
+                            "skills_and_interests": "ശരി! താങ്കൾക്ക് ഏത് മേഖലയിലാണ് താല്പര്യമോ പ്രവൃത്തിപരിചയമോ ഉള്ളത്?",
+                            "local_economic_context": "ശരി! താങ്കളുടെ നാട്ടിൽ സാധാരണയായി ആളുകൾ എന്ത് ജോലിയാണ് ചെയ്യുന്നത്?",
+                            "employment_preference": "ശരി! കമ്പനി ജോലിയാണോ സ്വന്തമായി ബിസിനസ്സ് ചെയ്യുന്നതാണോ കൂടുതൽ താല്പര്യം?",
+                        }
+                    elif lang == "hi":
+                        field_prompts = {
+                            "educational_background": "ठीक है! आपने स्कूल या कॉलेज में कहाँ तक पढ़ाई की है, कृपया बताइए?",
+                            "family_occupation": "ठीक है! आपके परिवार में आमतौर पर क्या काम या पेशा किया जाता है?",
+                            "current_livelihood": "ठीक है! इस समय आप क्या काम या रोज़गार कर रहे हैं?",
+                            "skills_and_interests": "ठीक है! आपको किस काम या क्षेत्र में रुचि या अनुभव है?",
+                            "local_economic_context": "ठीक है! आपके इलाके में आमतौर पर लोग क्या काम करते हैं?",
+                            "employment_preference": "ठीक है! आप नौकरी करना पसंद करेंगे या अपना खुद का काम शुरू करना?",
+                        }
+                    elif lang == "te":
+                        field_prompts = {
+                            "educational_background": "సరేనండీ! మీరు పాఠశాల లేదా కళాశాలలో ఎంతవరకు చదువుకున్నారో చెబుతారా?",
+                            "family_occupation": "సరేనండీ! మీ కుటుంబంలో సాధారణంగా ఎలాంటి వృత్తి లేదా పని చేస్తుంటారు?",
+                            "current_livelihood": "సరేనండీ! ప్రస్తుతం మీరు ఎలాంటి పని లేదా వ్యాపారం చేస్తున్నారు?",
+                            "skills_and_interests": "సరేనండీ! మీకు ఏ రంగంలో ఆసక్తి లేదా అనుభవం ఉందో చెబుతారా?",
+                            "local_economic_context": "సరేనండీ! మీ ప్రాంతంలో ఎక్కువగా ఎలాంటి పనులు లేదా వ్యాపారాలు ఉన్నాయి?",
+                            "employment_preference": "సరేనండీ! మీకు ఉద్యోగం చేయాలని ఉందా లేక సొంతంగా వ్యాపారం చేయాలని ఉందా?",
+                        }
+                    else:
+                        field_prompts = {
+                            "educational_background": "சரிங்க! நீங்க எந்த வகுப்பு வரை படிச்சிருக்கீங்கன்னு சொல்லுங்களேன்?",
+                            "family_occupation": "சரிங்க! உங்க குடும்பத்துல வழக்கமா என்ன தொழில் அல்லது வேலை செய்றாங்கன்னு சொல்லுங்களேன்?",
+                            "current_livelihood": "சரிங்க! இப்போதைக்கு நீங்க என்ன வேலை அல்லது தொழில் செய்றீங்கன்னு சொல்லுங்களேன்?",
+                            "skills_and_interests": "சரிங்க! உங்களுக்கு எந்த வேலை அல்லது துறையில ஆர்வம் அல்லது திறமை இருக்குன்னு சொல்லுங்களேன்?",
+                            "local_economic_context": "சரிங்க! உங்க ஊர்ல பொதுவாக மக்கள் என்ன வேலை அல்லது தொழில் செய்றாங்கன்னு சொல்லுங்களேன்?",
+                            "employment_preference": "சரிங்க! உங்களுக்கு கம்பெனி வேலை செய்ய விருப்பமா, அல்லது சொந்தமா தொழில் தொடங்க விருப்பமான்னு சொல்லுங்களேன்?",
+                        }
+                    prompt_text = field_prompts.get(current_field, "சரிங்க! அதுபத்தி கொஞ்சம் விரிவா சொல்லுங்களேன்?")
+                    prompt_audio = await self._synthesize_safe(prompt_text, lang, speaker=speaker)
+                    await asyncio.sleep(0.075)
+                    return CoordinatorTurnResult(
+                        session_id=session.session_id,
+                        spoken_response=prompt_text,
+                        audio_bytes=prompt_audio,
+                        state=session.state,
+                        is_completed=False,
+                        case_id=None,
+                        current_field=session.current_field,
+                        language_code=lang,
+                    )
+                else:
+                    # Noise, grunt, or unintelligible audio
+                    q_file, q_text = _get_question_for_field(current_field, "", session)
+                    if lang == "en":
+                        repeat_text = f"Sorry, I couldn't hear that clearly. {q_text}"
+                    elif lang == "ml":
+                        repeat_text = f"ക്ഷമിക്കണം, വ്യക്തമായി കേട്ടില്ല. {q_text}"
+                    elif lang == "hi":
+                        repeat_text = f"माफ़ कीजिए, आवाज़ स्पष्ट नहीं आई। {q_text}"
+                    elif lang == "te":
+                        repeat_text = f"క్షమించండి, స్పష్టంగా వినిపించలేదు. {q_text}"
+                    else:
+                        repeat_text = f"மன்னிச்சுக்கோங்க, சரியா கேக்கலங்க. {q_text}"
 
-            # 1. Immediate Synchronous Value Population (Eliminates the 'Yes' bug & normalizes to English)
+                    repeat_audio = await self._synthesize_safe(repeat_text, lang, speaker=speaker)
+                    await asyncio.sleep(0.075)
+                    return CoordinatorTurnResult(
+                        session_id=session.session_id,
+                        spoken_response=repeat_text,
+                        audio_bytes=repeat_audio,
+                        state=session.state,
+                        is_completed=False,
+                        case_id=None,
+                        current_field=session.current_field,
+                        language_code=lang,
+                    )
+
+            # 5. Genuine, Substantive Answer: Populate and Advance
             if current_field and current_field in session.fields:
                 session.fields[current_field].status = "confirmed"
                 session.fields[current_field].value = normalize_field_to_english(current_field, user_speech.strip(), lang)
                 session.fields[current_field].raw_transcript = user_speech.strip()
 
-            # 2. Fast Multi-Field Semantic Co-Inference
-            # Populates candidate values without prematurely marking unasked dimensions as confirmed
+            # Fast Multi-Field Semantic Co-Inference
             inferred = _infer_semantic_fields_fast(user_speech, lang)
             for inf_key, inf_val in inferred.items():
                 if inf_key in session.fields and session.fields[inf_key].status != "confirmed":
