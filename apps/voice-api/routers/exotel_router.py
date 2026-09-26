@@ -128,7 +128,7 @@ async def start_interview(
 
     CallSid = data.get("CallSid") or data.get("CallSidLegacy") or str(uuid.uuid4())
     target_phone = data.get("From") or data.get("Caller") or data.get("To") or "+919342900638"
-    language = data.get("language") or request.query_params.get("language") or "ta"
+    language = data.get("language") or request.query_params.get("language") or "en"
 
     # Fire fresh session initialization in background
     asyncio.create_task(coordinator.process_turn(
@@ -143,9 +143,9 @@ async def start_interview(
     base_voice_url = settings.voice_api_url.rstrip("/")
     consent_file = f"consent_{language}.wav"
     if not (_STATIC_AUDIO_DIR / consent_file).exists():
-        consent_file = "consent_ta.wav"
-    if not (_STATIC_AUDIO_DIR / consent_file).exists():
         consent_file = "consent_en.wav"
+    if not (_STATIC_AUDIO_DIR / consent_file).exists():
+        consent_file = "consent_ta.wav"
 
     consent_url = f"{base_voice_url}/webhooks/exotel/audio/{consent_file}"
     turn_action_url = f"{base_voice_url}/webhooks/exotel/interview-turn?language={language}"
@@ -160,7 +160,7 @@ async def start_interview(
     <Redirect method="POST">{_escape(turn_action_url)}</Redirect>
 </Response>"""
 
-    logger.info(f"[Exotel] Started {language} call {CallSid} for {target_phone} via ExoML (Tamil First)")
+    logger.info(f"[Exotel] Started {language} call {CallSid} for {target_phone} via ExoML (English Language Selection First)")
     return Response(
         content=exoml, 
         media_type="text/xml",
@@ -265,12 +265,14 @@ async def handle_turn(
             exoml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Play>{_escape(audio_url)}</Play>
+    <Pause length="1"/>
     <Hangup/>
 </Response>"""
         else:
             exoml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say>Thank you.</Say>
+    <Pause length="1"/>
     <Hangup/>
 </Response>"""
         return Response(content=exoml, media_type="text/xml")

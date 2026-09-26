@@ -141,7 +141,7 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
     stream_id: Optional[str] = None
     call_sid: str = "voicebot_call"
     target_phone: str = "+919342900638"
-    query_lang = websocket.query_params.get("language") or websocket.query_params.get("lang") or "ta"
+    query_lang = websocket.query_params.get("language") or websocket.query_params.get("lang") or "en"
     current_lang: str = query_lang
     sample_rate: int = 8000
 
@@ -178,7 +178,7 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                     except Exception:
                         pass
 
-                start_lang = start_data.get("language") or start_data.get("lang") or data.get("language") or data.get("lang")
+                start_lang = start_data.get("language") or start_data.get("lang") or data.get("language") or data.get("lang") or "en"
                 if start_lang:
                     current_lang = start_lang
 
@@ -190,9 +190,9 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                     consent_file = f"consent_{current_lang}.wav"
                     consent_path = _STATIC_AUDIO_DIR / consent_file
                     if not consent_path.exists():
-                        consent_path = _STATIC_AUDIO_DIR / "consent_ta.wav"
-                    if not consent_path.exists():
                         consent_path = _STATIC_AUDIO_DIR / "consent_en.wav"
+                    if not consent_path.exists():
+                        consent_path = _STATIC_AUDIO_DIR / "consent_ta.wav"
                     if consent_path.exists():
                         greeting_wav = consent_path.read_bytes()
                         greeting_pcm = audio_to_pcm8k(greeting_wav, target_rate=sample_rate)
@@ -321,11 +321,11 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                                     logger.info("[Voicebot WS] Interview completed! Waiting for final audio to finish playing on phone speaker...")
                                     elapsed = time.time() - stream_start
                                     remaining = max(dur_sec - elapsed, 0.0)
-                                    # Wait only for remaining playout time plus small 0.35s grace for phone speaker DAC buffer
-                                    wait_sec = min(remaining + 0.35, 2.5)
-                                    logger.info(f"[Voicebot WS] Audio {dur_sec:.1f}s, elapsed {elapsed:.2f}s, waiting {wait_sec:.2f}s before immediate hangup.")
+                                    # Wait for remaining audio playout plus 1.0s formal ending pause before hanging up
+                                    wait_sec = remaining + 1.0
+                                    logger.info(f"[Voicebot WS] Audio {dur_sec:.1f}s, elapsed {elapsed:.2f}s, waiting {wait_sec:.2f}s before formal hangup.")
                                     await asyncio.sleep(wait_sec)
-                                    logger.info("[Voicebot WS] Wrap-up complete. Hanging up immediately.")
+                                    logger.info("[Voicebot WS] Formal ending complete. Hanging up.")
                                     try:
                                         await websocket.send_text(json.dumps({"event": "stop", "stream_id": stream_id}))
                                     except Exception:
@@ -346,10 +346,20 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                 logger.info(f"[Voicebot WS] Caller pressed keypad digit: {digit}")
                 user_text = f"Pressed {digit}"
                 if digit == "1":
-                    user_text = "1 (Yes / ஆம் / proceed)"
+                    user_text = "1 (English)"
+                    current_lang = "en"
                 elif digit == "2":
-                    user_text = "2 (தமிழ் - Tamil)"
+                    user_text = "2 (Tamil - தமிழ்)"
                     current_lang = "ta"
+                elif digit == "3":
+                    user_text = "3 (Hindi - हिंदी)"
+                    current_lang = "hi"
+                elif digit == "4":
+                    user_text = "4 (Telugu - తెలుగు)"
+                    current_lang = "te"
+                elif digit == "5":
+                    user_text = "5 (Malayalam - മലയാളം)"
+                    current_lang = "ml"
 
                 try:
                     processing_turn = True
@@ -374,9 +384,11 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                         logger.info("[Voicebot WS] Interview completed via DTMF! Waiting for final audio to finish on speaker...")
                         elapsed = time.time() - stream_start
                         remaining = max(dur_sec - elapsed, 0.0)
-                        wait_sec = min(remaining + 0.35, 2.5)
+                        # Wait for remaining audio playout plus 1.0s formal ending pause before hanging up
+                        wait_sec = remaining + 1.0
+                        logger.info(f"[Voicebot WS] Audio {dur_sec:.1f}s, elapsed {elapsed:.2f}s, waiting {wait_sec:.2f}s before formal hangup.")
                         await asyncio.sleep(wait_sec)
-                        logger.info("[Voicebot WS] Wrap-up complete. Hanging up immediately.")
+                        logger.info("[Voicebot WS] Formal ending complete. Hanging up.")
                         try:
                             await websocket.send_text(json.dumps({"event": "stop", "stream_id": stream_id}))
                         except Exception:

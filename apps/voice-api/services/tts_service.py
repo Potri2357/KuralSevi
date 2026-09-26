@@ -266,18 +266,26 @@ async def _synthesize_edge_tts(text: str, language_code: str) -> Optional[bytes]
         if mp3_bytes:
             # Resample MP3 to standard 8000Hz 16-bit mono WAV so cache & telephony get clean audio
             import subprocess
+            import io
+            import wave
             cmd = [
                 "ffmpeg", "-hide_banner", "-loglevel", "error",
                 "-i", "pipe:0",
                 "-ar", "8000",
                 "-ac", "1",
-                "-c:a", "pcm_s16le",
-                "-f", "wav",
+                "-f", "s16le",
                 "pipe:1"
             ]
-            res = subprocess.run(cmd, input=mp3_bytes, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3.0)
+            res = subprocess.run(cmd, input=mp3_bytes, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=4.0)
             if res.returncode == 0 and res.stdout:
-                return res.stdout
+                pcm = res.stdout
+                buf = io.BytesIO()
+                with wave.open(buf, "wb") as w:
+                    w.setnchannels(1)
+                    w.setsampwidth(2)
+                    w.setframerate(8000)
+                    w.writeframes(pcm)
+                return buf.getvalue()
             return mp3_bytes
     except Exception as e:
         logger.warning(f"edge-tts in-memory synthesis failed: {e}")

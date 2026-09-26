@@ -295,7 +295,7 @@ class CoordinatorTurnResult:
     is_completed: bool
     case_id: Optional[str]
     current_field: Optional[str]
-    language_code: str = "ta"
+    language_code: str = "en"
 
 # In-memory pre-loaded audio assets for instantaneous zero-latency assembly
 _PRELOADED_AUDIO: Dict[str, Tuple[wave._wave_params, bytes]] = {}
@@ -807,7 +807,7 @@ class InterviewCoordinator:
         self,
         phone: str,
         channel: str,
-        language: str = "ta",
+        language: str = "en",
         session_key: Optional[str] = None,
         force_fresh: bool = False,
     ):
@@ -835,7 +835,7 @@ class InterviewCoordinator:
         channel: str,
         user_speech: str = "",
         stt_confidence: float = 0.75,
-        language: str = "ta",
+        language: str = "en",
         session_key: Optional[str] = None,
         is_initial: bool = False,
         speaker: Optional[str] = None,
@@ -956,7 +956,7 @@ class InterviewCoordinator:
         # ── Turn 0: Initial prompt (greeting + consent explanation) ────────────
         if is_initial:
             session.consent_prompted = True
-            prompt_text = CONSENT_SCRIPTS.get(lang, CONSENT_SCRIPTS["ta"]).strip()
+            prompt_text = CONSENT_SCRIPTS.get(lang, CONSENT_SCRIPTS["en"]).strip()
             # Serve native consent audio without falling back to Tamil
             audio_bytes = _get_static_bytes(f"consent_{lang}.wav") or await self._synthesize_safe(prompt_text, lang, speaker=speaker)
             return CoordinatorTurnResult(

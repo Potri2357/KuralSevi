@@ -72,7 +72,7 @@ LANGUAGE_GREETINGS = {
 }
 
 CONSENT_SCRIPTS = {
-    "en": "Hello, welcome to PM-AJAY beneficiary voice verification. You may speak in English, Tamil, Hindi, Telugu, or Malayalam. May we proceed?",
+    "en": "Welcome to PM-AJAY beneficiary voice verification. Please choose your language: For English, say English. For Tamil, say Tamil. For Hindi, say Hindi. For Telugu, say Telugu. For Malayalam, say Malayalam. Or you may start speaking in your preferred language.",
     "ta": "வணக்கம்! நான் குரல் செவி. அரசு உதவி திட்ட தகவல்களுக்காக அழைக்கிறேன். பேசலாங்களா?",
     "ml": "നമസ്കാരം! ഞാൻ കുരൽ സെവി. സർക്കാർ സഹായ പദ്ധതി വിവരങ്ങൾക്കായി വിളിക്കുന്നതാണ്. സംസാരിക്കാമോ?",
     "hi": "मैं कुरल सेवी हूँ। PM-AJAY योजना के लिए आपकी शिक्षा, काम और कौशल के बारे में कुछ सवाल पूछूँगा। जानकारी गोपनीय रहेगी। क्या आप सहमत हैं? हाँ कहें।",

@@ -570,6 +570,50 @@ class NotificationService:
             except Exception as hub_err:
                 logger.warning(f"SMS Hub dispatch notice: {hub_err}")
 
+            # Attempt 3: Node-based direct gateway dispatch fallback (bypasses Python LibreSSL TLS reset)
+            if self.android_gateway_url:
+                try:
+                    import subprocess
+                    import base64
+                    gw_url = self.android_gateway_url.rstrip("/")
+                    if not gw_url.endswith("/message") and not gw_url.endswith("/messages") and not gw_url.endswith("/send"):
+                        gw_url += "/messages"
+                    creds = f"{self.android_gateway_login or ''}:{self.android_gateway_password or ''}"
+                    auth_hdr = f"Basic {base64.b64encode(creds.encode()).decode()}" if self.android_gateway_login else ""
+                    node_script = f"""
+const fetch = globalThis.fetch;
+(async () => {{
+  try {{
+    const res = await fetch('{gw_url}', {{
+      method: 'POST',
+      headers: {{
+        'Content-Type': 'application/json',
+        'Authorization': '{auth_hdr}',
+        'User-Agent': 'KuralSevi/1.0'
+      }},
+      body: JSON.stringify({{
+        message: {json.dumps(body[:320])},
+        phoneNumbers: ['{target_phone}'],
+        deviceId: '{self.android_gateway_device_id or ""}'
+      }})
+    }});
+    const data = await res.json().catch(() => ({{}}));
+    process.stdout.write(JSON.stringify({{ status: res.status, ok: res.ok, data }}));
+  }} catch (e) {{
+    process.stdout.write(JSON.stringify({{ ok: false, error: e.message }}));
+  }}
+}})();
+"""
+                    res = subprocess.run(["node", "-e", node_script], capture_output=True, text=True, timeout=8.0)
+                    if res.returncode == 0 and res.stdout:
+                        r_data = json.loads(res.stdout)
+                        if r_data.get("ok"):
+                            msg_id = (r_data.get("data") or {}).get("id", "sent")
+                            logger.info(f"Node direct cellular SMS dispatched to {target_phone} (ID: {msg_id})")
+                            return f"ANDROID_GW_SENT:{r_data.get('status')}:{msg_id}"
+                except Exception as node_err:
+                    logger.warning(f"Node SMS fallback notice: {node_err}")
+
             return "SMS_LOGGED_LOCAL"
 
         return await asyncio.to_thread(_sync_open_source_sms)
@@ -686,15 +730,31 @@ class NotificationService:
             req.add_header("Content-Type", "application/json")
             req.add_header("User-Agent", "KuralSevi/1.0")
 
-            try:
-                with urllib.request.urlopen(req, timeout=8.0) as resp:
-                    resp_data = json.loads(resp.read().decode("utf-8"))
-                    if resp_data.get("success"):
-                        msg_id = resp_data.get("messageId", "sent")
-                        logger.info(f"Local WhatsApp Bot dispatched to {clean_digits} (ID: {msg_id})")
-                        return f"BOT_SENT:{msg_id}"
-                    return f"BOT_FAILED:{resp_data.get('error', 'unknown')}"
-            except Exception as ex:
-                return f"BOT_UNAVAILABLE:{str(ex)[:40]}"
+            import subprocess
+            from pathlib import Path
+            bot_script = Path(__file__).resolve().parent.parent.parent.parent / "apps" / "whatsapp-bot" / "server.js"
+
+            for attempt in range(2):
+                try:
+                    with urllib.request.urlopen(req, timeout=8.0) as resp:
+                        resp_data = json.loads(resp.read().decode("utf-8"))
+                        if resp_data.get("success"):
+                            msg_id = resp_data.get("messageId", "sent")
+                            logger.info(f"Local WhatsApp Bot dispatched to {clean_digits} (ID: {msg_id})")
+                            return f"BOT_SENT:{msg_id}"
+                        return f"BOT_FAILED:{resp_data.get('error', 'unknown')}"
+                except Exception as ex:
+                    err_msg = str(ex)
+                    if ("61" in err_msg or "Connection refused" in err_msg) and attempt == 0 and bot_script.exists():
+                        logger.warning(f"WhatsApp Bot offline, auto-spawning server.js...")
+                        try:
+                            subprocess.Popen(["node", str(bot_script)], cwd=str(bot_script.parent))
+                            time.sleep(3.0)
+                            continue
+                        except Exception as spawn_err:
+                            logger.error(f"Failed to auto-spawn WhatsApp bot: {spawn_err}")
+                    return f"BOT_UNAVAILABLE:{err_msg[:40]}"
+
+            return "BOT_UNAVAILABLE:Connection refused"
 
         return await asyncio.to_thread(_sync_bot_post)

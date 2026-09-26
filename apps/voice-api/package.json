@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "PYTHONPATH=. .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --ws-ping-interval 86400 --ws-ping-timeout 86400",
+    "dev": "PYTHONPATH=. .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --reload --ws-ping-interval 86400 --ws-ping-timeout 86400",
     "test": "PYTHONPATH=. .venv/bin/python -m unittest discover tests"
   }
 }
