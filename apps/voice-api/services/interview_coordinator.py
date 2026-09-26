@@ -991,7 +991,6 @@ class InterviewCoordinator:
                     reprompt_audio = _get_static_bytes("intro_reprompt.wav")
 
                 reprompt_audio = reprompt_audio or await self._synthesize_safe(reprompt_text, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=reprompt_text,
@@ -1026,7 +1025,6 @@ class InterviewCoordinator:
                 audio_bytes = await self._synthesize_safe(spoken_refusal, lang, speaker=speaker)
                 if key in self._active_sessions:
                     del self._active_sessions[key]
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=spoken_refusal,
@@ -1098,7 +1096,6 @@ class InterviewCoordinator:
                     "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
                 })
 
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=q1_text,
@@ -1132,7 +1129,6 @@ class InterviewCoordinator:
                     reprompt_course = "ஹலோங்க, பரிந்துரைக்கப்பட்ட மூன்று பயிற்சிகளில் உங்களுக்கு எதில் விருப்பம்னு சொல்லுங்க?"
 
                 reprompt_audio = await self._synthesize_safe(reprompt_course, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=reprompt_course,
@@ -1158,7 +1154,6 @@ class InterviewCoordinator:
                     aff_course = "சரிங்க! முதலாவது, இரண்டாவது, அல்லது மூன்றாவது - இதில் எந்த பயிற்சி உங்களுக்கு வேணும்னு சொல்லுங்க?"
 
                 aff_audio = await self._synthesize_safe(aff_course, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=aff_course,
@@ -1308,7 +1303,6 @@ class InterviewCoordinator:
 
             asyncio.create_task(_cleanup_active_session_later(key))
 
-            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=wrap_text,
@@ -1341,7 +1335,6 @@ class InterviewCoordinator:
                     q1_audio = _get_static_bytes("q_name_place.wav") or _get_static_bytes("q1_name_village.wav")
 
                 q1_audio = q1_audio or await self._synthesize_safe(q1_text, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=q1_text,
@@ -1367,7 +1360,6 @@ class InterviewCoordinator:
                     conn_text = "வணக்கம்ங்க! நான் பேசுறது கேக்குதுங்களா? முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
 
                 conn_audio = await self._synthesize_safe(conn_text, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=conn_text,
@@ -1393,7 +1385,6 @@ class InterviewCoordinator:
                     aff_text = "சரிங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
 
                 aff_audio = await self._synthesize_safe(aff_text, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=aff_text,
@@ -1431,7 +1422,6 @@ class InterviewCoordinator:
                     q1_audio = _get_static_bytes("q_name_place.wav") or _get_static_bytes("q1_name_village.wav")
 
                 q1_audio = q1_audio or await self._synthesize_safe(q1_text, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=q1_text,
@@ -1487,7 +1477,6 @@ class InterviewCoordinator:
             # Fire background extraction for identity without delaying the audio
             asyncio.create_task(self._process_background_extraction(session, fsm, user_speech))
 
-            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=q_edu,
@@ -1510,7 +1499,6 @@ class InterviewCoordinator:
             if not user_speech or is_noise(user_speech):
                 q_file, q_text = _get_question_for_field(current_field, "", session)
                 reprompt_audio = _get_static_bytes(q_file) or await self._synthesize_safe(q_text, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=q_text,
@@ -1539,7 +1527,6 @@ class InterviewCoordinator:
                     conn_reply = f"வணக்கம்ங்க, நான் பேசுறது தெளிவா கேக்குதுங்க! {q_text}"
 
                 conn_audio = await self._synthesize_safe(conn_reply, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=conn_reply,
@@ -1587,7 +1574,6 @@ class InterviewCoordinator:
                         sorry_text = "மன்னிச்சுக்கோங்க, மறுபடியும் சொல்றேன். இன்னும் ஒரு முறை சொல்லுங்களேன்?"
 
                     sorry_audio = sorry_audio or await self._synthesize_safe(sorry_text, lang, speaker=speaker)
-                    await asyncio.sleep(0.075)
                     return CoordinatorTurnResult(
                         session_id=session.session_id,
                         spoken_response=sorry_text,
@@ -1603,7 +1589,6 @@ class InterviewCoordinator:
                 llm_result = await self.llm.process_turn(session, fsm, user_speech=user_speech)
                 spoken_text = llm_result.spoken_response
                 audio_bytes = await self._synthesize_safe(spoken_text, lang, speaker=speaker)
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=spoken_text,
@@ -1667,7 +1652,6 @@ class InterviewCoordinator:
                         }
                     prompt_text = field_prompts.get(current_field, "சரிங்க! அதுபத்தி கொஞ்சம் விரிவா சொல்லுங்களேன்?")
                     prompt_audio = await self._synthesize_safe(prompt_text, lang, speaker=speaker)
-                    await asyncio.sleep(0.075)
                     return CoordinatorTurnResult(
                         session_id=session.session_id,
                         spoken_response=prompt_text,
@@ -1693,7 +1677,6 @@ class InterviewCoordinator:
                         repeat_text = f"மன்னிச்சுக்கோங்க, சரியா கேக்கலங்க. {q_text}"
 
                     repeat_audio = await self._synthesize_safe(repeat_text, lang, speaker=speaker)
-                    await asyncio.sleep(0.075)
                     return CoordinatorTurnResult(
                         session_id=session.session_id,
                         spoken_response=repeat_text,
@@ -1772,7 +1755,6 @@ class InterviewCoordinator:
                     "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
                 })
 
-                await asyncio.sleep(0.075)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=ask_course_text,
@@ -1801,7 +1783,6 @@ class InterviewCoordinator:
                 "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S")
             })
 
-            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=q_text,
@@ -1819,7 +1800,6 @@ class InterviewCoordinator:
             q_file, q_text = _get_question_for_field(next_field, "", session)
             fallback_sorry = f"sorry_unclear_{lang}.wav" if lang != "ta" else "sorry_unclear.wav"
             reprompt_audio = _get_static_bytes(q_file) or _get_static_bytes(fallback_sorry) or await self._synthesize_safe(q_text, lang, speaker=speaker)
-            await asyncio.sleep(0.075)
             return CoordinatorTurnResult(
                 session_id=session.session_id,
                 spoken_response=q_text,
@@ -1833,7 +1813,6 @@ class InterviewCoordinator:
 
         wrap_text = WRAP_UP_SCRIPTS.get(lang, WRAP_UP_SCRIPTS["ta"])
         wrap_audio = _get_static_bytes(f"q_wrapup_v2_{lang}.wav") or _get_static_bytes("q_wrapup_v2.wav") or _get_static_bytes("q_wrapup.wav")
-        await asyncio.sleep(0.075)
         return CoordinatorTurnResult(
             session_id=session.session_id,
             spoken_response=wrap_text,

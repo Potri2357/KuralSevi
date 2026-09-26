@@ -249,10 +249,11 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                         silence_duration = now - last_speech_time
                         spoken_duration = last_speech_time - speech_start_time
 
-                        # Natural Indian vernacular conversational silence threshold:
-                        # If caller spoke > 0.8s, require 1.9s of continuous silence before concluding utterance
-                        # If caller spoke very briefly (< 0.8s, e.g. "ஹலோ" or "ஆ..."), require 2.3s so they aren't cut off mid-thought
-                        required_silence = 1.9 if spoken_duration >= 0.8 else 2.3
+                        # Snappy conversational end-of-turn silence threshold:
+                        # 0.60s silence after caller finishes speaking to conclude turn immediately with zero perceived latency,
+                        # while giving enough breathing room between words (typically 150-250ms).
+                        # For very brief utterances (< 0.4s), require 0.75s to allow for slight hesitation.
+                        required_silence = 0.60 if spoken_duration >= 0.4 else 0.75
 
                         # Safety max utterance: 25 seconds
                         is_max_timeout = (now - speech_start_time) > 25.0
@@ -265,9 +266,9 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                             last_speech_time = 0.0
                             speech_consecutive_frames = 0
 
-                            # Ignore brief electrical clicks, coughs, and breath noise (< 0.35s)
-                            # Real spoken answers like "பத்து", "டைலர்", "டிரைவர்" (~0.45s-1.2s) are preserved
-                            min_speech_bytes = int(sample_rate * 2 * 0.35)
+                            # Ignore brief electrical clicks and breath noise (< 0.22s)
+                            # Real spoken answers like "ஆம்", "Yes", "பத்து", "டைலர்" (~0.3s-1.2s) are preserved
+                            min_speech_bytes = int(sample_rate * 2 * 0.22)
                             if len(full_pcm) < min_speech_bytes:
                                 logger.info(f"[Voicebot WS] Ignored brief acoustic noise/breath ({len(full_pcm)} bytes)")
                                 continue

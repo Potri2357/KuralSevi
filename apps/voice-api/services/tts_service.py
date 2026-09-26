@@ -16,6 +16,7 @@ from .circuit_breaker import circuit_breaker
 logger = logging.getLogger(__name__)
 
 SARVAM_TTS_SPEAKERS = {
+    "en": "kavitha",    # Indian English speaker (bulbul:v3 compatible)
     "ta": "kavitha",    # Tamil speaker (bulbul:v3 compatible)
     "ml": "kavitha",    # Malayalam speaker
     "hi": "priya",      # Hindi speaker (bulbul:v3 compatible)
@@ -292,7 +293,7 @@ async def _synthesize_edge_tts(text: str, language_code: str) -> Optional[bytes]
     return None
 
 def _sarvam_lang(code: str) -> str:
-    return {"ta": "ta-IN", "ml": "ml-IN", "hi": "hi-IN", "te": "te-IN"}.get(code, "ml-IN" if code == "ml" else "hi-IN")
+    return {"en": "en-IN", "ta": "ta-IN", "ml": "ml-IN", "hi": "hi-IN", "te": "te-IN"}.get(code, "en-IN" if code == "en" else "ta-IN")
 
 
 def _split_text(text: str, max_chars: int = 490) -> list[str]:

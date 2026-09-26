@@ -11,6 +11,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 SARVAM_LANGUAGE_CODES = {
+    "en": "en-IN",
     "ta": "ta-IN",
     "ml": "ml-IN",
     "hi": "hi-IN",
