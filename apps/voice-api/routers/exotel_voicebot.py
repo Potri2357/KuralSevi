@@ -95,12 +95,11 @@ def _calculate_rms(pcm_bytes: bytes) -> float:
 
 async def _stream_pcm_to_exotel(ws: WebSocket, stream_id: str, pcm_data: bytes, sample_rate: int = 8000):
     """
-    Streams raw 16-bit PCM audio to Exotel in chunks of 1600 bytes (100ms at 8kHz).
-    Sends the first 2 chunks immediately (0ms delay) to instantly prime Exotel's playout buffer,
-    then paces subsequent chunks smoothly at ~25ms so audio starts playing on the caller's phone
-    with 0 perceived latency while preventing buffer underruns.
+    Streams raw 16-bit PCM audio to Exotel in chunks of 3200 bytes (3.2 KB, 200ms at 8kHz).
+    Matches Exotel's minimum 3.2 KB / 320-byte alignment requirement to prevent packet hold delays.
+    Sends initial chunks immediately to fill Exotel's playout buffer, then paces at 25ms.
     """
-    chunk_size = 1600
+    chunk_size = 3200
     total = len(pcm_data)
 
     chunk_count = 0
@@ -250,10 +249,10 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
                         spoken_duration = last_speech_time - speech_start_time
 
                         # Snappy conversational end-of-turn silence threshold:
-                        # 0.60s silence after caller finishes speaking to conclude turn immediately with zero perceived latency,
+                        # 0.45s silence after caller finishes speaking to conclude turn immediately with zero perceived latency,
                         # while giving enough breathing room between words (typically 150-250ms).
-                        # For very brief utterances (< 0.4s), require 0.75s to allow for slight hesitation.
-                        required_silence = 0.60 if spoken_duration >= 0.4 else 0.75
+                        # For very brief utterances (< 0.35s), require 0.55s to allow for slight hesitation.
+                        required_silence = 0.45 if spoken_duration >= 0.35 else 0.55
 
                         # Safety max utterance: 25 seconds
                         is_max_timeout = (now - speech_start_time) > 25.0

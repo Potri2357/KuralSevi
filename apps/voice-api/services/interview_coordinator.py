@@ -1065,7 +1065,7 @@ class InterviewCoordinator:
                 else:
                     if lang == "en":
                         q1_text = "Thank you! To begin, could you please tell me your name and your village or town?"
-                        q1_audio = await self._synthesize_safe(q1_text, "en", speaker=speaker)
+                        q1_audio = _get_static_bytes("q1_name_village_en.wav")
                     elif lang == "ml":
                         q1_text = "വളരെ നന്ദി! ആദ്യം താങ്കളുടെ പേരും ഏത് നാട്ടുകാരനാണ് എന്നും പറയാമോ?"
                         q1_audio = _get_static_bytes("q1_name_village_ml.wav")
@@ -1128,7 +1128,8 @@ class InterviewCoordinator:
                 else:
                     reprompt_course = "ஹலோங்க, பரிந்துரைக்கப்பட்ட மூன்று பயிற்சிகளில் உங்களுக்கு எதில் விருப்பம்னு சொல்லுங்க?"
 
-                reprompt_audio = await self._synthesize_safe(reprompt_course, lang, speaker=speaker)
+                reprompt_audio = _get_static_bytes("q_reprompt_course_en.wav") if lang == "en" else None
+                reprompt_audio = reprompt_audio or await self._synthesize_safe(reprompt_course, lang, speaker=speaker)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=reprompt_course,
@@ -1153,7 +1154,8 @@ class InterviewCoordinator:
                 else:
                     aff_course = "சரிங்க! முதலாவது, இரண்டாவது, அல்லது மூன்றாவது - இதில் எந்த பயிற்சி உங்களுக்கு வேணும்னு சொல்லுங்க?"
 
-                aff_audio = await self._synthesize_safe(aff_course, lang, speaker=speaker)
+                aff_audio = _get_static_bytes("q_aff_course_en.wav") if lang == "en" else None
+                aff_audio = aff_audio or await self._synthesize_safe(aff_course, lang, speaker=speaker)
                 return CoordinatorTurnResult(
                     session_id=session.session_id,
                     spoken_response=aff_course,
@@ -1329,7 +1331,7 @@ class InterviewCoordinator:
                     q1_audio = _get_static_bytes("q1_name_village_te.wav")
                 elif lang == "en":
                     q1_text = "Thank you! To begin, could you please tell me your name and your village or town?"
-                    q1_audio = await self._synthesize_safe(q1_text, "en", speaker=speaker)
+                    q1_audio = _get_static_bytes("q1_name_village_en.wav")
                 else:
                     q1_text = "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
                     q1_audio = _get_static_bytes("q_name_place.wav") or _get_static_bytes("q1_name_village.wav")
@@ -1416,7 +1418,7 @@ class InterviewCoordinator:
                     q1_audio = _get_static_bytes("q1_name_village_te.wav")
                 elif lang == "en":
                     q1_text = "Thank you! To begin, could you please tell me your name and your village or town?"
-                    q1_audio = await self._synthesize_safe(q1_text, "en", speaker=speaker)
+                    q1_audio = _get_static_bytes("q1_name_village_en.wav")
                 else:
                     q1_text = "ரொம்ப சந்தோஷம்ங்க! முதல்ல உங்க பேரு மற்றும் உங்க ஊர் எதுன்னு சொல்லுங்க?"
                     q1_audio = _get_static_bytes("q_name_place.wav") or _get_static_bytes("q1_name_village.wav")
@@ -1445,7 +1447,7 @@ class InterviewCoordinator:
 
             if lang == "en":
                 q_edu = "Could you tell me a little about your schooling or education?"
-                edu_audio = await self._synthesize_safe(q_edu, "en", speaker=speaker)
+                edu_audio = _get_static_bytes("q2_education_v1_en.wav")
             elif lang == "ml":
                 q_edu = "നിങ്ങളുടെ വിദ്യാഭ്യാസ പശ്ചാത്തലത്തെക്കുറിച്ച് പറയാമോ?"
                 edu_audio = _get_static_bytes("q2_education_v1_ml.wav") or await self._synthesize_safe(q_edu, "ml", speaker=speaker)

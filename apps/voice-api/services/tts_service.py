@@ -201,6 +201,23 @@ async def synthesize_speech(
         except Exception as e:
             if "429" in str(e):
                 circuit_breaker.trip("sarvam_tts", "429 Rate Limit", cooldown=15.0)
+            logger.info(f"Sarvam async client failed ({e}), attempting fast curl fallback...")
+            try:
+                import subprocess, json
+                curl_cmd = [
+                    "curl", "-s", "-X", "POST", sarvam_tts_url,
+                    "-H", f"api-subscription-key: {sarvam_api_key}",
+                    "-H", "Content-Type: application/json",
+                    "-d", json.dumps(payload)
+                ]
+                p = await asyncio.to_thread(subprocess.run, curl_cmd, capture_output=True, text=True, timeout=5)
+                if p.returncode == 0:
+                    data = json.loads(p.stdout)
+                    audio_b64 = data.get("audios", [""])[0]
+                    if audio_b64:
+                        return base64.b64decode(audio_b64)
+            except Exception as curl_err:
+                logger.warning(f"Fast curl TTS fallback error: {curl_err}")
             logger.warning(f"Sarvam TTS request failed: {repr(e)}")
         return b""
 
