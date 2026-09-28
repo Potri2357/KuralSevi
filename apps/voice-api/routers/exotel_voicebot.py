@@ -139,7 +139,8 @@ async def handle_exotel_voicebot_stream(websocket: WebSocket):
 
     stream_id: Optional[str] = None
     call_sid: str = "voicebot_call"
-    target_phone: str = "+919342900638"
+    verified_env = os.getenv("EXOTEL_VERIFIED_PHONE", "6381291546").lstrip("+91")
+    target_phone: str = websocket.query_params.get("phone") or f"+91{verified_env}"
     query_lang = websocket.query_params.get("language") or websocket.query_params.get("lang") or "en"
     current_lang: str = query_lang
     sample_rate: int = 8000

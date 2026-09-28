@@ -49,7 +49,7 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
             return "Class 10 completed (Secondary School)"
         if any(k in text for k in ["12", "பன்னிரண்டாம்", "12वीं", "12వ", "பன்னிரண்டு", "പന്ത്രണ്ടാം", "hsc", "higher secondary", "இண்டர்"]):
             return "Class 12 completed (Higher Secondary)"
-        if any(k in text for k in ["8", "எட்டாம்", "எட்டாவது", "8वीं", "8వ", "എട്ടാം"]):
+        if any(k in text for k in ["8", "எட்டாம்", "எட்டாவது", "8वीं", "8వ", "എട്ടാം", "आठवीं", "आठवां", "आठवी", "अष्टम"]):
             return "Class 8 completed (Middle School)"
         if any(k in text for k in ["5", "ஐந்தாம்", "5वीं", "5వ", "അഞ്ചാം", "primary"]):
             return "Primary school (Class 5)"
@@ -102,6 +102,15 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
 
     # 3. Current Livelihood
     elif field_name == "current_livelihood":
+        # Homemaker + food catering (must check before farming to avoid misclassification)
+        homemaker_food_tokens = [
+            "घर का काम", "घर पर", "गृहिणी", "housewife", "homemaker",
+            "खाना बनाकर", "नाश्ता बनाकर", "खाना और नाश्ता", "आस पास के लोगों के लिए खाना",
+            "home catering", "local catering", "local food"
+        ]
+        if any(k in text for k in homemaker_food_tokens):
+            return "Homemaker & Local Food Catering / Snacks"
+
         farming_tokens = [
             "விவசாய", "விவசாயம்", "காடு", "பயிர்", "நிலம்", "கழனி", "கூலி",
             "കൃഷി", "കർഷക", "പാടം", "തോട്ടം", "പണി",
@@ -312,27 +321,27 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
         if any(k in text for k in dairy_tokens):
             return "Dairy Farming & Livestock"
 
+        # Food Processing & Pickles (check before generic cooking to be more specific)
+        food_proc_tokens = [
+            "ஊறுகாய்", "அப்பளம்", "உணவு பதப்படுத்துதல்", "சாஸ்", "ஜாம்",
+            "അച്ചാർ", "ഭക്ഷ്യസംസ്കരണം",
+            "अचार", "पापड़", "मसाले", "खाद्य प्रसंस्करण",
+            "పచ్చళ్లు", "ఫుడ్ ప్రాసెసింగ్",
+            "pickle", "food processing", "preserves", "achar", "papad", "spices"
+        ]
+        if any(k in text for k in food_proc_tokens):
+            return "Food Processing, Pickles & Culinary Products (Achar, Papad, Spices)"
+
         # Cooking & Food Catering
         cooking_tokens = [
             "பிரியாணி", "சமையல்", "ஹோட்டல்", "சாப்பாடு", "மாஸ்டர்", "கேட்டரிங்", "ரெஸ்டாரன்ட்", "பலகாரம்",
             "പാചക", "ബിരിയാണി", "ഹോട്ടൽ", "ഷെഫ്", "ഭക്ഷണ",
-            "रसोई", "खाना", "होटल", "बावर्ची", "कुक", "बिरयानी", "हलवाई", "मिठाई",
+            "रसोई", "खाना", "होटल", "बावर्ची", "कुक", "बिरयानी", "हलवाई", "मिठाई", "कैटरिंग",
             "వంట", "హోటల్", "బిర్యానీ", "భోజనం", "క్యాటరింగ్",
             "cooking", "catering", "hotel", "food", "chef", "cook", "biryani"
         ]
         if any(k in text for k in cooking_tokens):
             return "Cooking & Food Catering"
-
-        # Food Processing & Pickles
-        food_proc_tokens = [
-            "ஊறுகாய்", "அப்பளம்", "உணவு பதப்படுத்துதல்", "சாஸ்", "ஜாம்",
-            "അച്ചാർ", "ഭക്ഷ്യസംസ്കരണം",
-            "अचार", "पापड़", "खाद्य प्रसंस्करण",
-            "పచ్చళ్లు", "ఫుడ్ ప్రాసెసింగ్",
-            "pickle", "food processing", "preserves"
-        ]
-        if any(k in text for k in food_proc_tokens):
-            return "Food Processing & Pickle Production"
 
         # Driving
         driving_tokens = [
@@ -408,6 +417,15 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
 
     # 5. Mobility Constraints
     elif field_name == "mobility_constraints":
+        # Specific km-radius constraints (check first for precision)
+        km_tokens = [
+            "5 किलोमीटर", "5km", "5 km", "five km", "within 5",
+            "दूर नहीं", "बहुत दूर नहीं", "बहुत दूर जाकर काम",
+            "3 km", "10 km", "nearby", "5 kilo"
+        ]
+        if any(k in text for k in km_tokens):
+            return "Local Area Only (Within 5 km radius / Home & Childcare duties)"
+
         # Beneficiary answers with business aspiration when asked mobility
         shop_aspirations = [
             "கடை", "வியாபாரம்", "தொழில்", "சொந்தமா",
@@ -421,11 +439,11 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
         local_only_tokens = [
             "ஊருக்குள்ள", "உள்ளூர்", "வெளியூர் போக முடியாது", "முடியாது", "போக மாட்டேன்",
             "സ്വന്തം നാട്ടിൽ", "നാട്ടിൽ", "യാത്ര ചെയ്യാൻ പറ്റില്ല", "പറ്റില്ല",
-            "गांव में", "बाहर नहीं", "केवल गांव", "नहीं जा सकते",
+            "गांव में", "बाहर नहीं", "केवल गांव", "नहीं जा सकते", "बच्चों की देखभाल",
             "ఊర్లోనే", "ఊరు దాటి", "వెళ్లలేను", "కుదరదు"
         ]
         if any(k in text for k in local_only_tokens):
-            return "Local only (Prefers not to travel outside village)"
+            return "Local Area Only (Within 5 km radius / Home & Childcare duties)"
 
         travel_tokens = [
             "வெளியூர் போவேன்", "போக முடியும்", "முடியும்", "பரவாயில்லை", "பக்கத்து ஊர்", "டவுன்",
@@ -449,9 +467,19 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
 
     # 6. Employment Preference
     elif field_name == "employment_preference":
+        # Flexible / both options — check first for mixed intent (home + job)
+        flexible_tokens = [
+            "எதுவானாலும்", "ரெண்டும்", "ఏదైనా", "എന്തും", "कोई भी",
+            "घर की जिम्मेदारियों के साथ", "घर से काम", "घर से छोटा काम",
+            "घर से भी", "nearby wage job", "home-based", "micro-enterprise",
+            "पास में नौकरी", "घर पर काम"
+        ]
+        if any(k in text for k in flexible_tokens):
+            return "Flexible (Open to nearby wage job or home-based micro-enterprise)"
+
         self_emp_tokens = [
             "சொந்த", "கடை", "தொழில்", "வியாபாரம்", "பிசினஸ்",
-            "സ്വന്തം", "കട", "ബിസിനസ്", "കച്ചവടം", "സ്വന്തമായി",
+            "സ്വന്തം", "കട", "ബിസിനസ്", "കच്ചവടം", "സ്വന്തമായി",
             "खुद का", "दुकान", "व्यापार", "बिजनेस", "दुकान शुरू",
             "సొంత", "దుకాణం", "వ్యాపారం", "షాపు", "సొంతంగా"
         ]
@@ -467,14 +495,20 @@ def normalize_field_to_english(field_name: str, raw_value: str, language_code: s
         if any(k in text for k in wage_tokens):
             return "Wage Employment (Monthly salary)"
 
-        flexible_tokens = ["எதுவானாலும்", "ரெண்டும்", "ఏదైనా", "എന്തും", "कोई भी"]
-        if any(k in text for k in flexible_tokens):
-            return "Flexible (Open to self-employment or wage work)"
-
-        return "Self-Employment (Own shop / enterprise)"
+        return "Flexible (Open to self-employment or wage work)"
 
     # 7. Local Economic Context
     elif field_name == "local_economic_context":
+        # High demand for homemade food products (check before generic market)
+        homefood_demand_tokens = [
+            "अचार", "पापड़", "मसाले", "घर का बना", "त्योहार", "festive snacks",
+            "homemade pickles", "homemade food", "achar", "papad",
+            "ஊறுகாய்", "அப்பளம்", "திருவிழா", "வீட்டு செய்",
+            "അച്ചാർ", "ഉത്സവം", "വീട്ടുനിർമ്മിത"
+        ]
+        if any(k in text for k in homefood_demand_tokens):
+            return "High local demand for homemade pickles, papad, spices & festive snacks"
+
         market_tokens = [
             "சந்தை", "பாஜார்", "கடைங்க", "அங்காடி", "மார்க்கெட்", "டவுன்",
             "ചന്ത", "അങ്ങാടി", "മാർക്കറ്റ്", "ടൗൺ",

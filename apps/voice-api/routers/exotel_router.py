@@ -126,8 +126,9 @@ async def start_interview(
     query_data = dict(request.query_params)
     data = {**query_data, **form_data}
 
-    CallSid = data.get("CallSid") or data.get("CallSidLegacy") or str(uuid.uuid4())
-    target_phone = data.get("From") or data.get("Caller") or data.get("To") or "+919342900638"
+    verified_env = os.getenv("EXOTEL_VERIFIED_PHONE", "6381291546").lstrip("+91")
+    default_verified_phone = f"+91{verified_env}"
+    target_phone = data.get("From") or data.get("Caller") or data.get("To") or default_verified_phone
     language = data.get("language") or request.query_params.get("language") or "en"
 
     # Fire fresh session initialization in background
@@ -192,7 +193,7 @@ async def handle_turn(
     raw_digits = data.get("Digits") or data.get("digits") or ""
     digits = raw_digits.replace('"', '').replace("'", "").strip()
     language = data.get("language") or request.query_params.get("language") or "ta"
-    phone = data.get("From") or data.get("Caller") or data.get("To") or "+919342900638"
+    phone = data.get("From") or data.get("Caller") or data.get("To") or f"+91{os.getenv('EXOTEL_VERIFIED_PHONE', '6381291546').lstrip('+91')}"
     recording_url = (
         data.get("RecordingUrl") or data.get("recording_url") or
         data.get("RecordingUrlLegacy") or data.get("recording_url_legacy")

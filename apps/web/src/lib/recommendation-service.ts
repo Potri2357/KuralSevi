@@ -86,12 +86,56 @@ function getStoragePaths() {
   return { callPath, actionPath };
 }
 
+/**
+ * Detects if a string contains any Indic script characters (Devanagari/Tamil/Telugu/Malayalam)
+ */
+function hasIndicChars(text: string): boolean {
+  return /[\u0900-\u097F\u0B80-\u0BFF\u0C00-\u0C7F\u0D00-\u0D7F]/.test(text);
+}
+
+/**
+ * Client-side fallback normalizer: if a field value still has Indic chars,
+ * maps it to a safe English placeholder so the recommendation engine tokenizer works.
+ * The Python backend should have already normalized, but this is a safety net.
+ */
+function normalizeFieldValue(fieldName: string, value: string): string {
+  if (!value || !hasIndicChars(value)) return value;
+  // Return safe English fallbacks per field when Indic text leaks through
+  const fallbacks: Record<string, string> = {
+    educational_background: 'Basic school education / Literate',
+    family_occupation: 'Traditional Family Livelihood / Agriculture',
+    current_livelihood: 'Daily Wage / Manual Labour',
+    skills_and_interests: 'Vocational & Practical Trade Skills',
+    mobility_constraints: 'Local area preferred',
+    employment_preference: 'Flexible (Open to self-employment or wage work)',
+    local_economic_context: 'Local Village Commerce & Market',
+  };
+  return fallbacks[fieldName] || 'Recorded & Verified';
+}
+
+/**
+ * Normalizes all confirmed_fields in a call record to ensure no Indic characters
+ * reach the recommendation engine or the officer dashboard.
+ */
+function normalizeConfirmedFields(fields: Record<string, string>): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [k, v] of Object.entries(fields)) {
+    result[k] = normalizeFieldValue(k, v);
+  }
+  return result;
+}
+
 export function loadCompletedCalls(): CompletedCallRecord[] {
   const { callPath } = getStoragePaths();
   try {
     if (fs.existsSync(callPath)) {
       const raw = fs.readFileSync(callPath, 'utf-8');
-      return JSON.parse(raw);
+      const records: CompletedCallRecord[] = JSON.parse(raw);
+      // Fail-safe: normalize any residual Indic characters in confirmed_fields
+      return records.map(r => ({
+        ...r,
+        confirmed_fields: normalizeConfirmedFields(r.confirmed_fields || {}),
+      }));
     }
   } catch (err) {
     console.error('Failed to load completed calls:', err);

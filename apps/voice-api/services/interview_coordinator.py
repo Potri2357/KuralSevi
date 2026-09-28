@@ -1213,7 +1213,12 @@ class InterviewCoordinator:
                 for k, f in session.fields.items()
                 if (f.status == "confirmed" or f.raw_transcript or f.value)
             }
-
+            # Normalize all field values to clean professional English for officer records
+            confirmed_dict_english = {
+                k: normalize_field_to_english(k, f.value or f.raw_transcript or "Recorded", lang)
+                for k, f in session.fields.items()
+                if (f.status == "confirmed" or f.raw_transcript or f.value)
+            }
 
 
             # Warm celebratory wrap-up text acknowledging selected course
@@ -1257,7 +1262,7 @@ class InterviewCoordinator:
                 "confirmed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
                 "notification_status": "DISPATCHED",
                 "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "confirmed_fields": confirmed_dict,
+                "confirmed_fields": confirmed_dict_english,
                 "turns_count": len(session.transcript_turns),
                 "transcript": list(session.transcript_turns),
                 "recommended_courses": courses,
@@ -1976,7 +1981,7 @@ class InterviewCoordinator:
                         "confirmed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
                         "notification_status": "DISPATCHED",
                         "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-                        "confirmed_fields": confirmed_dict,
+                        "confirmed_fields": confirmed_dict_english,
                         "turns_count": len(getattr(session, "transcript_turns", [])),
                         "transcript": list(getattr(session, "transcript_turns", [])),
                         "recommended_courses": courses,

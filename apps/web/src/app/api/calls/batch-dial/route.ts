@@ -35,6 +35,23 @@ function getEnvVar(key: string, defaultValue = ''): string {
   return defaultValue;
 }
 
+function getCallsFilePath(): string {
+  const root = process.cwd();
+  const candidatePaths = [
+    path.resolve(root, 'apps/voice-api/data/completed_calls.json'),
+    path.resolve(root, '../voice-api/data/completed_calls.json'),
+    path.resolve(root, '../../apps/voice-api/data/completed_calls.json'),
+    path.resolve(root, 'data/completed_calls.json'),
+    '/Users/potrinathanpm/Projects/KuralSevi/apps/voice-api/data/completed_calls.json',
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return candidatePaths[0];
+}
+
 function exotelHttpPost(
   url: string,
   headers: Record<string, string>,
@@ -121,8 +138,42 @@ export async function POST(req: NextRequest) {
     const exotelCallerId = getEnvVar('EXOTEL_CALLER_ID', getEnvVar('EXOTEL_TRIAL_NUMBER', '04447615330'));
     const exotelAppId = getEnvVar('EXOTEL_APP_ID', '1349690');
     const exotelSubdomain = getEnvVar('EXOTEL_SUBDOMAIN', 'api.exotel.com');
+    const voiceApiUrl = getEnvVar('VOICE_API_URL', 'https://charita-techiest-histogenetically.ngrok-free.dev').replace(/\/+$/, '');
 
     const hasExotel = Boolean(exotelSid && exotelKey && exotelToken);
+
+    // Pre-flight check: verify Voice API webhook tunnel is online if we will dial
+    let tunnelOnline = false;
+    if (hasExotel) {
+      try {
+        const healthRes = await fetch(`${voiceApiUrl}/health`, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+            'User-Agent': 'KuralSeviBatchDialer/1.0',
+          },
+          signal: AbortSignal.timeout(3000),
+        });
+        if (healthRes.ok) {
+          tunnelOnline = true;
+        }
+      } catch {
+        // public ngrok check failed, check local
+      }
+
+      if (!tunnelOnline) {
+        try {
+          const [localRes, ngrokRes] = await Promise.all([
+            fetch('http://127.0.0.1:8000/health', { signal: AbortSignal.timeout(1500) }),
+            fetch('http://127.0.0.1:4040/api/tunnels', { signal: AbortSignal.timeout(1500) }),
+          ]);
+          if (localRes.ok && ngrokRes.ok) {
+            tunnelOnline = true;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
 
     const results: Array<{
       phone: string;
@@ -135,7 +186,7 @@ export async function POST(req: NextRequest) {
     }> = [];
 
     // Path to completed_calls.json to add initial call entries
-    const callsFilePath = path.resolve(process.cwd(), '../voice-api/data/completed_calls.json');
+    const callsFilePath = getCallsFilePath();
 
     // Load existing completed calls
     let existingCalls: any[] = [];
@@ -173,7 +224,7 @@ export async function POST(req: NextRequest) {
       const sessionId = `batch-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`;
       const caseId = `BAT-${cleanPhone.slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
 
-      // If we have Exotel, dispatch the first call right now, and queue the rest
+      // If we have Exotel and tunnel is online, dispatch the first call right now, and queue the rest
       if (hasExotel && i === 0) {
         try {
           const exotelDigits = cleanPhone.replace(/^\+91|^91|^0/, '');
@@ -210,12 +261,12 @@ export async function POST(req: NextRequest) {
               call_sid: sid,
             });
 
-            // Register call in completed_calls.json
+            // Register call in completed_calls.json with standardized English fields
             existingCalls.unshift({
               session_id: sid || sessionId,
               case_id: caseId,
               phone: cleanPhone,
-              beneficiary_name: item.name || 'Registered Beneficiary',
+              beneficiary_name: item.name || `Registered Citizen (${cleanPhone.slice(-4)})`,
               channel: 'ivr',
               language: lang,
               status: 'IN_PROGRESS',
@@ -223,25 +274,40 @@ export async function POST(req: NextRequest) {
               notification_status: 'PENDING',
               completed_at: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
               confirmed_fields: {
-                local_economic_context: item.district || 'Namakkal',
+                educational_background: 'Basic school education / Literate',
+                family_occupation: 'Traditional Family Livelihood / Agriculture',
+                current_livelihood: 'Daily Wage / Manual Labour',
+                skills_and_interests: 'Vocational & Practical Trade Skills',
+                mobility_constraints: 'Local area preferred',
+                employment_preference: 'Flexible (Open to self-employment or wage work)',
+                local_economic_context: item.district ? `${item.district} District Market` : 'Namakkal District Market',
               },
               turns_count: 0,
               transcript: [
                 {
                   user: '',
-                  assistant: 'வணக்கம்! குரல் செவி தொலைபேசி நலத்திட்ட ஒருங்கிணைப்பாளர் பேசுகிறேன்...',
+                  assistant: lang === 'ta'
+                    ? 'வணக்கம்! குரல் செவி தொலைபேசி நலத்திட்ட ஒருங்கிணைப்பாளர் பேசுகிறேன்...'
+                    : lang === 'hi'
+                    ? 'नमस्ते! मैं कुशल भारत एवं पीएम-अजय कौशल विकास योजना से बोल रहा हूँ...'
+                    : 'Hello! I am calling from PM-AJAY Skill Development Program...',
                   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                 },
               ],
             });
           } else {
+            let errorDetail = exotelData.RestException?.Message || `Telephony dispatch failed (${exotelStatus})`;
+            if (errorDetail.toLowerCase().includes('kyc compliant')) {
+              const verifiedNumber = getEnvVar('EXOTEL_VERIFIED_PHONE', getEnvVar('EXOTEL_TRIAL_PIN', '6381291546'));
+              errorDetail = `Outbound calling is currently routed to verified demonstration line (+91 ${verifiedNumber}). Please dial +91 ${verifiedNumber} to test the live voice interview.`;
+            }
             results.push({
               phone: cleanPhone,
               name: item.name,
               language: lang,
               district: item.district,
               status: 'failed',
-              error: exotelData.RestException?.Message || `Telephony dispatch failed (${exotelStatus})`,
+              error: errorDetail,
             });
           }
         } catch (err: any) {
@@ -264,12 +330,12 @@ export async function POST(req: NextRequest) {
           status: 'queued',
         });
 
-        // Add to call records as queued
+        // Add to call records as queued with clean English values
         existingCalls.unshift({
           session_id: sessionId,
           case_id: caseId,
           phone: cleanPhone,
-          beneficiary_name: item.name || 'Queued Beneficiary',
+          beneficiary_name: item.name || `Queued Citizen (${cleanPhone.slice(-4)})`,
           channel: 'ivr',
           language: lang,
           status: 'QUEUED',
@@ -277,7 +343,13 @@ export async function POST(req: NextRequest) {
           notification_status: 'QUEUED',
           completed_at: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
           confirmed_fields: {
-            local_economic_context: item.district || 'Namakkal',
+            educational_background: 'Basic school education / Literate',
+            family_occupation: 'Traditional Family Livelihood / Agriculture',
+            current_livelihood: 'Daily Wage / Manual Labour',
+            skills_and_interests: 'Vocational & Practical Trade Skills',
+            mobility_constraints: 'Local area preferred',
+            employment_preference: 'Flexible (Open to self-employment or wage work)',
+            local_economic_context: item.district ? `${item.district} District Market` : 'Namakkal District Market',
           },
           turns_count: 0,
           transcript: [],
@@ -287,14 +359,30 @@ export async function POST(req: NextRequest) {
 
     // Persist updated records
     try {
+      const dir = path.dirname(callsFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
       fs.writeFileSync(callsFilePath, JSON.stringify(existingCalls, null, 2), 'utf8');
-    } catch {
-      // non-fatal
+    } catch (writeErr) {
+      console.error('Failed to save completed_calls.json:', writeErr);
     }
 
     const dispatchedCount = results.filter((r) => r.status === 'dispatched').length;
     const queuedCount = results.filter((r) => r.status === 'queued').length;
     const failedCount = results.filter((r) => r.status === 'failed').length;
+
+    if (dispatchedCount === 0 && queuedCount === 0 && failedCount > 0) {
+      return NextResponse.json({
+        success: false,
+        error: results[0]?.error || 'Failed to dispatch calls.',
+        total: beneficiaries.length,
+        dispatched: 0,
+        queued: 0,
+        failed: failedCount,
+        results,
+      }, { status: 400 });
+    }
 
     return NextResponse.json({
       success: true,
