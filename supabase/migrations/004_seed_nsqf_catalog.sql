@@ -22,18 +22,18 @@ INSERT INTO nsqf_catalog (
 -- FOOD PROCESSING
 ('FIC/Q0201', 'Pickle Making Technician', 'Food Industry', 2, 'home_enterprise', 'all', false, false, 0, 5000, 20000, 100, 'Produces pickles and chutneys for local and commercial sale', ARRAY['basic_cooking'], ARRAY['preservation_techniques', 'hygiene_practices', 'packaging', 'labeling']),
 ('FIC/Q0601', 'Food Processing Entrepreneur', 'Food Industry', 4, 'self_employment', 'all', false, false, 5, 10000, 30000, 240, 'Sets up and manages a small food processing unit', ARRAY['cooking', 'business_basics'], ARRAY['production_planning', 'quality_assurance', 'costing', 'market_linkage']),
-('FIC/Q0101', 'Helper - Food Processing', 'Food Industry', 2, 'wage_employment', 'all', false, false, 0, 7000, 12000, 80, 'Assists in food processing and packaging operations', ARRAY[], ARRAY['food_safety', 'basic_processing', 'packaging_operation']),
+('FIC/Q0101', 'Helper - Food Processing', 'Food Industry', 2, 'wage_employment', 'all', false, false, 0, 7000, 12000, 80, 'Assists in food processing and packaging operations', ARRAY[]::TEXT[], ARRAY['food_safety', 'basic_processing', 'packaging_operation']),
 ('FIC/Q5001', 'Papad and Ready-to-Eat Products Maker', 'Food Industry', 2, 'home_enterprise', 'all', false, false, 0, 4000, 15000, 80, 'Prepares traditional ready-to-eat food products for local markets', ARRAY['traditional_cooking'], ARRAY['standardized_recipes', 'hygiene', 'pricing', 'local_distribution']),
 
 -- CONSTRUCTION
 ('CON/Q0102', 'Mason - General (Brick Work)', 'Construction', 4, 'wage_employment', 'male_preferred', true, true, 5, 12000, 22000, 200, 'Constructs brick and stone masonry structures', ARRAY['physical_fitness', 'basic_math'], ARRAY['brick_laying', 'plastering', 'waterproofing', 'structural_reading']),
-('CON/Q0501', 'Painter - General', 'Construction', 3, 'wage_employment', 'all', true, true, 5, 10000, 18000, 150, 'Paints interior and exterior surfaces of buildings', ARRAY[], ARRAY['surface_preparation', 'paint_mixing', 'brush_techniques', 'waterproofing_paint']),
+('CON/Q0501', 'Painter - General', 'Construction', 3, 'wage_employment', 'all', true, true, 5, 10000, 18000, 150, 'Paints interior and exterior surfaces of buildings', ARRAY[]::TEXT[], ARRAY['surface_preparation', 'paint_mixing', 'brush_techniques', 'waterproofing_paint']),
 ('CON/Q0701', 'Plumber - General', 'Construction', 4, 'self_employment', 'all', true, true, 8, 12000, 25000, 200, 'Installs and maintains water supply and drainage systems', ARRAY['basic_tools'], ARRAY['pipe_fitting', 'sanitary_installation', 'leak_detection', 'water_supply_systems']),
 ('CON/Q0603', 'Helper - Civil Construction Work', 'Construction', 2, 'wage_employment', 'all', true, true, 0, 9000, 15000, 80, 'Assists in general civil construction activities', ARRAY['physical_fitness'], ARRAY['material_handling', 'scaffolding_safety', 'basic_construction_tasks']),
 
 -- BEAUTY & WELLNESS
 ('BWS/Q0201', 'Beauty Therapist', 'Beauty & Wellness', 4, 'self_employment', 'all', false, false, 10, 12000, 35000, 300, 'Provides beauty and grooming services to clients', ARRAY['interpersonal_skills'], ARRAY['skincare', 'makeup', 'hair_styling', 'salon_management']),
-('BWS/Q0101', 'Assistant Beauty Therapist', 'Beauty & Wellness', 2, 'wage_employment', 'all', false, false, 5, 7000, 14000, 120, 'Assists senior beauty therapists in a salon setting', ARRAY[], ARRAY['basic_beauty_services', 'hygiene', 'client_communication']),
+('BWS/Q0101', 'Assistant Beauty Therapist', 'Beauty & Wellness', 2, 'wage_employment', 'all', false, false, 5, 7000, 14000, 120, 'Assists senior beauty therapists in a salon setting', ARRAY[]::TEXT[], ARRAY['basic_beauty_services', 'hygiene', 'client_communication']),
 ('BWS/Q0501', 'Mehendi Artist', 'Beauty & Wellness', 3, 'self_employment', 'all', false, false, 0, 5000, 30000, 100, 'Creates traditional and contemporary mehendi designs', ARRAY['artistic_skill', 'steady_hands'], ARRAY['design_patterns', 'cone_preparation', 'client_consultation']),
 
 -- AGRICULTURE & ALLIED
@@ -69,10 +69,10 @@ INSERT INTO nsqf_catalog (
 ('HAN/Q0901', 'Bamboo Products Maker', 'Handicrafts & Carpet', 3, 'home_enterprise', 'all', false, false, 0, 5000, 18000, 180, 'Crafts household and decorative items from bamboo', ARRAY['traditional_bamboo_work'], ARRAY['bamboo_treatment', 'product_design', 'finishing_techniques', 'market_linkage']),
 
 -- PLUMBING / SANITATION
-('CON/Q9001', 'Sanitation Worker / Swachh Bharat Worker', 'Construction', 2, 'wage_employment', 'all', true, true, 5, 10000, 16000, 80, 'Manages solid waste collection and community sanitation', ARRAY[], ARRAY['waste_segregation', 'safe_sanitation_practices', 'protective_equipment_use', 'record_maintenance']),
+('CON/Q9001', 'Sanitation Worker / Swachh Bharat Worker', 'Construction', 2, 'wage_employment', 'all', true, true, 5, 10000, 16000, 80, 'Manages solid waste collection and community sanitation', ARRAY[]::TEXT[], ARRAY['waste_segregation', 'safe_sanitation_practices', 'protective_equipment_use', 'record_maintenance']),
 
 -- DOMESTIC SERVICES (formalized)
-('DMS/Q0101', 'Domestic Worker (House Cleaner)', 'Domestic Services', 2, 'wage_employment', 'all', false, false, 0, 6000, 12000, 60, 'Provides professional domestic cleaning and household management services', ARRAY[], ARRAY['hygienic_cleaning', 'appliance_operation', 'laundry_management', 'client_communication']),
+('DMS/Q0101', 'Domestic Worker (House Cleaner)', 'Domestic Services', 2, 'wage_employment', 'all', false, false, 0, 6000, 12000, 60, 'Provides professional domestic cleaning and household management services', ARRAY[]::TEXT[], ARRAY['hygienic_cleaning', 'appliance_operation', 'laundry_management', 'client_communication']),
 
 -- GEMS & JEWELLERY
 ('G&J/Q0501', 'Stone Setter', 'Gems & Jewellery', 5, 'wage_employment', 'all', false, false, 8, 10000, 25000, 300, 'Sets precious and semi-precious stones into jewellery', ARRAY['steady_hands', 'artistic_sense'], ARRAY['stone_selection', 'setting_techniques', 'soldering_basics', 'quality_grading']),

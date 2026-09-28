@@ -7,6 +7,7 @@
 
 [![Tests](https://img.shields.io/badge/tests-20%20passing-brightgreen)](#testing--verification)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](#setup-guide)
+[![DB](https://img.shields.io/badge/supabase-migrations%20applied-brightgreen)](#3-database-initialization)
 [![DPDP Act 2023](https://img.shields.io/badge/compliance-DPDP%20Act%202023-blue)](#data-protection--governance)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-teal)](https://fastapi.tiangolo.com)
@@ -206,9 +207,13 @@ This section details all external third-party services and APIs integrated into 
   - `supabase/migrations/*.sql`
   - `apps/web/src/lib/supabase.ts`
   - `apps/voice-api/services/session_manager.py`
+- **Migration Notes** (applied to cloud project `iuedutlxbqdgeniiggvu`):
+  - UUID generation uses `gen_random_uuid()` (built-in since PostgreSQL 13) — `uuid-ossp` extension is not required.
+  - `pgvector` is installed in the `extensions` schema on Supabase. All `VECTOR` columns use `extensions.vector(768)` and functions that use vector operators set `search_path = public, extensions`.
+  - Empty `TEXT[]` array literals are explicitly cast as `ARRAY[]::TEXT[]` for PostgreSQL type inference compatibility.
 - **Setup Options**:
-  - **Local Development**: `npx supabase start` (uses local Docker instance).
-  - **Cloud Instance**: Connect with standard `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+  - **Cloud Project** *(current)*: Migrations are already applied to the live Supabase project. Run `npm run db:migrate` to apply any future migrations.
+  - **Local Development**: `npm run db:start` to spin up a local Docker-based Supabase instance, then `npm run db:migrate`.
 
 ---
 
@@ -274,18 +279,28 @@ cd ../..
 
 ### 3. Database Initialization
 
+**Cloud Project** *(recommended — already applied)*:
 ```bash
-# Option A: Using local Supabase CLI
-npm run db:start
+# Link your Supabase project and push all migrations
+SUPABASE_ACCESS_TOKEN=<your_token> npx supabase link --project-ref <project-ref>
 npm run db:migrate
-
-# Option B: Using Supabase Cloud Project
-# Execute SQL migrations from supabase/migrations/ in order:
-# 001_initial_schema.sql
-# 002_rls_policies.sql
-# 003_pgvector_setup.sql
-# 004_seed_nsqf_catalog.sql
 ```
+
+Get your personal access token from [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens).
+
+**Local Development** (Docker required):
+```bash
+npm run db:start    # Start local Supabase instance
+npm run db:migrate  # Apply all 4 migrations in order
+```
+
+Migrations applied (in order):
+| # | File | Description |
+|---|---|---|
+| 1 | `001_initial_schema.sql` | All 12 tables, custom ENUMs, indexes, triggers |
+| 2 | `002_rls_policies.sql` | Row Level Security — district-scoped policies |
+| 3 | `003_pgvector_setup.sql` | IVFFlat indexes + `find_similar_trades()` function |
+| 4 | `004_seed_nsqf_catalog.sql` | 40+ NSQF QP-NOS trade catalog seed rows |
 
 ### 4. Run Development Servers
 
@@ -380,8 +395,10 @@ Built in compliance with the **Digital Personal Data Protection (DPDP) Act 2023*
 - [x] Mock simulation modes for offline development
 - [x] Next.js 15 production build and type checking
 - [x] Automated test suites across all workspaces
+- [x] Supabase cloud project linked and all 4 migrations applied (schema + RLS + pgvector + NSQF seed)
 - [ ] Transition IVR transport from Twilio to Exotel / Tata Tele Business for TRAI compliance
 - [ ] Connect production WhatsApp Business Account via Meta Business Manager
 - [ ] Provision production Supabase Cloud project with Point-In-Time Recovery (PITR)
+- [ ] Run `npm run generate:embeddings` to populate `trade_embedding` vectors in `nsqf_catalog`
 - [ ] Enable Bhashini NLTM as automated STT fallback
 - [ ] Finalize district pilot language selection (Tamil Nadu — Namakkal district)

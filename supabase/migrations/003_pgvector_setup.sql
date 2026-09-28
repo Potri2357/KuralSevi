@@ -4,23 +4,24 @@
 -- Sets up vector indexes for semantic similarity search in the recommendation engine.
 -- =============================================================================
 
--- Enable pgvector extension
-CREATE EXTENSION IF NOT EXISTS vector;
+-- Enable pgvector extension (idempotent — already enabled in 001)
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 -- Create IVFFlat index on trade embeddings for fast similarity search
 -- 100 lists is appropriate for a catalog of ~1000-5000 trades
 CREATE INDEX IF NOT EXISTS nsqf_catalog_trade_embedding_idx
-  ON nsqf_catalog USING ivfflat (trade_embedding vector_cosine_ops)
+  ON nsqf_catalog USING ivfflat (trade_embedding extensions.vector_cosine_ops)
   WITH (lists = 100);
 
 -- Create index on profile skills embeddings
 CREATE INDEX IF NOT EXISTS profiles_skills_embedding_idx
-  ON profiles USING ivfflat (skills_embedding vector_cosine_ops)
+  ON profiles USING ivfflat (skills_embedding extensions.vector_cosine_ops)
   WITH (lists = 50);
 
 -- Helper function: find top K similar trades for a given skills embedding
+-- SET search_path ensures vector operators from extensions schema are resolvable
 CREATE OR REPLACE FUNCTION find_similar_trades(
-  query_embedding VECTOR(768),
+  query_embedding extensions.vector(768),
   top_k INTEGER DEFAULT 15,
   exclude_qp_codes TEXT[] DEFAULT '{}'::TEXT[],
   min_nsqf_level INTEGER DEFAULT 1,
@@ -43,6 +44,7 @@ RETURNS TABLE(
   similarity FLOAT
 )
 LANGUAGE SQL STABLE
+SET search_path = public, extensions
 AS $$
   SELECT
     n.qp_code, n.qp_name, n.sector, n.nsqf_level, n.pathway_type,

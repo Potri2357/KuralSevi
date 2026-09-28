@@ -6,8 +6,9 @@
 -- =============================================================================
 
 -- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- uuid-ossp not needed: using gen_random_uuid() (built-in since PG13)
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "vector" WITH SCHEMA extensions;
 
 -- Custom types
 CREATE TYPE channel_type AS ENUM ('ivr', 'whatsapp', 'field_worker');
@@ -29,7 +30,7 @@ CREATE TYPE case_priority AS ENUM ('high', 'medium', 'low');
 -- Aadhaar stored ONLY as HMAC-SHA256 hash — never plaintext.
 -- =============================================================================
 CREATE TABLE beneficiaries (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   case_id VARCHAR(20) UNIQUE NOT NULL,            -- Portable case ID (e.g., KS-2026-00001)
   phone_hash VARCHAR(64) NOT NULL,                 -- SHA-256 hash of phone number for matching
   name_encrypted TEXT,                             -- AES-256 encrypted name (nullable — data minimization)
@@ -58,7 +59,7 @@ $$ LANGUAGE plpgsql;
 -- DPDP-compliant consent log. Immutable — rows never updated.
 -- =============================================================================
 CREATE TABLE consent_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   beneficiary_id UUID NOT NULL REFERENCES beneficiaries(id) ON DELETE RESTRICT,
   session_id UUID NOT NULL,                        -- References sessions.id (set below)
   channel channel_type NOT NULL,
@@ -79,7 +80,7 @@ CREATE TABLE consent_records (
 -- Supports FR-13a resume/continuity on disconnect.
 -- =============================================================================
 CREATE TABLE sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   beneficiary_id UUID REFERENCES beneficiaries(id) ON DELETE SET NULL,
   channel channel_type NOT NULL,
   state session_state NOT NULL DEFAULT 'initiated',
@@ -106,7 +107,7 @@ CREATE TABLE sessions (
 -- The 7 PS-mandated fields plus system metadata fields.
 -- =============================================================================
 CREATE TABLE session_fields (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   field_name VARCHAR(100) NOT NULL,
   field_value TEXT,
@@ -127,7 +128,7 @@ CREATE TABLE session_fields (
 -- Created only after all required fields are confirmed (FR-3).
 -- =============================================================================
 CREATE TABLE profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   beneficiary_id UUID NOT NULL REFERENCES beneficiaries(id) ON DELETE RESTRICT,
   session_id UUID NOT NULL REFERENCES sessions(id),
 
@@ -141,7 +142,7 @@ CREATE TABLE profiles (
   local_economic_context JSONB,                   -- { district_industries: [], nearby_markets: [] }
 
   -- Derived metadata from profiling
-  skills_embedding VECTOR(768),                   -- pgvector embedding of skills + interests text
+  skills_embedding extensions.vector(768),           -- pgvector embedding of skills + interests text
   profile_completeness FLOAT NOT NULL DEFAULT 0, -- 0–1, fraction of fields confirmed
   is_complete BOOLEAN DEFAULT FALSE,
 
@@ -154,7 +155,7 @@ CREATE TABLE profiles (
 -- NSQF/QP-NOS trade catalog (seeded from NSDC Track 2 data).
 -- =============================================================================
 CREATE TABLE nsqf_catalog (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   qp_code VARCHAR(50) UNIQUE NOT NULL,            -- e.g., 'TEX/Q4101'
   qp_name TEXT NOT NULL,                          -- e.g., 'Weaving Machine Operator'
   sector VARCHAR(100) NOT NULL,                   -- e.g., 'Textile'
@@ -170,7 +171,7 @@ CREATE TABLE nsqf_catalog (
   description TEXT,
   required_skills TEXT[],                         -- Skills needed to enter this trade
   skills_acquired TEXT[],                         -- Skills gained after training
-  trade_embedding VECTOR(768),                    -- pgvector embedding for similarity search
+  trade_embedding extensions.vector(768),            -- pgvector embedding for similarity search
   is_active BOOLEAN DEFAULT TRUE,
   last_updated TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -181,7 +182,7 @@ CREATE TABLE nsqf_catalog (
 -- Cached external data (e-Shram, Udyam, DIP) — never queried live (Section 10).
 -- =============================================================================
 CREATE TABLE district_data_cache (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   state VARCHAR(100) NOT NULL,
   district VARCHAR(100) NOT NULL,
   source VARCHAR(50) NOT NULL,                    -- 'eshram', 'udyam', 'dip', 'sidh'
@@ -197,7 +198,7 @@ CREATE TABLE district_data_cache (
 -- Top-3 pathway recommendations per profile with full audit trail.
 -- =============================================================================
 CREATE TABLE recommendations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
   beneficiary_id UUID NOT NULL REFERENCES beneficiaries(id) ON DELETE RESTRICT,
   rank INTEGER NOT NULL CHECK (rank BETWEEN 1 AND 3),
@@ -237,7 +238,7 @@ CREATE TABLE recommendations (
 -- Officer review queue (FR-9, FR-10).
 -- =============================================================================
 CREATE TABLE officer_cases (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   beneficiary_id UUID NOT NULL REFERENCES beneficiaries(id) ON DELETE RESTRICT,
   profile_id UUID NOT NULL REFERENCES profiles(id),
   district VARCHAR(100) NOT NULL,
@@ -262,7 +263,7 @@ CREATE TABLE officer_cases (
 -- Pre-computed district-level statistics (FR-14, FR-16 — batch, not live).
 -- =============================================================================
 CREATE TABLE planning_aggregates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   state VARCHAR(100) NOT NULL,
   district VARCHAR(100) NOT NULL,
   aggregation_date DATE NOT NULL,
@@ -290,7 +291,7 @@ CREATE TABLE planning_aggregates (
 -- Immutable append-only log of all recommendations (auditability requirement).
 -- =============================================================================
 CREATE TABLE audit_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_type VARCHAR(100) NOT NULL,               -- 'recommendation_generated', 'officer_action', 'consent_captured', etc.
   entity_type VARCHAR(50) NOT NULL,               -- 'beneficiary', 'session', 'recommendation', 'officer_case'
   entity_id UUID NOT NULL,
