@@ -1,20 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import https from 'https';
 
 function getEnvVar(key: string, defaultValue = ''): string {
   if (process.env[key]) return process.env[key]!;
 
   try {
-    const rootEnv = path.resolve(process.cwd(), '../../.env');
-    if (fs.existsSync(rootEnv)) {
-      const content = fs.readFileSync(rootEnv, 'utf8');
-      for (const line of content.split('\n')) {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-          const [k, ...rest] = trimmed.split('=');
-          if (k.trim() === key) {
-            return rest.join('=').trim();
+    const candidatePaths = [
+      path.resolve(process.cwd(), '.env'),
+      path.resolve(process.cwd(), '../../.env'),
+      path.resolve(process.cwd(), '../.env'),
+      path.resolve(process.cwd(), '.env.local'),
+      path.resolve(process.cwd(), 'apps/web/.env.local'),
+    ];
+    for (const envPath of candidatePaths) {
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, 'utf8');
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+            const [k, ...rest] = trimmed.split('=');
+            if (k.trim() === key) {
+              return rest.join('=').trim();
+            }
           }
         }
       }
@@ -24,6 +33,66 @@ function getEnvVar(key: string, defaultValue = ''): string {
   }
 
   return defaultValue;
+}
+
+function exotelHttpPost(
+  url: string,
+  headers: Record<string, string>,
+  bodyStr: string
+): Promise<{ ok: boolean; status: number; data: any }> {
+  return new Promise((resolve) => {
+    try {
+      const u = new URL(url);
+      const req = https.request(
+        {
+          protocol: u.protocol,
+          hostname: u.hostname,
+          port: u.port || 443,
+          path: u.pathname + u.search,
+          method: 'POST',
+          headers: {
+            ...headers,
+            'Content-Length': Buffer.byteLength(bodyStr),
+            'User-Agent': 'KuralSeviBatchDialer/1.0',
+            Accept: 'application/json',
+          },
+        },
+        (res) => {
+          let respData = '';
+          res.on('data', (chunk) => (respData += chunk));
+          res.on('end', () => {
+            let parsed: any = {};
+            try {
+              parsed = JSON.parse(respData);
+            } catch {
+              parsed = { raw: respData };
+            }
+            const status = res.statusCode || 500;
+            resolve({
+              ok: status >= 200 && status < 300,
+              status,
+              data: parsed,
+            });
+          });
+        }
+      );
+      req.on('error', (err) => {
+        resolve({
+          ok: false,
+          status: 500,
+          data: { RestException: { Message: `HTTPS error: ${err.message}` } },
+        });
+      });
+      req.write(bodyStr);
+      req.end();
+    } catch (e: any) {
+      resolve({
+        ok: false,
+        status: 500,
+        data: { RestException: { Message: e?.message || 'Failed to dispatch request' } },
+      });
+    }
+  });
 }
 
 export interface BatchBeneficiaryInput {
@@ -46,11 +115,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const exotelSid = getEnvVar('EXOTEL_ACCOUNT_SID', 'incogvia1');
+    const exotelSid = getEnvVar('EXOTEL_ACCOUNT_SID', 'incogvia2');
     const exotelKey = getEnvVar('EXOTEL_API_KEY');
     const exotelToken = getEnvVar('EXOTEL_API_TOKEN');
-    const exotelCallerId = getEnvVar('EXOTEL_CALLER_ID', '08047289241');
-    const exotelAppId = getEnvVar('EXOTEL_APP_ID');
+    const exotelCallerId = getEnvVar('EXOTEL_CALLER_ID', getEnvVar('EXOTEL_TRIAL_NUMBER', '04447615330'));
+    const exotelAppId = getEnvVar('EXOTEL_APP_ID', '1349690');
+    const exotelSubdomain = getEnvVar('EXOTEL_SUBDOMAIN', 'api.exotel.com');
 
     const hasExotel = Boolean(exotelSid && exotelKey && exotelToken);
 
@@ -107,7 +177,7 @@ export async function POST(req: NextRequest) {
       if (hasExotel && i === 0) {
         try {
           const exotelDigits = cleanPhone.replace(/^\+91|^91|^0/, '');
-          const exotelUrl = `https://api.exotel.com/v1/Accounts/${exotelSid}/Calls/connect.json`;
+          const exotelUrl = `https://${exotelSubdomain}/v1/Accounts/${exotelSid}/Calls/connect.json`;
           const authHeader = 'Basic ' + Buffer.from(`${exotelKey}:${exotelToken}`).toString('base64');
           
           const formData = new URLSearchParams();
@@ -115,22 +185,21 @@ export async function POST(req: NextRequest) {
           formData.append('CallerId', exotelCallerId);
           formData.append('CallType', 'trans');
           if (exotelAppId) {
-            formData.append('Url', `http://my.exotel.com/${exotelSid}/exoml/start_voice/${exotelAppId}`);
+            formData.append('Url', `https://my.exotel.com/${exotelSid}/exoml/start_voice/${exotelAppId}`);
           } else {
             formData.append('To', exotelDigits);
           }
 
-          const exotelRes = await fetch(exotelUrl, {
-            method: 'POST',
-            headers: {
+          const { ok: exotelOk, status: exotelStatus, data: exotelData } = await exotelHttpPost(
+            exotelUrl,
+            {
               Authorization: authHeader,
               'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: formData.toString(),
-          });
+            formData.toString()
+          );
 
-          const exotelData = await exotelRes.json().catch(() => ({}));
-          if (exotelRes.ok) {
+          if (exotelOk) {
             const sid = exotelData.Call?.Sid || 'dispatched';
             results.push({
               phone: cleanPhone,
@@ -172,7 +241,7 @@ export async function POST(req: NextRequest) {
               language: lang,
               district: item.district,
               status: 'failed',
-              error: exotelData.RestException?.Message || `Telephony dispatch failed (${exotelRes.status})`,
+              error: exotelData.RestException?.Message || `Telephony dispatch failed (${exotelStatus})`,
             });
           }
         } catch (err: any) {

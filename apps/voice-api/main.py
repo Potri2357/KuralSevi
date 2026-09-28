@@ -229,7 +229,8 @@ async def trigger_dial_call(req: DialRequest):
     if not exotel_sid or not exotel_key or not exotel_token:
         return {"success": False, "error": "Exotel credentials not configured in voice-api environment.", "command": cli_cmd}
 
-    api_url = f"https://api.exotel.com/v1/Accounts/{exotel_sid}/Calls/connect.json"
+    subdomain = getattr(settings, "exotel_subdomain", "api.exotel.com") or "api.exotel.com"
+    api_url = f"https://{subdomain}/v1/Accounts/{exotel_sid}/Calls/connect.json"
     credentials = f"{exotel_key}:{exotel_token}"
     auth_header = f"Basic {base64.b64encode(credentials.encode('utf-8')).decode('utf-8')}"
 
@@ -239,7 +240,7 @@ async def trigger_dial_call(req: DialRequest):
         "CallType": "trans",
     }
     if app_id:
-        params["Url"] = f"http://my.exotel.com/{exotel_sid}/exoml/start_voice/{app_id}"
+        params["Url"] = f"https://my.exotel.com/{exotel_sid}/exoml/start_voice/{app_id}"
     else:
         params["To"] = phone
 
@@ -248,6 +249,8 @@ async def trigger_dial_call(req: DialRequest):
     req_obj = urllib.request.Request(api_url, data=post_data, method="POST")
     req_obj.add_header("Authorization", auth_header)
     req_obj.add_header("Content-Type", "application/x-www-form-urlencoded")
+    req_obj.add_header("User-Agent", "KuralSeviVoiceApi/1.0")
+    req_obj.add_header("Accept", "application/json")
 
     try:
         with urllib.request.urlopen(req_obj, timeout=15.0) as resp:

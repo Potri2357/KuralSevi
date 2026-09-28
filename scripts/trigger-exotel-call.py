@@ -31,7 +31,7 @@ def _load_dotenv():
 _load_dotenv()
 
 def main():
-    target_phone = sys.argv[1].strip() if len(sys.argv) > 1 else os.environ.get("EXOTEL_TRIAL_PIN", "9342900638")
+    target_phone = sys.argv[1].strip() if len(sys.argv) > 1 else os.environ.get("EXOTEL_VERIFIED_PHONE", os.environ.get("EXOTEL_TRIAL_PIN", "6381291546"))
     language = sys.argv[2].strip().lower() if len(sys.argv) > 2 else "en"
 
     # Normalize phone digits for Exotel (expects 10-digit format without +91 or with leading 0)
@@ -41,13 +41,14 @@ def main():
     elif clean_phone.startswith("0") and len(clean_phone) == 11:
         clean_phone = clean_phone[1:]
 
-    account_sid = os.environ.get("EXOTEL_ACCOUNT_SID", "incogvia1")
+    account_sid = os.environ.get("EXOTEL_ACCOUNT_SID", "incogvia2")
     api_key = os.environ.get("EXOTEL_API_KEY", "")
     api_token = os.environ.get("EXOTEL_API_TOKEN", "")
-    caller_id = os.environ.get("EXOTEL_CALLER_ID", "08047289241")
-    app_id = os.environ.get("EXOTEL_APP_ID", "")
-    trial_number = os.environ.get("EXOTEL_TRIAL_NUMBER", "09513886363")
-    trial_pin = os.environ.get("EXOTEL_TRIAL_PIN", "9342900638")
+    caller_id = os.environ.get("EXOTEL_CALLER_ID", os.environ.get("EXOTEL_TRIAL_NUMBER", "04447615330"))
+    app_id = os.environ.get("EXOTEL_APP_ID", "1349690")
+    trial_number = os.environ.get("EXOTEL_TRIAL_NUMBER", "04447615330")
+    trial_pin = os.environ.get("EXOTEL_VERIFIED_PHONE", os.environ.get("EXOTEL_TRIAL_PIN", "6381291546"))
+    subdomain = os.environ.get("EXOTEL_SUBDOMAIN", "api.exotel.com")
 
     base_url = os.environ.get("VOICE_API_URL", "https://charita-techiest-histogenetically.ngrok-free.dev").rstrip("/")
 
@@ -75,7 +76,7 @@ def main():
     except Exception as e:
         print(f"[WARNING] Voice API tunnel returned: {e}")
 
-    api_url = f"https://api.exotel.com/v1/Accounts/{account_sid}/Calls/connect.json"
+    api_url = f"https://{subdomain}/v1/Accounts/{account_sid}/Calls/connect.json"
     auth_str = f"{api_key}:{api_token}"
     auth_header = f"Basic {base64.b64encode(auth_str.encode('utf-8')).decode('utf-8')}"
 
@@ -86,7 +87,7 @@ def main():
     }
 
     if app_id:
-        form_fields["Url"] = f"http://my.exotel.com/{account_sid}/exoml/start_voice/{app_id}"
+        form_fields["Url"] = f"https://my.exotel.com/{account_sid}/exoml/start_voice/{app_id}"
     else:
         # Default bridging connect
         form_fields["To"] = clean_phone

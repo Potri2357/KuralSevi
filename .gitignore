@@ -38,3 +38,4 @@ yarn-debug.log*
 yarn-error.log*
 apps/voice-api/static_audio/cache/
 apps/whatsapp-bot/auth_info_baileys/
+supabase/.temp/

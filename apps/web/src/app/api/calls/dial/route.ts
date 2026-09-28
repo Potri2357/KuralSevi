@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import https from 'https';
 
 function getEnvVar(key: string, defaultValue = ''): string {
   if (process.env[key]) return process.env[key]!;
@@ -33,6 +34,66 @@ function getEnvVar(key: string, defaultValue = ''): string {
   }
 
   return defaultValue;
+}
+
+function exotelHttpPost(
+  url: string,
+  headers: Record<string, string>,
+  bodyStr: string
+): Promise<{ ok: boolean; status: number; data: any }> {
+  return new Promise((resolve) => {
+    try {
+      const u = new URL(url);
+      const req = https.request(
+        {
+          protocol: u.protocol,
+          hostname: u.hostname,
+          port: u.port || 443,
+          path: u.pathname + u.search,
+          method: 'POST',
+          headers: {
+            ...headers,
+            'Content-Length': Buffer.byteLength(bodyStr),
+            'User-Agent': 'KuralSeviDialer/1.0',
+            Accept: 'application/json',
+          },
+        },
+        (res) => {
+          let respData = '';
+          res.on('data', (chunk) => (respData += chunk));
+          res.on('end', () => {
+            let parsed: any = {};
+            try {
+              parsed = JSON.parse(respData);
+            } catch {
+              parsed = { raw: respData };
+            }
+            const status = res.statusCode || 500;
+            resolve({
+              ok: status >= 200 && status < 300,
+              status,
+              data: parsed,
+            });
+          });
+        }
+      );
+      req.on('error', (err) => {
+        resolve({
+          ok: false,
+          status: 500,
+          data: { RestException: { Message: `HTTPS request error: ${err.message}` } },
+        });
+      });
+      req.write(bodyStr);
+      req.end();
+    } catch (e: any) {
+      resolve({
+        ok: false,
+        status: 500,
+        data: { RestException: { Message: e?.message || 'Failed to dispatch request' } },
+      });
+    }
+  });
 }
 
 async function fetchWithRetry(url: string, opts: RequestInit, retries = 3): Promise<Response> {
@@ -77,11 +138,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const exotelSid = getEnvVar('EXOTEL_ACCOUNT_SID', 'incogvia1');
+    const exotelSid = getEnvVar('EXOTEL_ACCOUNT_SID', 'incogvia2');
     const exotelKey = getEnvVar('EXOTEL_API_KEY');
     const exotelToken = getEnvVar('EXOTEL_API_TOKEN');
-    const exotelCallerId = getEnvVar('EXOTEL_CALLER_ID', '08047289241');
-    const exotelAppId = getEnvVar('EXOTEL_APP_ID');
+    const exotelCallerId = getEnvVar('EXOTEL_CALLER_ID', getEnvVar('EXOTEL_TRIAL_NUMBER', '04447615330'));
+    const exotelAppId = getEnvVar('EXOTEL_APP_ID', '1349690');
+    const exotelSubdomain = getEnvVar('EXOTEL_SUBDOMAIN', 'api.exotel.com');
     const voiceApiUrl = getEnvVar('VOICE_API_URL', 'https://charita-techiest-histogenetically.ngrok-free.dev').replace(/\/+$/, '');
 
     const hasExotel = Boolean(exotelSid && exotelKey && exotelToken);
@@ -149,7 +211,7 @@ export async function POST(req: NextRequest) {
 
     // ── Primary Path: Exotel (India Domestic Cloud Telephony) ──
     const exotelDigits = cleanPhone.replace(/^\+91|^91|^0/, '');
-    const exotelUrl = `https://api.exotel.com/v1/Accounts/${exotelSid}/Calls/connect.json`;
+    const exotelUrl = `https://${exotelSubdomain}/v1/Accounts/${exotelSid}/Calls/connect.json`;
     const authHeader = 'Basic ' + Buffer.from(`${exotelKey}:${exotelToken}`).toString('base64');
     
     const formData = new URLSearchParams();
@@ -158,33 +220,32 @@ export async function POST(req: NextRequest) {
     formData.append('CallType', 'trans');
 
     if (exotelAppId) {
-      formData.append('Url', `http://my.exotel.com/${exotelSid}/exoml/start_voice/${exotelAppId}`);
+      formData.append('Url', `https://my.exotel.com/${exotelSid}/exoml/start_voice/${exotelAppId}`);
     } else {
       formData.append('To', exotelDigits);
     }
 
-    const exotelRes = await fetchWithRetry(exotelUrl, {
-      method: 'POST',
-      headers: {
+    const { ok: exotelOk, status: exotelStatus, data: exotelData } = await exotelHttpPost(
+      exotelUrl,
+      {
         Authorization: authHeader,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: formData.toString(),
-    });
+      formData.toString()
+    );
 
-    const exotelData = await exotelRes.json().catch(() => ({}));
-
-    if (!exotelRes.ok) {
-      let errorDetail = exotelData.RestException?.Message || `Telephony dispatch failed with status ${exotelRes.status}`;
+    if (!exotelOk) {
+      let errorDetail = exotelData.RestException?.Message || `Telephony dispatch failed with status ${exotelStatus}`;
       if (errorDetail.toLowerCase().includes('kyc compliant')) {
-        errorDetail = `Outbound calling is currently routed to verified demonstration line (+91 9342900638). Please dial +91 9342900638 to test the live voice interview.`;
+        const verifiedNumber = getEnvVar('EXOTEL_VERIFIED_PHONE', getEnvVar('EXOTEL_TRIAL_PIN', '6381291546'));
+        errorDetail = `Outbound calling is currently routed to verified demonstration line (+91 ${verifiedNumber}). Please dial +91 ${verifiedNumber} to test the live voice interview.`;
       }
       return NextResponse.json(
         {
           success: false,
           error: `Telephony Notice: ${errorDetail}`,
         },
-        { status: exotelRes.status }
+        { status: exotelStatus }
       );
     }
 

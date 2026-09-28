@@ -24,13 +24,16 @@ class Settings(BaseSettings):
     sarvam_tts_url: str = "https://api.sarvam.ai/text-to-speech"
     
     # Exotel Telephony
-    exotel_account_sid: str = "incogvia1"
+    exotel_account_sid: str = "incogvia2"
     exotel_api_key: Optional[str] = None
     exotel_api_token: Optional[str] = None
-    exotel_caller_id: str = "08047289241"
-    exotel_app_id: Optional[str] = None
-    exotel_trial_number: Optional[str] = None
-    exotel_trial_pin: Optional[str] = None
+    exotel_caller_id: str = "04447615330"
+    exotel_app_id: Optional[str] = "1349690"
+    exotel_trial_number: Optional[str] = "04447615330"
+    exotel_trial_pin: Optional[str] = "6381291546"
+    exotel_account_region: str = "Singapore"
+    exotel_subdomain: str = "api.exotel.com"
+    exotel_verified_phone: str = "6381291546"
     telephony_provider: str = "exotel"
     
     # WhatsApp (Self-Hosted Baileys Bot)

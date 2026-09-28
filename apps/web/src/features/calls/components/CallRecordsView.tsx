@@ -81,9 +81,10 @@ export function CallRecordsView({ initialCalls }: Props) {
   };
 
   // Direct Outbound Dialing State
+  const verifiedTestPhone = process.env.NEXT_PUBLIC_VERIFIED_PHONE || '+916381291546';
   const [isDialModalOpen, setIsDialModalOpen] = useState(false);
   const [dialModalTab, setDialModalTab] = useState<'single' | 'bulk'>('single');
-  const [dialPhone, setDialPhone] = useState('+919342900638');
+  const [dialPhone, setDialPhone] = useState(verifiedTestPhone);
   const [dialLanguage, setDialLanguage] = useState('en');
   const [isDialing, setIsDialing] = useState(false);
   const [dialResult, setDialResult] = useState<{
@@ -1181,7 +1182,7 @@ export function CallRecordsView({ initialCalls }: Props) {
                       type="tel"
                       value={dialPhone}
                       onChange={(e) => setDialPhone(e.target.value)}
-                      placeholder="+919342900638 or 9342900638"
+                      placeholder={`${verifiedTestPhone} or ${verifiedTestPhone.replace(/\D/g, '').slice(-10)}`}
                       required
                       className="w-full bg-slate-50 border border-slate-300 focus:bg-white rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064] focus:border-[#0B3064] transition-all shadow-2xs"
                     />
@@ -1190,24 +1191,24 @@ export function CallRecordsView({ initialCalls }: Props) {
                     <span className="text-[11px] text-slate-500">Country code (+91) added automatically if omitted</span>
                     <button
                       type="button"
-                      onClick={() => setDialPhone('+919342900638')}
+                      onClick={() => setDialPhone(verifiedTestPhone)}
                       className="text-[11px] font-bold text-[#0B3064] hover:underline cursor-pointer"
                     >
-                      Use Verified Test Phone (+919342900638)
+                      Use Verified Test Phone ({verifiedTestPhone})
                     </button>
                   </div>
-                  {!dialPhone.replace(/\D/g, '').endsWith('9342900638') && (
+                  {!dialPhone.replace(/\D/g, '').endsWith(verifiedTestPhone.replace(/\D/g, '').slice(-10)) && (
                     <div className="mt-2.5 flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
                       <span className="flex items-center gap-1.5">
                         <span>ℹ️</span>
-                        <span><strong>Demonstration Line Notice:</strong> Outbound calling is currently routed to verified demonstration line <strong>+919342900638</strong>.</span>
+                        <span><strong>Demonstration Line Notice:</strong> Outbound calling is currently routed to verified demonstration line <strong>{verifiedTestPhone}</strong>.</span>
                       </span>
                       <button
                         type="button"
-                        onClick={() => setDialPhone('+919342900638')}
+                        onClick={() => setDialPhone(verifiedTestPhone)}
                         className="underline font-bold text-amber-900 ml-2 hover:text-amber-950 shrink-0 cursor-pointer"
                       >
-                        Use +919342900638
+                        Use {verifiedTestPhone}
                       </button>
                     </div>
                   )}
