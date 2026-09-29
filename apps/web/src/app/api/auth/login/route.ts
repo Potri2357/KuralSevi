@@ -68,20 +68,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Strict role verification
-      let authorized = false;
-      if (requestedRole === 'admin') {
-        authorized = provisionedUser.role === 'admin';
-      } else if (requestedRole === 'district_officer') {
-        authorized = provisionedUser.role === 'district_officer' || provisionedUser.role === 'admin';
-      } else if (requestedRole === 'panchayat_kiosk') {
-        authorized = provisionedUser.role === 'panchayat_kiosk' || provisionedUser.role === 'admin';
-      }
+      // STRICT 1:1 role enforcement — selected portal must match assigned account role exactly
+      const authorized = provisionedUser.role === requestedRole;
 
       if (!authorized) {
         return NextResponse.json(
           {
-            error: `Access Denied: Your assigned account role is "${ROLE_TITLES[provisionedUser.role]}". You do not have authorization to access the ${ROLE_TITLES[requestedRole]} portal. Please select your assigned role or contact your administrator.`,
+            error: `Access Denied: Your account is assigned the "${ROLE_TITLES[provisionedUser.role]}" role. You cannot access the "${ROLE_TITLES[requestedRole]}" portal. Please select your correct portal from the dropdown.`,
             actualRole: provisionedUser.role,
             requestedRole,
           },
@@ -89,10 +82,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Redirect is always based on the account's actual assigned role
       const redirectUrl =
-        requestedRole === 'admin'
+        provisionedUser.role === 'admin'
           ? '/admin'
-          : requestedRole === 'panchayat_kiosk'
+          : provisionedUser.role === 'panchayat_kiosk'
           ? '/kiosk'
           : '/officer';
 
@@ -226,21 +220,15 @@ export async function POST(request: NextRequest) {
     }
 
     const actualRole = activeProfile.role as UserRole;
-    let isRoleAuthorized = false;
 
-    if (requestedRole === 'admin') {
-      isRoleAuthorized = actualRole === 'admin';
-    } else if (requestedRole === 'district_officer') {
-      isRoleAuthorized = actualRole === 'district_officer' || actualRole === 'admin';
-    } else if (requestedRole === 'panchayat_kiosk') {
-      isRoleAuthorized = actualRole === 'panchayat_kiosk' || actualRole === 'admin';
-    }
+    // STRICT 1:1 role enforcement — selected portal must match assigned account role exactly
+    const isRoleAuthorized = actualRole === requestedRole;
 
     if (!isRoleAuthorized) {
       await supabase.auth.signOut();
       return NextResponse.json(
         {
-          error: `Access Denied: Your assigned account role is "${ROLE_TITLES[actualRole] || actualRole}". You do not have authorization to access the ${ROLE_TITLES[requestedRole] || requestedRole} portal. Please select your assigned role or contact your administrator.`,
+          error: `Access Denied: Your account is assigned the "${ROLE_TITLES[actualRole] || actualRole}" role. You cannot access the "${ROLE_TITLES[requestedRole] || requestedRole}" portal. Please select your correct portal from the dropdown.`,
           actualRole,
           requestedRole,
         },
@@ -248,10 +236,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Redirect is always based on the account's actual assigned role
     const redirectUrl =
-      requestedRole === 'admin'
+      actualRole === 'admin'
         ? '/admin'
-        : requestedRole === 'panchayat_kiosk'
+        : actualRole === 'panchayat_kiosk'
         ? '/kiosk'
         : '/officer';
 
