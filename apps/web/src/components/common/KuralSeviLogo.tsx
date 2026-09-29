@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { IndicEar } from '@/components/icons/indic';
+import { IndicEar } from '@/components/icons/indic/IndicIcons';
 
 export interface KuralSeviLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
