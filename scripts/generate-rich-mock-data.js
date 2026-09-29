@@ -1,0 +1,675 @@
+const fs = require('fs');
+const path = require('path');
+
+const mockCalls = [
+  {
+    session_id: "67253b03-59a2-4df4-befa-f93f3967232b",
+    case_id: "67253B03-59A",
+    phone: "07338845352",
+    channel: "ivr",
+    language: "hi",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-28 09:01:41 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-28 09:01:41 UTC",
+    confirmed_fields: {
+      educational_background: "Class 8 completed (Middle School)",
+      family_occupation: "Agriculture / Farming (Family Cultivation)",
+      current_livelihood: "Homemaker & Local Food Catering / Snacks",
+      skills_and_interests: "Food Processing, Pickles & Culinary Products (Achar, Papad, Spices)",
+      mobility_constraints: "Local Area Only (Within 5 km radius / Home & Childcare duties)",
+      employment_preference: "Flexible (Open to nearby wage job or home-based micro-enterprise)",
+      local_economic_context: "High local demand for homemade pickles, papad, spices & festive snacks in Namakkal"
+    },
+    turns_count: 9,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Food Catering & Culinary Enterprise Training",
+    transcript: [
+      { user: "मेरा नाम संयुक्ता है और मैं नमक्कल में रहती हूँ।", assistant: "अपनी पढ़ाई और शिक्षा के बारे में हमें कुछ बताइए?", timestamp: "08:59:09" },
+      { user: "मैंने आठवीं कक्षा तक पढ़ाई की है।", assistant: "आपके परिवार में पारंपरिक रूप से बुजुर्ग क्या काम करते आए हैं?", timestamp: "08:59:22" },
+      { user: "मेरे घर में खेती का काम मुख्य रूप से रहता है।", assistant: "वर्तमान में आप अपने भरण-पोषण के लिए क्या काम करते हैं?", timestamp: "08:59:35" },
+      { user: "अभी मैं घर पर खाना और नाश्ता बनाकर देती हूँ।", assistant: "आपने कौन-से हुनर सीखे हैं या किस काम में रुचि है?", timestamp: "08:59:53" },
+      { user: "मुझे खाना बनाना अच्छा आता है। मैं अचार और पापड़ बना लेती हूँ।", assistant: "रोजगार के लिए आप अपने गाँव में ही रहना पसंद करेंगे या आसपास?", timestamp: "09:00:10" },
+      { user: "मैं 5 किलोमीटर तक जा सकती हूँ।", assistant: "खुद का काम शुरू करना चाहते हैं या नौकरी?", timestamp: "09:00:31" },
+      { user: "मुझे घर से छोटा काम शुरू करने का मौका मिले तो बेहतर रहेगा।", assistant: "धन्यवाद! आपका आवेदन दर्ज कर लिया गया है।", timestamp: "09:00:53" }
+    ]
+  },
+  {
+    session_id: "ecece242-f4d2-43bb-a30f-bce6a310ec70",
+    case_id: "ECECE242-F4D",
+    phone: "07338845352",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "SMS",
+    confirmed_at: "2026-09-28 09:18:14 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-28 09:18:14 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed (SSLC Board Examination)",
+      family_occupation: "Traditional Handloom Weaving & Textile Craft",
+      current_livelihood: "Powerloom Assistant & Garment Tailoring",
+      skills_and_interests: "Sewing Machine Operation, Garment Cutting & Hand Embroidery",
+      mobility_constraints: "Within Salem District / Local transport accessible",
+      employment_preference: "Self-Employment (Home Tailoring Unit / Self-Help Group)",
+      local_economic_context: "Salem textile and garment manufacturing export hub with high demand"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Tailor - Women's and Men's Garment",
+    transcript: [
+      { user: "வணக்கம், என் பெயர் முத்துலட்சுமி, சேலத்தில் வசிக்கிறேன்.", assistant: "உங்கள் கல்வித் தகுதி பற்றி கூறுங்கள்?", timestamp: "09:15:02" },
+      { user: "பத்தாம் வகுப்பு வரை படித்துள்ளேன்.", assistant: "உங்கள் குடும்பத்தின் பாரம்பரிய தொழில் என்ன?", timestamp: "09:15:20" },
+      { user: "எங்கள் குடும்பத்தில் கைத்தறி நெசவு செய்து வருகிறார்கள்.", assistant: "தற்போது நீங்கள் என்ன வேலை செய்கிறீர்கள்?", timestamp: "09:15:40" },
+      { user: "தையல் வேலை மற்றும் தறிக்கூடத்தில் வேலை செய்கிறேன்.", assistant: "உங்களுக்கு எந்த தொழிற்பயிற்சியில் ஆர்வம்?", timestamp: "09:16:05" },
+      { user: "துணி தைத்தல், ஜாக்கெட் கட்டிங் போன்றவற்றில் ஆர்வம்.", assistant: "சுயதொழில் தொடங்க விருப்பமா அல்லது நிறுவன வேலையா?", timestamp: "09:16:30" },
+      { user: "வீட்டிலேயே தையல் இயந்திரம் வைத்து சொந்த தொழில் செய்ய ஆசை.", assistant: "நன்றி! விவரங்கள் பதிவு செய்யப்பட்டன.", timestamp: "09:17:10" }
+    ]
+  },
+  {
+    session_id: "a149c0d2-7b19-482f-9cb0-128a5091a101",
+    case_id: "KS-2026-00101",
+    phone: "09842156781",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-27 11:20:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-27 11:20:00 UTC",
+    confirmed_fields: {
+      educational_background: "Higher Secondary (12th Standard Passed)",
+      family_occupation: "Daily Agricultural Labour & Livestock Rearing",
+      current_livelihood: "Assistant Electrician & Solar Panel Helper",
+      skills_and_interests: "Solar Panel Installation, Rooftop Inverter Wiring & Battery Maintenance",
+      mobility_constraints: "Can travel within Tiruppur and Coimbatore district up to 25 km",
+      employment_preference: "Wage Employment (Solar EPC Contractor or Industrial Unit)",
+      local_economic_context: "Rapid rooftop solar adoption across industrial textile mills in Tiruppur"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Solar Panel Installation Technician",
+    transcript: [
+      { user: "என் பெயர் கார்த்திக், திருப்பூர் பல்லடம் அருகே உள்ளேன்.", assistant: "உங்கள் கல்வி மற்றும் தொழில் விருப்பத்தை அறிய விரும்புகிறோம்.", timestamp: "11:12:10" },
+      { user: "12-ஆம் வகுப்பு தேர்ச்சி பெற்றுள்ளேன்.", assistant: "தற்போது என்ன பணி புரிகிறீர்கள்?", timestamp: "11:12:35" },
+      { user: "சூரிய ஒளி மின்சார சோலார் பேனல் அமைக்கும் இடத்தில் உதவியாளராக உள்ளேன்.", assistant: "எந்த துறையில் சான்றிதழ் பெற விரும்புகிறீர்கள்?", timestamp: "11:13:00" },
+      { user: "சோலார் பேனல் இன்ஸ்டாலேஷன் டெக்னீஷியன் பயிற்சி வேண்டும்.", assistant: "வேலைவாய்ப்பு எங்கு எதிர்பார்க்கிறீர்கள்?", timestamp: "11:13:25" },
+      { user: "திருப்பூர் அல்லது கோயம்புத்தூர் ஆலைகளில் சம்பள வேலை வேண்டும்.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "11:14:00" }
+    ]
+  },
+  {
+    session_id: "b258d1e3-8c20-493a-adb1-239b6102b202",
+    case_id: "KS-2026-00102",
+    phone: "09789012345",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "SMS",
+    confirmed_at: "2026-09-27 14:45:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-27 14:45:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed (SSLC)",
+      family_occupation: "Blacksmith & Metal Tool Fabrication",
+      current_livelihood: "Two Wheeler Repair Helper & Garage Mechanic",
+      skills_and_interests: "Two-Wheeler Engine Servicing, Brake Overhaul, EV Scooter Battery Check",
+      mobility_constraints: "Within Madurai town / 10 km radius",
+      employment_preference: "Self-Employment (Setting up Own Two-Wheeler Workshop)",
+      local_economic_context: "High vehicle density and growing electric two-wheeler market in Madurai"
+    },
+    turns_count: 7,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Two Wheeler Service Technician",
+    transcript: [
+      { user: "வணக்கம், என் பெயர் செந்தில் குமார், மதுரை.", assistant: "உங்கள் கல்வி விவரம் கூறுங்கள்?", timestamp: "14:40:11" },
+      { user: "பத்தாம் வகுப்பு படித்துள்ளேன்.", assistant: "தற்போது என்ன வேலை?", timestamp: "14:40:30" },
+      { user: "இருசக்கர வாகன மெக்கானிக் கடையில் 3 வருடமாக வேலை செய்கிறேன்.", assistant: "எதிர்கால திட்டம் என்ன?", timestamp: "14:40:55" },
+      { user: "முறையான பயிற்சி பெற்று PM-AJAY மானியத்தில் சொந்த பைக் ஒர்க்ஷாப் வைக்க வேண்டும்.", assistant: "உறுதிப்படுத்தப்பட்டது.", timestamp: "14:41:20" }
+    ]
+  },
+  {
+    session_id: "c369e2f4-9d31-4a4b-bec2-340c7213c303",
+    case_id: "KS-2026-00103",
+    phone: "09443218765",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "WHATSAPP",
+    confirmed_at: "2026-09-26 16:10:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-26 16:10:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 8 completed",
+      family_occupation: "Handloom Silk & Cotton Saree Weaving",
+      current_livelihood: "Traditional Pit Loom Weaver (Cooperative Society Member)",
+      skills_and_interests: "Handloom Weaving, Jacquard Punch Card Operation, Natural Dyeing",
+      mobility_constraints: "Home-based only / Elderly parents care",
+      employment_preference: "Home Enterprise (Master Weaver Cluster Linkage)",
+      local_economic_context: "Famous Namakkal-Rasipuram handloom silk cooperative market"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Handloom Weaver",
+    transcript: [
+      { user: "ராசிபுரத்திலிருந்து சண்முகம் பேசுகிறேன்.", assistant: "வணக்கம்! உங்கள் தொழில் அனுபவம் பற்றி பகிருங்கள்.", timestamp: "16:02:15" },
+      { user: "எங்கள் குடும்பம் தலைமுறையாக பட்டு கைத்தறி நெய்கிறோம்.", assistant: "தற்போது என்ன உதவி தேவைப்படுகிறது?", timestamp: "16:02:40" },
+      { user: "வீட்டிலேயே சொந்தமாக தறி அமைத்து புதிய ஜக்கார்டு டிசைன் செய்ய பயிற்சி மற்றும் கடன் தேவை.", assistant: "அருமை! பதிவு செய்யப்பட்டுள்ளது.", timestamp: "16:03:10" }
+    ]
+  },
+  {
+    session_id: "d470f3a5-0e42-4b5c-cfd3-451d8324d404",
+    case_id: "KS-2026-00104",
+    phone: "09629123456",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-26 10:30:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-26 10:30:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Dryland Millets & Vegetable Cultivation",
+      current_livelihood: "Dairy Assistant & Backyard Poultry Farmer",
+      skills_and_interests: "Dairy Farm Management, Cattle Feed Preparation, Biogas & Organic Manure",
+      mobility_constraints: "Within village panchayat / 6 km radius",
+      employment_preference: "Self-Employment (Mini Dairy Unit with Aavin Milk Route)",
+      local_economic_context: "Strong dairy cooperative milk chilling center in Erode district"
+    },
+    turns_count: 7,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Dairy Farmer / Assistant",
+    transcript: [
+      { user: "என் பெயர் செல்வி, ஈரோடு மாவட்டம் பெருந்துறை.", assistant: "வணக்கம்! உங்கள் தொழில் பின்னணி என்ன?", timestamp: "10:25:00" },
+      { user: "வீட்டில் 2 பசு மாடுகள் வைத்து பால் ஊற்றி வருகிறேன்.", assistant: "எந்த வழியில் வளர விரும்புகிறீர்கள்?", timestamp: "10:25:30" },
+      { user: "கறவை மாடு வளர்ப்பு மற்றும் தீவன மேலாண்மை கற்றுக்கொண்டு பால் பண்ணை விரிவுபடுத்த ஆசை.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "10:26:00" }
+    ]
+  },
+  {
+    session_id: "e581a4b6-1f53-4c6d-dae4-562e9435e505",
+    case_id: "KS-2026-00105",
+    phone: "09843378901",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-25 12:15:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-25 12:15:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 12 completed (Vocational Stream)",
+      family_occupation: "Electrician & House Wiring Helper",
+      current_livelihood: "Appliance Repair Apprentice",
+      skills_and_interests: "Domestic Electrical Wiring, Fan & Mixer Motor Rewinding, Inverter Repair",
+      mobility_constraints: "Coimbatore city & suburb service routes up to 15 km",
+      employment_preference: "Self-Employment (Doorstep Electrical Repair Services)",
+      local_economic_context: "Thriving residential and commercial electrical servicing demand in Coimbatore"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Domestic Electrical Appliance Repair Technician",
+    transcript: [
+      { user: "கோயம்புத்தூரிலிருந்து வினோத் பேசுகிறேன்.", assistant: "உங்கள் கல்வி தகுதி மற்றும் பணி என்ன?", timestamp: "12:10:00" },
+      { user: "12-ஆம் வகுப்பு முடித்துவிட்டு வீட்டு மின்சாதனம் பழுதுபார்க்கும் வேலை செய்கிறேன்.", assistant: "எதிர்கால திட்டம் என்ன?", timestamp: "12:10:30" },
+      { user: "மின்னணு உபகரண பழுதுநீக்கும் அரசு சான்றிதழ் பெற்று டூல்-கிட் மானியம் பெற வேண்டும்.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "12:11:00" }
+    ]
+  },
+  {
+    session_id: "f692b5c7-2064-4d7e-ebf5-673fa546f606",
+    case_id: "KS-2026-00106",
+    phone: "09751234567",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "SMS",
+    confirmed_at: "2026-09-25 15:00:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-25 15:00:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Pottery & Clay Artisan Work",
+      current_livelihood: "Handicrafts & Block Printing Assistant",
+      skills_and_interests: "Wooden Block Printing, Fabric Dyeing, Eco-Friendly Jute Bag Designing",
+      mobility_constraints: "Within Thanjavur district / Local craft cluster",
+      employment_preference: "Home Enterprise (Women SHG Craft Producer Group)",
+      local_economic_context: "Thanjavur heritage tourism market with steady souvenir and textile demand"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Artisan - Block Printing",
+    transcript: [
+      { user: "என் பெயர் அமுதா, தஞ்சாவூர் சுவாமிமலை அருகில் வசிக்கிறேன்.", assistant: "வணக்கம்! என்ன வேலை செய்கிறீர்கள்?", timestamp: "14:55:00" },
+      { user: "துணிகளில் மர அச்சு பதிக்கும் பிளாக் பிரிண்டிங் மற்றும் சணல் பை தைக்கிறேன்.", assistant: "எதில் பயிற்சி பெற ஆசைப்படுகிறீர்கள்?", timestamp: "14:55:30" },
+      { user: "பாரம்பரிய பிளாக் பிரிண்டிங் நுட்பங்களை கற்று மகளிர் குழுவுடன் இணைந்து விற்க விரும்புகிறேன்.", assistant: "விவரங்கள் சேர்க்கப்பட்டன.", timestamp: "14:56:00" }
+    ]
+  },
+  {
+    session_id: "07a3c6d8-3175-4e8f-fc06-7840b6570707",
+    case_id: "KS-2026-00107",
+    phone: "09442198765",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-24 09:40:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-24 09:40:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Agriculture & Vegetable Farming",
+      current_livelihood: "Organic Vegetable Grower & Market Vendor",
+      skills_and_interests: "Organic Crop Cultivation, Vermicomposting, Drip Irrigation Setup",
+      mobility_constraints: "Dindigul district farm cluster / 10 km",
+      employment_preference: "Self-Employment (FPO Farmers Collective / Organic Stall)",
+      local_economic_context: "Dindigul wholesale vegetable and organic produce market"
+    },
+    turns_count: 7,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Organic Grower",
+    transcript: [
+      { user: "வணக்கம், திண்டுக்கல் ஒட்டன்சத்திரத்திலிருந்து பழனிவேல் பேசுகிறேன்.", assistant: "உங்கள் விவசாய அனுபவம் பற்றி சொல்லுங்கள்.", timestamp: "09:35:00" },
+      { user: "இயற்கை முறையில் காய்கறி சாகுபடி செய்து வருகிறேன்.", assistant: "எந்த பயிற்சியில் ஆர்வம் உள்ளது?", timestamp: "09:35:30" },
+      { user: "அங்கக வேளாண்மை சான்றிதழ் மற்றும் மண்புழு உரம் தயாரிப்பு பயிற்சி வேண்டும்.", assistant: "பதிவு முடிந்தது.", timestamp: "09:36:00" }
+    ]
+  },
+  {
+    session_id: "18b4d7e9-4286-4f90-0d17-8951c7681808",
+    case_id: "KS-2026-00108",
+    phone: "09841567890",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-24 16:30:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-24 16:30:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 12 completed",
+      family_occupation: "Construction Mason Work",
+      current_livelihood: "Department Store Counter Cashier",
+      skills_and_interests: "Retail Billing Software, Inventory Stacking, Customer Relationship",
+      mobility_constraints: "Tiruchirappalli city bus routes up to 12 km",
+      employment_preference: "Wage Employment (Supermarket or Retail Chain)",
+      local_economic_context: "Expanding organized retail supermarkets in Tiruchirappalli town"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Store Operations Assistant",
+    transcript: [
+      { user: "என் பெயர் பிரியதர்ஷினி, திருச்சி கண்டோன்மென்ட்.", assistant: "உங்கள் படிப்பு மற்றும் விருப்பம் கூறுங்கள்.", timestamp: "16:25:00" },
+      { user: "12-ஆம் வகுப்பு முடித்து மளிகை கடையில் பில்லிங் செய்கிறேன்.", assistant: "எந்த வேலையில் ஆர்வம்?", timestamp: "16:25:30" },
+      { user: "பெரிய சூப்பர் மார்க்கெட் அல்லது ரீடெய்ல் கடையில் ஸ்டோர் ஆபரேஷன்ஸ் வேலை வேண்டும்.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "16:26:00" }
+    ]
+  },
+  {
+    session_id: "29c5e8fa-5397-40a1-1e28-9062d8792909",
+    case_id: "KS-2026-00109",
+    phone: "09790456123",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "SMS",
+    confirmed_at: "2026-09-23 11:15:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-23 11:15:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Traditional Barber & Hair Stylist",
+      current_livelihood: "Beauty Salon Assistant",
+      skills_and_interests: "Bridal Makeup, Skin Care, Hair Styling & Herbal Beauty Treatments",
+      mobility_constraints: "Vellore town / 8 km radius",
+      employment_preference: "Self-Employment (Home Parlour & Bridal Services)",
+      local_economic_context: "Vellore college and wedding banquet corridor with strong beauty care demand"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Beauty & Wellness Assistant",
+    transcript: [
+      { user: "வணக்கம், வேலூரிலிருந்து கவிதா பேசுகிறேன்.", assistant: "வணக்கம்! உங்கள் தொழில் ஆர்வம் என்ன?", timestamp: "11:10:00" },
+      { user: "பியூட்டி பார்லரில் 2 வருடம் வேலை செய்துள்ளேன்.", assistant: "எதிர்கால திட்டம் என்ன?", timestamp: "11:10:30" },
+      { user: "அரசு சான்றிதழுடன் பெண்கள் சுயதொழில் கடன் பெற்று சொந்த பியூட்டி பார்லர் திறக்க வேண்டும்.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "11:11:00" }
+    ]
+  },
+  {
+    session_id: "3ad6f90b-6408-41b2-2f39-0173e98a3a10",
+    case_id: "KS-2026-00110",
+    phone: "09944112233",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-23 14:20:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-23 14:20:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 8 completed",
+      family_occupation: "Poultry Farming & Egg Trading",
+      current_livelihood: "Broiler & Country Chicken Farm Attendant",
+      skills_and_interests: "Poultry Shed Sanitation, Vaccination, Commercial Broiler Management",
+      mobility_constraints: "Namakkal poultry belt / 15 km radius",
+      employment_preference: "Self-Employment (Country Chicken Breeding Unit)",
+      local_economic_context: "Namakkal is India's premier poultry hub with vast hatcheries and feed plants"
+    },
+    turns_count: 7,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Poultry Farmer",
+    transcript: [
+      { user: "நாமக்கல் மாவட்டம் பரமத்தி வேலூரிலிருந்து பிரகாஷ் பேசுகிறேன்.", assistant: "வணக்கம்! என்ன தொழில் செய்கிறீர்கள்?", timestamp: "14:15:00" },
+      { user: "கோழிப் பண்ணையில் வேலை செய்கிறேன்.", assistant: "எந்த பயிற்சி தேவை?", timestamp: "14:15:30" },
+      { user: "நாட்டுக்கோழி வளர்ப்பு மற்றும் நோய் தடுப்பு பயிற்சி பெற்று சொந்த பண்ணை வைக்க ஆசை.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "14:16:00" }
+    ]
+  },
+  {
+    session_id: "4be70a1c-7519-42c3-304a-1284fa9b4b11",
+    case_id: "KS-2026-00111",
+    phone: "09842778899",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "WHATSAPP",
+    confirmed_at: "2026-09-22 10:10:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-22 10:10:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Construction Work",
+      current_livelihood: "Civil Masonry & Plastering Helper",
+      skills_and_interests: "Bricklaying, Cement Plastering, Tile Laying & Concrete Mixing",
+      mobility_constraints: "Within Salem city construction sites / 15 km",
+      employment_preference: "Wage Employment (Certified Civil Contractor Team)",
+      local_economic_context: "Major housing and infrastructure development projects in Salem"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Assistant Mason",
+    transcript: [
+      { user: "சேலத்திலிருந்து மணிகண்டன் பேசுகிறேன்.", assistant: "வணக்கம்! உங்கள் பணி விவரம் என்ன?", timestamp: "10:05:00" },
+      { user: "கட்டிட கொத்தனார் வேலை செய்கிறேன்.", assistant: "எதில் முன்னேற விரும்புகிறீர்கள்?", timestamp: "10:05:30" },
+      { user: "முறையான அரசு மேசன் சான்றிதழ் பெற்றால் கூடுதல் சம்பளத்தில் ஒப்பந்த வேலை கிடைக்கும்.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "10:06:00" }
+    ]
+  },
+  {
+    session_id: "5cf81b2d-8620-43d4-415b-23950bac5c12",
+    case_id: "KS-2026-00112",
+    phone: "09791889900",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-22 15:40:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-22 15:40:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 8 completed",
+      family_occupation: "Powerloom Weaving",
+      current_livelihood: "Garment Factory Overlock Stitching Helper",
+      skills_and_interests: "Industrial Single Needle & Overlock Machine Sewing",
+      mobility_constraints: "Tiruppur town bus access / 10 km",
+      employment_preference: "Wage Employment (Garment Export Processing Unit)",
+      local_economic_context: "Tiruppur textile export cluster with continuous hiring of sewing machine operators"
+    },
+    turns_count: 7,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Sewing Machine Operator",
+    transcript: [
+      { user: "என் பெயர் ரேவதி, திருப்பூர் குமாரனந்தபுரம்.", assistant: "வணக்கம்! என்ன வேலை செய்கிறீர்கள்?", timestamp: "15:35:00" },
+      { user: "பனியன் கம்பெனியில் துணி தைக்கும் உதவியாளராக உள்ளேன்.", assistant: "எந்த பயிற்சி தேவைப்படுகிறது?", timestamp: "15:35:30" },
+      { user: "ஓவர்லாக் மற்றும் சிங்கிள் நீடில் மெஷின் ஆபரேட்டர் சான்றிதழ் பயிற்சி தேவை.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "15:36:00" }
+    ]
+  },
+  {
+    session_id: "6da92c3e-9731-44e5-526c-34061cbd6d13",
+    case_id: "KS-2026-00113",
+    phone: "09444332211",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-21 11:50:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-21 11:50:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Automobile Garage Mechanic",
+      current_livelihood: "Auto Electrical Helper & Alternator Repair",
+      skills_and_interests: "Two-Wheeler Electrical System Diagnostics, Battery Charging, Wiring Harness",
+      mobility_constraints: "Madurai city / 12 km radius",
+      employment_preference: "Self-Employment (Specialized Auto Electrical Shop)",
+      local_economic_context: "High commercial auto and two-wheeler traffic across Madurai junction"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Two Wheeler Service Technician",
+    transcript: [
+      { user: "மதுரையிலிருந்து சரவணன் பேசுகிறேன்.", assistant: "வணக்கம்! உங்கள் அனுபவம் என்ன?", timestamp: "11:45:00" },
+      { user: "பைக் வயரிங் மற்றும் பேட்டரி வேலை செய்கிறேன்.", assistant: "எந்த துறையில் பயிற்சி பெற விரும்புகிறீர்கள்?", timestamp: "11:45:30" },
+      { user: "டூவீலர் சர்வீஸ் டெக்னீஷியன் பயிற்சி வேண்டும்.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "11:46:00" }
+    ]
+  },
+  {
+    session_id: "7eb03d4f-a842-45f6-637d-45172dce7e14",
+    case_id: "KS-2026-00114",
+    phone: "09840223344",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "SMS",
+    confirmed_at: "2026-09-21 14:15:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-21 14:15:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 8 completed",
+      family_occupation: "Traditional Cane & Bamboo Basket Weaving",
+      current_livelihood: "Handicrafts Maker & Local Market Seller",
+      skills_and_interests: "Bamboo Product Weaving, Cane Furniture Assembly, Natural Fiber Bags",
+      mobility_constraints: "Local only (Wheelchair accessible / locomotor barrier reported)",
+      employment_preference: "Home Enterprise (Online Marketplace & Exhibition Linkage)",
+      local_economic_context: "Coimbatore eco-friendly handicrafts and gifting demand"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Handloom Weaver",
+    transcript: [
+      { user: "வணக்கம், கோவையிலிருந்து மாரிமுத்து பேசுகிறேன்.", assistant: "வணக்கம்! உங்கள் பணி மற்றும் உடல் நிலை பற்றி கூறுங்கள்.", timestamp: "14:10:00" },
+      { user: "எனக்கு காலில் சிறிய குறைபாடு உண்டு. வீட்டில் இருந்தே கூடை மற்றும் பிரம்பு கைவினை பொருட்கள் செய்வேன்.", assistant: "உங்களுக்கு பொருத்தமான பயிற்சி எது?", timestamp: "14:10:30" },
+      { user: "வீட்டில் இருந்தே செய்யும் கைவினைப் பொருள் பயிற்சி மற்றும் டூல்கிட் வேண்டும்.", assistant: "விவரங்கள் பதியப்பட்டன.", timestamp: "14:11:00" }
+    ]
+  },
+  {
+    session_id: "8fc14e50-b953-4607-748e-56283edf8f15",
+    case_id: "KS-2026-00115",
+    phone: "09789123890",
+    channel: "ivr",
+    language: "te",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-20 10:20:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-20 10:20:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed (SSC)",
+      family_occupation: "Traditional Weaving & Spinning",
+      current_livelihood: "Loom Operator Assistant in Cooperative",
+      skills_and_interests: "Powerloom & Shuttle Loom Operation, Warp Beam Loading, Cloth Inspection",
+      mobility_constraints: "Tiruppur border / 15 km radius",
+      employment_preference: "Wage Employment (Modern Weaving Mills)",
+      local_economic_context: "Continuous demand for skilled loom operators in Tiruppur textile mills"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Weaving Machine Operator",
+    transcript: [
+      { user: "నమస్కారం, నా పేరు శ్రీనివాసులు, తిరుప్పూర్ సమీపంలో ఉంటాను.", assistant: "మీ విద్య మరియు అనుభవం చెప్పండి?", timestamp: "10:15:00" },
+      { user: "పదో తరగతి వరకు చదివాను, మగ్గం పనిలో 4 ఏళ్ల అనుభవం ఉంది.", assistant: "ఏ రంగంలో సర్టిఫికేషన్ కావాలి?", timestamp: "10:15:30" },
+      { user: "వీవింగ్ మెషిన్ ఆపరేటర్ ట్రైనింగ్ తీసుకుని మంచి మిల్లులో ఉద్యోగం చేయాలనుకుంటున్నాను.", assistant: "వివరాలు నమోదు చేయబడ్డాయి.", timestamp: "10:16:00" }
+    ]
+  },
+  {
+    session_id: "90d25f61-ca64-4718-859f-67394fe09016",
+    case_id: "KS-2026-00116",
+    phone: "09944556677",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "SMS",
+    confirmed_at: "2026-09-20 14:50:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-20 14:50:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 8 completed",
+      family_occupation: "Traditional Food Making",
+      current_livelihood: "Home Pickles & Savory Preparation",
+      skills_and_interests: "Pickle Preservation, FSSAI Packaging Standards, Mango & Lime Pickles",
+      mobility_constraints: "Local village / 5 km radius",
+      employment_preference: "Self-Employment (FSSAI Certified Micro Food Unit)",
+      local_economic_context: "Namakkal agricultural produce processing and spice trade"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Pickle Making Technician",
+    transcript: [
+      { user: "என் பெயர் கற்பகம், நாமக்கல் மோகனூர்.", assistant: "வணக்கம்! என்ன உணவு தயாரிப்பில் அனுபவம் உள்ளது?", timestamp: "14:45:00" },
+      { user: "மாங்காய், எலுமிச்சை ஊறுகாய் மற்றும் தொக்கு செய்து விற்கிறேன்.", assistant: "எதிர்கால தேவை என்ன?", timestamp: "14:45:30" },
+      { user: "தரமான பேக்கிங் மற்றும் உணவு பதப்படுத்தும் பயிற்சி தேவை.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "14:46:00" }
+    ]
+  },
+  {
+    session_id: "a1e36072-db75-4829-9600-784a50f1a117",
+    case_id: "KS-2026-00117",
+    phone: "09842345678",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-19 11:30:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-19 11:30:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 12 completed (Science Group)",
+      family_occupation: "Agricultural Labor",
+      current_livelihood: "Solar Water Pump Helper & Farm Electrician",
+      skills_and_interests: "Solar Panel Mounting, Inverter Troubleshooting, Net Metering Wiring",
+      mobility_constraints: "Erode and Salem farming belt / 20 km",
+      employment_preference: "Self-Employment (Solar Installation & Annual Maintenance Franchise)",
+      local_economic_context: "PM-KUSUM solar agricultural pump boom across Erode agricultural belts"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Solar Panel Installation Technician",
+    transcript: [
+      { user: "ஈரோடு அந்தியூரிலிருந்து தினேஷ் பேசுகிறேன்.", assistant: "வணக்கம்! உங்கள் விருப்பம் என்ன?", timestamp: "11:25:00" },
+      { user: "சோலார் விவசாய பம்புகள் அமைப்பதில் பயிற்சி பெற்று சொந்த நிறுவனம் தொடங்க ஆசை.", assistant: "பதிவு முடிந்தது.", timestamp: "11:25:30" }
+    ]
+  },
+  {
+    session_id: "b2f47183-ec86-493a-a711-895b6102b218",
+    case_id: "KS-2026-00118",
+    phone: "09750011223",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-19 16:10:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-19 16:10:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Textile Tailoring",
+      current_livelihood: "Boutique Stitching Assistant",
+      skills_and_interests: "Garment Tailoring, Blouse Pattern Design, Embroidery & Hemming",
+      mobility_constraints: "Madurai city / 7 km",
+      employment_preference: "Self-Employment (Women Tailoring Boutique)",
+      local_economic_context: "Madurai Meenakshi Amman Temple festival textile and silk garment demand"
+    },
+    turns_count: 7,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Tailor - Women's and Men's Garment",
+    transcript: [
+      { user: "என் பெயர் மீனாட்சி, மதுரை சிம்மக்கல்.", assistant: "வணக்கம்! என்ன தையல் அனுபவம் உள்ளது?", timestamp: "16:05:00" },
+      { user: "பெண்கள் மற்றும் குழந்தைகள் ஆடை தைப்பதில் பயிற்சி வேண்டும்.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "16:05:30" }
+    ]
+  },
+  {
+    session_id: "c3058294-fd97-4a4b-b822-906c7213c319",
+    case_id: "KS-2026-00119",
+    phone: "09443355779",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "SMS",
+    confirmed_at: "2026-09-18 10:45:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-18 10:45:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 8 completed",
+      family_occupation: "Livestock & Milk Trade",
+      current_livelihood: "Dairy Farm Caretaker",
+      skills_and_interests: "Dairy Cattle Healthcare, Clean Milk Production, Chaff Cutter Operation",
+      mobility_constraints: "Within Dindigul rural cluster / 10 km",
+      employment_preference: "Self-Employment (Commercial Dairy & Value Added Ghee/Butter)",
+      local_economic_context: "Dindigul dairy farming cooperative network"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Dairy Farmer / Assistant",
+    transcript: [
+      { user: "திண்டுக்கல் வேடசந்தூரிலிருந்து முனியப்பன்.", assistant: "வணக்கம்! என்ன உதவி தேவை?", timestamp: "10:40:00" },
+      { user: "பால் பண்ணை அமைக்க கடனுதவி மற்றும் அரசு பயிற்சி சான்றிதழ் தேவை.", assistant: "பதிவு செய்யப்பட்டது.", timestamp: "10:40:30" }
+    ]
+  },
+  {
+    session_id: "d41693a5-0ea8-4b5c-c933-017d8324d420",
+    case_id: "KS-2026-00120",
+    phone: "09841122446",
+    channel: "ivr",
+    language: "ta",
+    status: "BENEFICIARY_CONFIRMED",
+    citizen_confirmed: true,
+    confirmed_via: "VOICE_CALL",
+    confirmed_at: "2026-09-18 15:20:00 UTC",
+    notification_status: "DISPATCHED",
+    completed_at: "2026-09-18 15:20:00 UTC",
+    confirmed_fields: {
+      educational_background: "Class 10 completed",
+      family_occupation: "Two-Wheeler Repair Work",
+      current_livelihood: "Workshop Assistant Mechanic",
+      skills_and_interests: "Two-Wheeler Brake, Clutch, Suspension Overhaul & Periodic Service",
+      mobility_constraints: "Tiruchirappalli suburb / 12 km",
+      employment_preference: "Self-Employment (Authorized Service Point)",
+      local_economic_context: "Tiruchirappalli urban two-wheeler repair demand"
+    },
+    turns_count: 8,
+    citizen_selected_choice: 1,
+    citizen_selected_course: "Two Wheeler Service Technician",
+    transcript: [
+      { user: "திருச்சியிலிருந்து அருண் குமார்.", assistant: "வணக்கம்! பைக் மெக்கானிக் பயிற்சியில் சேர விருப்பமா?", timestamp: "15:15:00" },
+      { user: "ஆம், இருசக்கர வாகன தொழில்நுட்ப பயிற்சி வேண்டும்.", assistant: "விவரங்கள் சேர்க்கப்பட்டன.", timestamp: "15:15:30" }
+    ]
+  }
+];
+
+const targetPath = path.resolve(__dirname, '../apps/voice-api/data/completed_calls.json');
+fs.writeFileSync(targetPath, JSON.stringify(mockCalls, null, 2), 'utf-8');
+console.log(`Successfully generated ${mockCalls.length} mock completed call records into ${targetPath}`);

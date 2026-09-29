@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -57,13 +58,19 @@ export function CaseDetailView({ caseData }: Props) {
   const [selectedPathwayIndex, setSelectedPathwayIndex] = useState<number>(initialIndex);
   const [officialDecision, setOfficialDecision] = useState<string>('approve');
   const [beneficiaryFeedback, setBeneficiaryFeedback] = useState<string>('ready');
-  const [notes, setNotes] = useState<string>('');
+  const [notes, setNotes] = useState<string>(caseData.officer_notes || '');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [submitted, setSubmitted] = useState<boolean>(false);
+  // If the case is already actioned, show the completed state immediately
+  const [submitted, setSubmitted] = useState<boolean>(
+    caseData.officer_action === 'approved' ||
+    caseData.officer_action === 'modified' ||
+    caseData.officer_action === 'rejected'
+  );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showFullDossierModal, setShowFullDossierModal] = useState<boolean>(false);
 
   const notesRef = useRef<HTMLTextAreaElement>(null);
+  const router = useRouter();
 
   const currentRec = recommendations[selectedPathwayIndex] || recommendations[0];
 
@@ -110,6 +117,12 @@ export function CaseDetailView({ caseData }: Props) {
       });
       setSubmitted(true);
       showToast('Official decision recorded successfully');
+      // Redirect back to case queue after a short delay so approved cases
+      // are properly filtered out of the pending queue on next load.
+      setTimeout(() => {
+        router.push('/officer/cases');
+        router.refresh();
+      }, 2000);
     } catch (e) {
       console.error(e);
       setSubmitted(true);
@@ -232,7 +245,13 @@ export function CaseDetailView({ caseData }: Props) {
               <span className="flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-slate-400" />
                 <span className="text-slate-500">Intake Mode:</span>
-                <strong className="text-slate-800">Voice Telephony (IVR)</strong>
+                <strong className="text-slate-800">
+                  {caseData.confirmed_via === 'WHATSAPP' || caseData.confirmed_via === 'WhatsApp'
+                    ? 'WhatsApp Intake'
+                    : caseData.confirmed_via === 'SMS'
+                    ? 'Voice + SMS Confirmation'
+                    : 'Voice Telephony'}
+                </strong>
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -805,28 +824,38 @@ export function CaseDetailView({ caseData }: Props) {
                     </p>
                   </div>
 
-                  <div className="p-3 bg-white/90 rounded-lg border border-[#BBE8CB] text-left text-[11px] text-slate-700 space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-[#0A783C]">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Beneficiary Notified via SMS
+                  {/* Notification status cards */}
+                  <div className="space-y-1.5 text-left">
+                    <div className="p-2.5 bg-white/90 rounded-lg border border-[#BBE8CB] text-[11px] text-slate-700 flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-slate-800">WhatsApp Notification Dispatched</p>
+                        <p className="text-slate-500 text-[10px]">Official sanction message + PDF document sent to beneficiary's WhatsApp ({caseData.phone || 'registered number'}).</p>
+                      </div>
                     </div>
-                    <p className="text-slate-500 text-[10px] pl-5">
-                      Dispatch triggered in <strong className="text-slate-700">{caseData.language}</strong> with counseling coordinator contact and enrollment center details.
-                    </p>
+                    <div className="p-2.5 bg-white/90 rounded-lg border border-[#BBE8CB] text-[11px] text-slate-700 flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#0A783C] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-slate-800">SMS Confirmation Sent</p>
+                        <p className="text-slate-500 text-[10px]">Approval SMS with PDF link & DBT disbursement details dispatched in {caseData.language || 'Tamil'}.</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="pt-2 flex flex-col gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.print();
-                        showToast('Printing official sanction certificate');
-                      }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-[#0A783C] hover:bg-[#085C2E] text-white text-xs font-bold shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  <div className="pt-1 flex flex-col gap-2">
+                    <a
+                      href={`/api/cases/${caseData.case_id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#0A783C] hover:bg-[#085C2E] text-white text-xs font-bold shadow-sm transition-colors flex items-center justify-center gap-2"
+                      onClick={() => showToast('Opening official sanction PDF')}
                     >
-                      <Printer className="w-4 h-4" />
-                      Print Official Sanction Order (PDF)
-                    </button>
+                      <FileText className="w-4 h-4" />
+                      Download Official Sanction Order (PDF)
+                    </a>
+                    <p className="text-[10px] text-slate-500 text-center">
+                      Redirecting to Case Queue in 2 seconds...
+                    </p>
                     <Link
                       href="/officer/cases"
                       className="w-full py-2 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1"

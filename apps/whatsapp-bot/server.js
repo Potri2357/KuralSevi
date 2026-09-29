@@ -259,10 +259,34 @@ app.post('/send', async (req, res) => {
 
     const result = await sock.sendMessage(targetJid, { text: String(message) });
 
-    console.log(`[WhatsApp Bot] Successfully dispatched message to ${targetJid} (ID: ${result.key.id})`);
+    // If a PDF document is provided via pdfUrl or document base64, dispatch it directly
+    const { pdfUrl, fileName } = req.body || {};
+    let pdfSent = false;
+    if (pdfUrl) {
+      try {
+        console.log(`[WhatsApp Bot] Fetching and attaching Sanction PDF from ${pdfUrl}...`);
+        const pdfResp = await fetch(pdfUrl, { signal: AbortSignal.timeout(8000) });
+        if (pdfResp.ok) {
+          const pdfBuffer = Buffer.from(await pdfResp.arrayBuffer());
+          await sock.sendMessage(targetJid, {
+            document: pdfBuffer,
+            mimetype: 'application/pdf',
+            fileName: fileName || 'PM-AJAY_Sanction_Order.pdf',
+            caption: '📜 Official PM-AJAY Livelihood Sanction Order'
+          });
+          pdfSent = true;
+          console.log(`[WhatsApp Bot] Successfully dispatched PDF document to ${targetJid}`);
+        }
+      } catch (pdfErr) {
+        console.warn(`[WhatsApp Bot] Notice while attaching PDF:`, pdfErr.message);
+      }
+    }
+
+    console.log(`[WhatsApp Bot] Successfully dispatched message to ${targetJid} (ID: ${result.key.id}, PDF: ${pdfSent})`);
     res.json({
       success: true,
       messageId: result.key.id,
+      pdfSent,
       to: cleanDigits,
       timestamp: result.messageTimestamp
     });

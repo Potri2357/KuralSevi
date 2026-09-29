@@ -610,7 +610,7 @@ export function CallRecordsView({ initialCalls }: Props) {
                     : 'text-slate-600 hover:text-slate-900'
                 )}
               >
-                IVR Call
+                Voice Call
               </button>
               <button
                 type="button"
@@ -735,40 +735,44 @@ export function CallRecordsView({ initialCalls }: Props) {
                         <span>Case: {call.case_id}</span>
                       </div>
 
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 uppercase tracking-wider">
-                        {call.channel?.toUpperCase() || 'IVR'}
-                      </span>
-
                       <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB]">
                         {langMeta.name} ({langMeta.native})
                       </span>
-                    </div>
 
-                    {/* Right: Confirmation Status & Timestamp */}
-                    <div className="flex items-center gap-2">
-                      {call.citizen_confirmed ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#EDF9F1] text-[#0A783C] border border-[#BBE8CB] shadow-2xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#0A783C]" />
-                          <span>Citizen Confirmed ({call.confirmed_via || 'SMS'})</span>
+                      {/* Channel badge */}
+                      {call.channel?.toLowerCase() === 'whatsapp' ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-md bg-[#EDF9F1] text-[#0A783C] border border-[#BBE8CB]">
+                          <MessageSquare className="w-3 h-3 text-[#25D366]" />
+                          WhatsApp
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#FFF4ED] text-[#C24810] border border-[#FDD8C2] shadow-2xs">
-                          <Clock className="w-3.5 h-3.5 text-[#E05A1B]" />
-                          <span>Awaiting Citizen Reply</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-md bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB]">
+                          <PhoneCall className="w-3 h-3" />
+                          Voice Call
                         </span>
                       )}
 
-                      {/* Card Quick WhatsApp Action */}
+                      {/* Citizen confirmed badge */}
+                      {call.citizen_confirmed && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#EDF9F1] text-[#0A783C] border border-[#BBE8CB]">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Confirmed
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Right: WhatsApp Intake + Timestamp */}
+                    <div className="flex items-center gap-2">
+                      {/* WhatsApp Intake Button - top of card */}
                       <button
                         type="button"
                         onClick={() => openWhatsAppModalForCall(call)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#EDF9F1] text-[#075E54] border border-[#BBE8CB] hover:bg-[#DCFCE7] transition-all hover:scale-102 cursor-pointer shadow-2xs"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#25D366] hover:bg-[#1EBE5D] border border-[#1EBE5D]/50 transition-all hover:scale-105 cursor-pointer shadow-2xs"
                         title="Initialise WhatsApp voice intake for this beneficiary"
                       >
-                        <Sparkles className="w-3 h-3 text-[#25D366]" />
+                        <MessageSquare className="w-3.5 h-3.5" />
                         <span>WhatsApp Intake</span>
                       </button>
-
                       <span className="text-xs font-medium text-slate-400">
                         {call.completed_at || 'Recently'}
                       </span>
@@ -810,17 +814,6 @@ export function CallRecordsView({ initialCalls }: Props) {
                           {Math.round(rec.topsis_score * 100)}% Match
                         </span>
                       )}
-
-                      {/* WhatsApp Intake Button */}
-                      <button
-                        type="button"
-                        onClick={() => openWhatsAppModalForCall(call)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold text-[#075E54] bg-[#EDF9F1] hover:bg-[#DCFCE7] border border-[#BBE8CB] transition-all hover:scale-102 cursor-pointer shadow-2xs h-8"
-                        title="Initialise WhatsApp voice intake for this beneficiary"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-[#25D366]" />
-                        <span>WhatsApp Intake</span>
-                      </button>
 
                       <Link href={`/officer/cases/${call.case_id}`}>
                         <Button size="sm" variant="secondary" className="text-xs font-bold shadow-2xs gap-1 py-1 h-8">

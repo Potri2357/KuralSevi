@@ -68,4 +68,10 @@ export interface CaseDetailData {
   citizen_confirmed?: boolean;
   confirmed_via?: string;
   confirmed_at?: string;
+  officer_action?: 'pending' | 'approved' | 'modified' | 'rejected';
+  beneficiary_decision?: string;
+  officer_notes?: string;
+  actioned_at?: string;
+  sanction_order_id?: string;
+  phone?: string;
 }

@@ -5,5 +5,33 @@
     "beneficiary_decision": "ready",
     "officer_notes": "",
     "actioned_at": "2026-09-07T14:25:50.117Z"
+  },
+  "67253B03-59A": {
+    "case_id": "67253B03-59A",
+    "action": "approved",
+    "beneficiary_decision": "ready",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T05:11:54.589Z"
+  },
+  "ECECE242-F4D": {
+    "case_id": "ECECE242-F4D",
+    "action": "approved",
+    "beneficiary_decision": "ready",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T05:20:55.843Z"
+  },
+  "KS-2026-00119": {
+    "case_id": "KS-2026-00119",
+    "action": "approved",
+    "beneficiary_decision": "ready",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T05:47:49.067Z"
+  },
+  "KS-2026-00108": {
+    "case_id": "KS-2026-00108",
+    "action": "approved",
+    "beneficiary_decision": "ready",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T06:11:58.413Z"
   }
 }

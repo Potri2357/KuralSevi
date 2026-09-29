@@ -34,6 +34,7 @@ interface Props {
   selectedIds?: string[];
   onToggleSelect?: (id: string) => void;
   onSelectAll?: () => void;
+  onQuickApprove?: (id: string) => void;
 }
 
 function getTradeIcon(trade: string) {
@@ -107,6 +108,7 @@ export function CaseQueueTable({
   selectedIds = [],
   onToggleSelect,
   onSelectAll,
+  onQuickApprove,
 }: Props) {
   const isAllSelected = cases.length > 0 && selectedIds.length === cases.length;
 
@@ -325,10 +327,20 @@ export function CaseQueueTable({
                           <ArrowRight className="w-3 h-3" />
                         </Button>
                       </Link>
-                    ) : (
+                    ) : c.officer_action === 'approved' ? (
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-2.5 py-1 rounded shadow-2xs">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        Actioned
+                        Approved
+                      </span>
+                    ) : c.officer_action === 'rejected' ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded shadow-2xs">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Rejected
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB] px-2.5 py-1 rounded shadow-2xs">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Modified
                       </span>
                     )}
                   </td>
