@@ -1,22 +1,17 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
 import {
-  Mic,
-  Cpu,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
   QrCode,
   Building2,
   Users,
-  Sparkles,
   Lock,
   Globe2,
 } from 'lucide-react';
 import {
   IndicEar,
-  IndicVoiceWave,
-  IndicCertificate,
   IndicChakra,
 } from '@/components/icons/indic';
 
@@ -63,9 +58,6 @@ export default function HomePage() {
             </div>
             <a href="#portals" className="hover:text-[#0B3064] transition-colors">
               Role Portals
-            </a>
-            <a href="#workflows" className="hover:text-[#0B3064] transition-colors">
-              Core Engine
             </a>
             <Link href="/verify" className="flex items-center gap-1.5 hover:text-[#E05A1B] transition-colors">
               <QrCode className="w-3.5 h-3.5 text-[#E05A1B]" />
@@ -243,97 +235,6 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-[#0B3064] font-display">0-Sec</div>
             <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Instant Tamper-Proof QR Verify</div>
           </div>
-        </div>
-      </section>
-
-      {/* CORE CAPABILITIES ARCHITECTURE SECTION */}
-      <section id="workflows" className="relative z-10 py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF1FB] text-xs font-bold text-[#0B3064] border border-[#BACEEB] mb-2.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#0B3064]" />
-            <span>End-to-End Governance Architecture</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display tracking-tight">
-            How Kural Sevi Operates
-          </h2>
-          <p className="text-sm text-slate-600 max-w-2xl mx-auto mt-1 font-sans">
-            Automating the bridge between unorganized rural beneficiaries and government skill development programs.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-          {[
-            {
-              step: '01',
-              title: 'Multilingual Ingestion',
-              desc: 'Beneficiaries dial an IVR hotline or send a WhatsApp voice note. Sarvam AI models transcribe colloquial Tamil into clean structured records.',
-              icon: IndicVoiceWave,
-              secondaryIcon: Mic,
-              badge: 'Telephony & WhatsApp',
-              accent: 'border-[#BACEEB]/80',
-              iconContainer: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
-            },
-            {
-              step: '02',
-              title: 'AI Livelihood Profiling',
-              desc: 'Google Gemini extracts 7 key demographic criteria: education level, physical mobility, migration preference, and existing skills.',
-              icon: IndicEar,
-              secondaryIcon: Cpu,
-              badge: 'Gemini 2.5 Flash',
-              accent: 'border-[#FDD8C2]/80',
-              iconContainer: 'text-[#C24810] bg-[#FFF4ED] border border-[#FDD8C2]',
-            },
-            {
-              step: '03',
-              title: 'NSQF Match Engine',
-              desc: 'Hard-constraint filtering plus vector similarity ranks the top 3 National Skills Qualifications Framework (NSQF) courses with salary benchmarks.',
-              icon: IndicCertificate,
-              secondaryIcon: CheckCircle2,
-              badge: 'AHP Multi-Criteria',
-              accent: 'border-[#BBE8CB]/80',
-              iconContainer: 'text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB]',
-            },
-            {
-              step: '04',
-              title: 'QR Verified Dispatch',
-              desc: 'District Officer reviews and approves. System generates a bilingual PDF with a cryptographically signed QR code for instant field validation.',
-              icon: IndicCertificate,
-              secondaryIcon: QrCode,
-              badge: 'Tamper-Proof Verify',
-              accent: 'border-[#BACEEB]/80',
-              iconContainer: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
-            },
-          ].map((item) => {
-            const Icon = item.icon;
-            const SecIcon = item.secondaryIcon;
-            return (
-              <div
-                key={item.step}
-                className={`p-6 rounded-2xl bg-white border ${item.accent} shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-black text-slate-300 font-mono">
-                      {item.step}
-                    </span>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-mono">
-                      {item.badge}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs ${item.iconContainer}`}>
-                      <Icon className="w-5 h-5" strokeWidth={2} />
-                    </div>
-                    <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400">
-                      <SecIcon className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-bold text-[#0B3064] font-display mb-1.5">{item.title}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-sans">{item.desc}</p>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </section>
 
