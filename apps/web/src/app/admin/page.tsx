@@ -1,10 +1,7 @@
-import { Metadata } from 'next';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BookOpen, Database, Sliders, Activity, PhoneCall } from 'lucide-react';
-
-export const metadata: Metadata = { title: 'System Administration — Kural Sevi' };
 
 export default function AdminPage() {
   const adminModules = [
@@ -54,10 +51,10 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-[#0B3064] tracking-tight">
+        <h1 className="text-2xl font-extrabold text-white tracking-tight">
           System Administration & Governance
         </h1>
-        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-0.5">
+        <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
           NSQF national qualification catalog management, AI matching engine weights, and data ingestion pipeline controls
         </p>
       </div>
@@ -66,7 +63,7 @@ export default function AdminPage() {
         {adminModules.map((mod) => {
           const Icon = mod.icon;
           const cardContent = (
-            <Card key={mod.title} className="bg-[var(--bg-card)] border-[var(--border)] card-hover cursor-pointer shadow-2xs h-full">
+            <Card key={mod.title} className="bg-slate-800 border-slate-700 card-hover cursor-pointer shadow-2xs h-full">
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">

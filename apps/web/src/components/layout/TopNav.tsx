@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Inbox,
@@ -14,14 +14,47 @@ import {
   Menu,
   X,
   PhoneCall,
+  LogOut,
+  ChevronDown,
+  User,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { createClient } from '@/utils/supabase/client';
+
+type UserRole = 'admin' | 'district_officer' | 'panchayat_kiosk';
+
+interface UserProfile {
+  full_name: string;
+  role: UserRole;
+  district?: string;
+  panchayat?: string;
+}
 
 export function TopNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [counts, setCounts] = useState<{ total: number; pending: number; slaBreached: number } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const supabase = createClient();
+
+  // Load user profile
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('full_name, role, district, panchayat')
+        .eq('id', user.id)
+        .single();
+      if (data) setProfile(data as UserProfile);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -32,27 +65,31 @@ export function TopNav() {
           const data = await res.json();
           const cases = data.cases || [];
           const total = cases.length;
-          const pending = cases.filter((c: any) => c.officer_action === 'pending').length;
+          const pending = cases.filter((c: { officer_action: string }) => c.officer_action === 'pending').length;
           const slaBreached = cases.filter(
-            (c: any) => c.officer_action === 'pending' && new Date(c.sla_deadline) < new Date()
+            (c: { officer_action: string; sla_deadline: string }) =>
+              c.officer_action === 'pending' && new Date(c.sla_deadline) < new Date()
           ).length;
-          if (isMounted) {
-            setCounts({ total, pending, slaBreached });
-          }
+          if (isMounted) setCounts({ total, pending, slaBreached });
         }
-      } catch (err) {
+      } catch {
         // silent fallback
       }
     }
 
     loadDocketStats();
-    // Fast refresh for live call updates
     const timer = setInterval(loadDocketStats, 4000);
     return () => {
       isMounted = false;
       clearInterval(timer);
     };
   }, [pathname]);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await supabase.auth.signOut();
+    router.replace('/login');
+  }
 
   const queueBadge = counts !== null ? (counts.pending > 0 ? String(counts.pending) : '0') : '0';
   const slaCount = counts !== null ? counts.slaBreached : 0;
@@ -64,18 +101,26 @@ export function TopNav() {
     { href: '/officer/planning', label: 'Planning', icon: BarChart3 },
     { href: '/officer/beneficiary/new', label: 'Intake', icon: UserPlus },
     { href: '/officer/export', label: 'Export', icon: Download },
-    { href: '/admin', label: 'Admin', icon: Settings },
+    ...(profile?.role === 'admin' ? [{ href: '/admin', label: 'Admin', icon: Settings }] : []),
   ];
+
+  const initials = profile?.full_name
+    ? profile.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'U';
+
+  const roleLabel: Record<UserRole, string> = {
+    admin: 'System Administrator',
+    district_officer: 'District Officer',
+    panchayat_kiosk: 'Panchayat Kiosk',
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.05)] transition-all">
-      {/* 3px Top Saffron National Scheme Accent Rule */}
       <div className="h-[3px] w-full bg-[#E05A1B]" aria-hidden="true" />
 
-      {/* Main container perfectly aligned with webpage max-w-7xl */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between gap-4 sm:gap-6">
-          {/* Brand Mark (Navy KS square logo + bold Kural Sevi text) */}
+          {/* Brand */}
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
@@ -99,11 +144,8 @@ export function TopNav() {
             </Link>
           </div>
 
-          {/* Desktop Navigation Tabs: Clean underline indicator & dynamic pill badges */}
-          <nav
-            className="hidden md:flex items-center gap-6 lg:gap-8 h-full"
-            aria-label="Main Navigation"
-          >
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 h-full" aria-label="Main Navigation">
             {navItems.map((item) => {
               const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
               const Icon = item.icon;
@@ -124,10 +166,10 @@ export function TopNav() {
                   {item.badge !== undefined && (
                     <span
                       className={cn(
-                        "text-xs px-2 py-0.5 rounded-full font-bold ml-0.5 transition-colors",
+                        'text-xs px-2 py-0.5 rounded-full font-bold ml-0.5 transition-colors',
                         item.badge === '0'
-                          ? "bg-slate-200 text-slate-700"
-                          : "bg-[#0B3064] text-white"
+                          ? 'bg-slate-200 text-slate-700'
+                          : 'bg-[#0B3064] text-white'
                       )}
                     >
                       {item.badge}
@@ -138,19 +180,17 @@ export function TopNav() {
             })}
           </nav>
 
-          {/* Right Actions: Dynamic SLA Alert Pill + Avatar N */}
+          {/* Right: SLA badge + user menu */}
           <div className="flex items-center gap-3 shrink-0">
-
-            {/* SLA Alert Badge (Live status from real case deadlines) */}
             <Link
               href="/officer/cases?filter=sla_breached"
               className={cn(
-                "flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]",
+                'hidden sm:flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]',
                 slaCount > 0
-                  ? "text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2]"
-                  : "text-[#0A783C] bg-[#EDF9F1] hover:bg-[#DDF4E4] border border-[#BBE8CB]"
+                  ? 'text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2]'
+                  : 'text-[#0A783C] bg-[#EDF9F1] hover:bg-[#DDF4E4] border border-[#BBE8CB]'
               )}
-              title={slaCount > 0 ? `${slaCount} case${slaCount > 1 ? 's' : ''} breach statutory SLA today` : "All cases within statutory SLA deadline"}
+              title={slaCount > 0 ? `${slaCount} case(s) breach SLA` : 'All cases within SLA'}
             >
               {slaCount > 0 ? (
                 <AlertTriangle className="w-3.5 h-3.5 text-[#E05A1B] shrink-0 animate-pulse" />
@@ -160,19 +200,80 @@ export function TopNav() {
               <span>{slaCount} SLA</span>
             </Link>
 
-            {/* Officer Avatar Button */}
-            <button
-              type="button"
-              className="w-8 h-8 rounded-full bg-[#0B3064] hover:bg-[#144282] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-2xs transition-transform duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0B3064] cursor-pointer"
-              aria-label="Officer Profile"
-            >
-              N
-            </button>
+            {/* User menu dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0B3064]"
+                aria-label="User menu"
+                id="user-menu-btn"
+              >
+                <div className="w-7 h-7 rounded-full bg-[#0B3064] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-2xs">
+                  {initials}
+                </div>
+                <ChevronDown className={cn('w-3.5 h-3.5 text-slate-400 transition-transform', userMenuOpen && 'rotate-180')} />
+              </button>
+
+              {userMenuOpen && (
+                <>
+                  {/* Backdrop */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setUserMenuOpen(false)}
+                    aria-hidden="true"
+                  />
+                  {/* Dropdown */}
+                  <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-[0_8px_40px_-4px_rgba(11,48,100,0.16)] border border-slate-100 z-50 overflow-hidden">
+                    {/* Profile header */}
+                    <div className="px-4 py-4 bg-gradient-to-br from-[#EAF1FB] to-white border-b border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#0B3064] flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                          {initials}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-[#0B3064] leading-tight">{profile?.full_name || 'Loading…'}</p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            {profile ? roleLabel[profile.role] : ''}
+                          </p>
+                          {profile?.district && (
+                            <p className="text-xs text-slate-400 mt-0.5">{profile.district}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu items */}
+                    <div className="p-2">
+                      <button
+                        onClick={() => { setUserMenuOpen(false); router.push('/officer'); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        <User className="w-4 h-4 text-slate-400" />
+                        My Dashboard
+                      </button>
+
+                      <div className="my-1.5 border-t border-slate-100" />
+
+                      <button
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                        id="logout-btn"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        {loggingOut ? 'Signing out…' : 'Sign Out'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer Dropdown */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md px-4 py-3 space-y-1.5 shadow-lg animate-in slide-in-from-top-2">
           {navItems.map((item) => {
@@ -196,10 +297,10 @@ export function TopNav() {
                 </div>
                 {item.badge !== undefined && (
                   <span className={cn(
-                    "text-xs px-2 py-0.5 rounded-full font-bold border",
+                    'text-xs px-2 py-0.5 rounded-full font-bold border',
                     item.badge === '0'
-                      ? "bg-slate-100 text-slate-600 border-slate-200"
-                      : "bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]"
+                      ? 'bg-slate-100 text-slate-600 border-slate-200'
+                      : 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]'
                   )}>
                     {item.badge}
                   </span>
@@ -207,6 +308,16 @@ export function TopNav() {
               </Link>
             );
           })}
+
+          {/* Mobile logout */}
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            {loggingOut ? 'Signing out…' : 'Sign Out'}
+          </button>
         </div>
       )}
     </header>
