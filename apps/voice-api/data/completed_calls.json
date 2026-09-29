@@ -68,7 +68,10 @@
         "user": "Selected Course: Option 2 (Self Employed Tailor)",
         "assistant": "Confirmed"
       }
-    ]
+    ],
+    "officer_action": "approved",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T12:02:15.358Z"
   },
   {
     "session_id": "wa-mumlelju-b4rd",

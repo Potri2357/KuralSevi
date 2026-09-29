@@ -33,5 +33,12 @@
     "beneficiary_decision": "ready",
     "officer_notes": "",
     "actioned_at": "2026-09-29T06:11:58.413Z"
+  },
+  "KS-WA-2026-5776": {
+    "case_id": "KS-WA-2026-5776",
+    "action": "approved",
+    "beneficiary_decision": "ready",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T12:02:15.358Z"
   }
 }

@@ -39,11 +39,11 @@ export function KioskWhatsAppModal({
   const getMessageContent = () => {
     const cleanPhone = phone.trim();
     if (serviceType === 'intake') {
-      return `*வணக்கம் / Greetings from Kural Sevi (PM-AJAY)*\n\nதமிழ்நாடு அரசு சமூக நலத்துறை மூலமாக பிரதம மந்திரி அனுகூல ஆதி திராவிடர் நல திட்டம் (PM-AJAY GIA) கீழ் இலவச திறன் பயிற்சி மற்றும் ரூ. 50,000 வரை மானிய உதவி வழங்கப்படுகிறது.\n\nகிராம ஊராட்சி கணினி மையம் (Panchayat Kiosk) மூலம் உங்கள் குரல் பதிவு முடிந்தது.\n\n📞 உதவிக்கு கட்டணமில்லா எண்: 1800-11-2001\nஅரசு இணையதளம்: http://localhost:3000`;
+      return `*नमस्ते / Greetings from Kural Sevi (PM-AJAY)*\n\nसामाजिक न्याय एवं अधिकारिता विभाग के तत्वावधान में प्रधानमंत्री अनुसचित जाति अभ्युदय योजना (PM-AJAY GIA) के तहत निःशुल्क कौशल प्रशिक्षण एवं ₹50,000 तक की अनुदान सहायता उपलब्ध है।\n\nग्राम पंचायत कियोस्क (Panchayat Kiosk) द्वारा आपका पंजीकरण दर्ज कर लिया गया है।\n\n📞 टोल-फ्री सहायता केंद्र: 1800-11-2001\nआधिकारिक पोर्टल: http://localhost:3000`;
     } else if (serviceType === 'status') {
-      return `*Kural Sevi — விண்ணப்ப நிலை / Application Update*\n\nஉங்கள் PM-AJAY விண்ணப்பம் (${caseId || 'REG-CASE'}) மாவட்ட சமூக நல அலுவலர் சரிபார்ப்பில் உள்ளது.\n\nவிண்ணப்ப நிலையை காண: http://localhost:3000/kiosk\nஉதவி மையம்: 1800-11-2001`;
+      return `*Kural Sevi — आवेदन स्थिति / Application Update*\n\nआपका PM-AJAY आवेदन (${caseId || 'REG-CASE'}) जिला कल्याण अधिकारी के सत्यापन हेतु प्रक्रियाधीन है।\n\nआवेदन स्थिति देखें: http://localhost:3000/kiosk\nटोल-फ्री हेल्पलाइन: 1800-11-2001`;
     } else {
-      return `*அரசு ஆணை சரிபார்ப்பு / Verified PM-AJAY Sanction Order*\n\nஉங்கள் PM-AJAY திறன் பயிற்சி மற்றும் வாழ்வாதார உதவி ஆணை அனுமதிக்கப்பட்டுள்ளது.\n\nஆணை எண்: ORD-AJAY-${caseId || '2026'}\nசரிபார்க்க: http://localhost:3000/verify/${caseId || 'ORD-AJAY-2026'}\n\nதமிழ்நாடு சமூக நலத்துறை · இந்திய அரசு`;
+      return `*सत्यापित स्वीकृति आदेश / Verified PM-AJAY Sanction Order*\n\nआपका PM-AJAY कौशल प्रशिक्षण एवं आजीविका अनुदान आदेश स्वीकृत कर दिया गया है।\n\nआदेश संख्या: ORD-AJAY-${caseId || '2026'}\nसत्यापन लिंक: http://localhost:3000/verify/${caseId || 'ORD-AJAY-2026'}\n\nसामाजिक न्याय एवं अधिकारिता मंत्रालय · भारत सरकार`;
     }
   };
 
@@ -114,7 +114,7 @@ export function KioskWhatsAppModal({
                   WhatsApp Citizen Outreach
                 </h3>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/20 text-white font-mono">
-                  வாட்ஸ்அப் சேவை
+                  व्हाट्सएप सेवा
                 </span>
               </div>
               <p className="text-xs text-white/80">
@@ -193,7 +193,7 @@ export function KioskWhatsAppModal({
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. 9841567890"
+                  placeholder="1234567890"
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 focus:border-[#075E54] focus:bg-white transition-all shadow-2xs"
                 />
               </div>

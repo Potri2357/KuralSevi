@@ -109,7 +109,7 @@ export function KioskWhatsAppPlatform({
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       sender: 'user',
-      text: isVoiceNote ? `🎤 குரல் செய்தி / Voice Note: "${text}"` : text,
+      text: isVoiceNote ? `🎤 आवाज संदेश / Voice Note: "${text}"` : text,
       time: now,
       isVoice: isVoiceNote,
     };
@@ -153,7 +153,7 @@ export function KioskWhatsAppPlatform({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 phone: realPhone,
-                language: 'ta',
+                language: 'hi',
                 mode: 'sanction',
                 caseId: data.completedCase.caseId,
                 beneficiaryName: data.completedCase.name,
@@ -169,7 +169,7 @@ export function KioskWhatsAppPlatform({
         {
           id: `err-${Date.now()}`,
           sender: 'bot',
-          text: 'மன்னிக்கவும், தகவல் தொடர்பில் பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.',
+          text: 'क्षमा करें, कनेक्शन में त्रुटि हुई। कृपया पुनः प्रयास करें।',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -181,15 +181,15 @@ export function KioskWhatsAppPlatform({
     setTimeout(() => {
       setIsRecordingVoice(false);
       const defaultSamples = [
-        'என் பெயர் முருகன், சேலம் மாவட்டம் மேல்படி கிராமம்.',
-        'நான் 10 ஆம் வகுப்பு முடித்துள்ளேன்.',
-        'எனக்கு தையல் மற்றும் ஆடை தயாரிப்பில் 1 வருடம் அனுபவம் உள்ளது.',
-        'சொந்தமாக தையல் கடை வைக்க விரும்புகிறேன்.',
-        'ஆம், மாவட்ட ITI பயிற்சி மையத்திற்கு செல்ல முடியும்.',
-        '2 வது திட்டத்தை தேர்வு செய்கிறேன்.',
+        'मेरा नाम रमेश कुमार, जिला सलेम, ग्राम मेलपाड़ी।',
+        'मैंने 10वीं कक्षा उत्तीर्ण की है।',
+        'मुझे सिलाई और वस्त्र निर्माण में 1 वर्ष का अनुभव है।',
+        'मैं स्वयं की सिलाई दुकान (स्वरोजगार) शुरू करना चाहता हूँ।',
+        'हाँ, मैं जिला ITI कौशल केंद्र जा सकता हूँ।',
+        'मैं विकल्प संख्या 2 (सिलाई एवं वस्त्र उद्यम) चुनता हूँ।',
       ];
       const stageIdx = Math.min(conversationState.stage || 0, defaultSamples.length - 1);
-      handleSendMessage(defaultSamples[stageIdx] || 'ஆம், பதிவு செய்கிறேன்', true);
+      handleSendMessage(defaultSamples[stageIdx] || 'हाँ, पंजीकरण आगे बढ़ाएं', true);
     }, 1200);
   };
 
@@ -242,14 +242,14 @@ export function KioskWhatsAppPlatform({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-sm sm:text-base font-display tracking-tight leading-tight">
-                  Kural Sevi · குரல் செவி
+                  Kural Sevi · कुराल सेवी
                 </h3>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#25D366] text-slate-900 font-mono">
                   Official AI Bot
                 </span>
               </div>
               <p className="text-[11px] text-white/80 font-mono">
-                {isTyping ? 'தட்டச்சு செய்கிறார் / typing…' : 'Online · PM-AJAY Livelihood Intake'}
+                {isTyping ? 'टाइप कर रहे हैं / typing…' : 'Online · PM-AJAY Livelihood Intake'}
               </p>
             </div>
           </div>
@@ -299,7 +299,7 @@ export function KioskWhatsAppPlatform({
                 type="tel"
                 value={realPhone}
                 onChange={(e) => setRealPhone(e.target.value)}
-                placeholder="Enter 10-digit mobile number"
+                placeholder="1234567890"
                 className="px-3 py-1.5 rounded-lg bg-white border border-[#25D366]/60 text-slate-900 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#075E54]"
               />
               <button
@@ -307,7 +307,7 @@ export function KioskWhatsAppPlatform({
                 onClick={() => {
                   if (realPhone.length >= 10) {
                     const text = encodeURIComponent(
-                      'வணக்கம்! Kural Sevi PM-AJAY உதவி மையத்தில் உங்கள் குரல் பதிவு தொடங்கப்பட்டுள்ளது. உதவிக்கு: 1800-11-2001'
+                      'नमस्ते! Kural Sevi PM-AJAY सहायता केंद्र में आपका स्वागत है। सहायता: 1800-11-2001'
                     );
                     window.open(`https://wa.me/91${realPhone.replace(/\D/g, '')}?text=${text}`, '_blank');
                   }
@@ -405,7 +405,7 @@ export function KioskWhatsAppPlatform({
                 type="button"
                 onClick={handleSimulateVoiceNote}
                 disabled={isTyping}
-                title="Send Voice Note (குரல் செய்தி)"
+                title="Send Voice Note (आवाज संदेश)"
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-xs cursor-pointer shrink-0 ${
                   isRecordingVoice
                     ? 'bg-red-600 animate-pulse'
@@ -425,7 +425,7 @@ export function KioskWhatsAppPlatform({
                     handleSendMessage(inputText);
                   }
                 }}
-                placeholder="Type your reply or tap quick options above… (தட்டச்சு செய்க)"
+                placeholder="Type your reply or tap quick options above… (उत्तर टाइप करें)"
                 disabled={isTyping}
                 className="flex-1 px-4 py-2.5 rounded-full bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#128C7E]/30 focus:border-[#128C7E]"
               />

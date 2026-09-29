@@ -52,7 +52,7 @@ export function KioskStatusModal({ isOpen, onClose, onOpenVerify }: KioskStatusM
             </div>
             <div>
               <h3 className="font-bold text-lg font-display tracking-tight">
-                விண்ணப்ப நிலை அறிதல் · Application Status
+                आवेदन स्थिति जांच · Application Status
               </h3>
               <p className="text-xs text-white/70">
                 Check PM-AJAY registration & approval status
@@ -83,7 +83,7 @@ export function KioskStatusModal({ isOpen, onClose, onOpenVerify }: KioskStatusM
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="e.g. 9876543210 or case-17408"
+                  placeholder="e.g. 1234567890 or case-17408"
                   className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-medium text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/20 focus:border-[#0B3064] focus:bg-white transition-all shadow-2xs"
                   required
                 />
@@ -98,7 +98,7 @@ export function KioskStatusModal({ isOpen, onClose, onOpenVerify }: KioskStatusM
               </button>
             </div>
             <p className="text-[11px] text-slate-500">
-              பயனாளியின் 10 இலக்க செல்போன் எண் அல்லது விண்ணப்ப குறிப்பு எண்ணை உள்ளிடவும்.
+              लाभार्थी का 10 अंकों का मोबाइल नंबर (1234567890) या आवेदन संदर्भ संख्या दर्ज करें।
             </p>
           </form>
 

@@ -117,12 +117,10 @@ export function CaseDetailView({ caseData }: Props) {
       });
       setSubmitted(true);
       showToast('Official decision recorded successfully');
-      // Redirect back to case queue after a short delay so approved cases
-      // are properly filtered out of the pending queue on next load.
+      // Automatically return to case queue
       setTimeout(() => {
-        router.push('/officer/cases');
-        router.refresh();
-      }, 2000);
+        window.location.href = '/officer/cases';
+      }, 1200);
     } catch (e) {
       console.error(e);
       setSubmitted(true);
@@ -820,8 +818,9 @@ export function CaseDetailView({ caseData }: Props) {
                       <FileText className="w-4 h-4" />
                       Download Official Sanction Order (PDF)
                     </a>
-                    <p className="text-[10px] text-slate-500 text-center">
-                      Redirecting to Case Queue in 2 seconds...
+                    <p className="text-xs font-bold text-[#0A783C] text-center animate-pulse flex items-center justify-center gap-1.5 py-1">
+                      <span className="w-2 h-2 rounded-full bg-[#0A783C] animate-ping" />
+                      Returning to Case Queue automatically...
                     </p>
                     <Link
                       href="/officer/cases"

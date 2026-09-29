@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { LogOut } from 'lucide-react';
+import { LogOut, Maximize2, Minimize2 } from 'lucide-react';
 import { IndicEar, IndicChakra } from '@/components/icons/indic';
 import { useState, useEffect } from 'react';
 
@@ -16,6 +16,25 @@ export function KioskShell({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
+  const toggleKioskFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+      setIsFullScreen(true);
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+      setIsFullScreen(false);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -90,6 +109,29 @@ export function KioskShell({ children }: { children: React.ReactNode }) {
                 )}
               </div>
             )}
+            <button
+              type="button"
+              onClick={toggleKioskFullscreen}
+              id="kiosk-shell-fullscreen-btn"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                isFullScreen
+                  ? 'bg-[#0B3064] text-white border-[#0B3064]'
+                  : 'bg-white hover:bg-slate-50 text-[#0B3064] border-[#0B3064]/30'
+              }`}
+              title={isFullScreen ? 'Exit Kiosk Fullscreen' : 'Enter Kiosk Stand Mode'}
+            >
+              {isFullScreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5" />
+                  <span>Exit Kiosk</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>⤢ Kiosk Mode</span>
+                </>
+              )}
+            </button>
             <button
               onClick={handleLogout}
               disabled={loggingOut}

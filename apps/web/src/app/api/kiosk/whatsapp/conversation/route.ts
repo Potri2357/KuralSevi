@@ -48,16 +48,16 @@ const COURSES_BY_SKILL: Record<string, Array<{ qp_code: string; qp_name: string;
 
 function getCoursesForSkills(skills: string = '') {
   const s = skills.toLowerCase();
-  if (s.includes('தையல்') || s.includes('tailor') || s.includes('sewing') || s.includes('cloth') || s.includes('ஆடை')) {
+  if (s.includes('தையல்') || s.includes('सिलाई') || s.includes('वस्त्र') || s.includes('tailor') || s.includes('sewing') || s.includes('cloth') || s.includes('ஆடை')) {
     return COURSES_BY_SKILL.tailoring;
   }
-  if (s.includes('மின்சார') || s.includes('electr') || s.includes('solar') || s.includes('வயர்')) {
+  if (s.includes('மின்சார') || s.includes('बिजली') || s.includes('वायरिंग') || s.includes('इलेक्ट्री') || s.includes('electr') || s.includes('solar') || s.includes('வயர்')) {
     return COURSES_BY_SKILL.electrical;
   }
-  if (s.includes('வாகன') || s.includes('auto') || s.includes('mechanic') || s.includes('வண்டி') || s.includes('பைக்')) {
+  if (s.includes('வாகன') || s.includes('गाड़ी') || s.includes('वाहन') || s.includes('मैकेनिक') || s.includes('auto') || s.includes('mechanic') || s.includes('வண்டி') || s.includes('பைக்')) {
     return COURSES_BY_SKILL.automotive;
   }
-  if (s.includes('கடை') || s.includes('வியாபாரம்') || s.includes('retail') || s.includes('shop') || s.includes('உணவு')) {
+  if (s.includes('கடை') || s.includes('दुकान') || s.includes('व्यापार') || s.includes('किराना') || s.includes('வியாபாரம்') || s.includes('retail') || s.includes('shop') || s.includes('உணவு')) {
     return COURSES_BY_SKILL.retail;
   }
   return COURSES_BY_SKILL.default;
@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
       case 0: {
         // Welcome and request Name & Village
         botReply =
-          'வணக்கம்! Kural Sevi (குரல் செவி) PM-AJAY உதவி மையத்திற்கு வரவேற்கிறோம். 🇮🇳\n\nபிரதம மந்திரி அனுகூல ஆதி திராவிடர் நல திட்டம் (PM-AJAY) மூலம் இலவச திறன் பயிற்சி மற்றும் ரூ. 50,000 வரை வாழ்வாதார மானிய உதவிக்கு பதிவு செய்ய உங்கள் விவரங்களை கூறுங்கள்.\n\nமுதலில், உங்கள் முழுப் பெயர் மற்றும் மாவட்டம்/ஊர் என்ன?\n(What is your full name and district/village?)';
-        quickReplies = ['முருகன், சேலம் (Melpadi)', 'பிரியா, மதுரை (Alanganallur)', 'வேலன், திருச்சி'];
+          'नमस्ते! Kural Sevi (कुराल सेवी) PM-AJAY AI सहायता केंद्र में आपका स्वागत है। 🇮🇳\n\nप्रधानमंत्री अनुसूचित जाति अभ्युदय योजना (PM-AJAY) के तहत निःशुल्क कौशल प्रशिक्षण एवं ₹50,000 तक की आजीविका सहायता हेतु अपना विवरण दर्ज कराएं।\n\nकृपया अपना पूरा नाम और जिला/गाँव बताएं:\n(What is your full name and district/village?)';
+        quickReplies = ['रमेश कुमार, सलेम (Melpadi)', 'सुनीता, मदुरै (Alanganallur)', 'राजेश, त्रिची'];
         nextStage = 1;
         break;
       }
@@ -97,8 +97,8 @@ export async function POST(req: NextRequest) {
         nextState.district = parts[1]?.trim() || 'Salem';
         nextState.village = 'Melpadi Gram Panchayat';
 
-        botReply = `மகிழ்ச்சி ${nextState.name} அவர்களே! உங்கள் கல்வித் தகுதி என்ன?\n(What is your educational qualification?)\n\n1️⃣ 8th Pass / ஆரம்பக் கல்வி\n2️⃣ 10th Pass (SSLC)\n3️⃣ 12th / ITI Diploma\n4️⃣ பட்டப்படிப்பு (Graduate)\n5️⃣ படிக்கவில்லை / எழுதப் படிக்கத் தெரியும்`;
-        quickReplies = ['10th Pass (SSLC)', '8th Pass', '12th / ITI', 'பட்டப்படிப்பு (Graduate)'];
+        botReply = `बहुत बढ़िया ${nextState.name} जी! आपकी शैक्षणिक योग्यता क्या है?\n(What is your educational qualification?)\n\n1️⃣ 8वीं पास (8th Pass)\n2️⃣ 10वीं पास (10th Pass / High School)\n3️⃣ 12वीं / ITI डिप्लोमा\n4️⃣ स्नातक (Graduate)\n5️⃣ कोई औपचारिक शिक्षा नहीं (No Formal Education)`;
+        quickReplies = ['10वीं पास (10th Pass)', '8वीं पास (8th Pass)', '12वीं / ITI', 'स्नातक (Graduate)'];
         nextStage = 2;
         break;
       }
@@ -107,13 +107,13 @@ export async function POST(req: NextRequest) {
         // Capture Education, ask Existing Skills / Experience
         nextState.education = trimmedInput;
         botReply =
-          'நன்றி! உங்களுக்கு ஏதேனும் முந்தைய வேலை அல்லது தொழில் அனுபவம் உள்ளதா?\n(Do you have any previous work experience or trade skills?)\n\nஎடுத்துக்காட்டு: தையல் & ஆடை தயாரிப்பு, எலக்ட்ரிக்கல், வாகன பழுதுபார்ப்பு, கைவினை, விவசாயம் & கால்நடை, அல்லது அனுபவம் இல்லை.';
+          'धन्यवाद! क्या आपके पास कोई पूर्व कार्य अनुभव या कौशल है?\n(Do you have any previous work experience or trade skills?)\n\nउदाहरण: सिलाई एवं वस्त्र निर्माण, इलेक्ट्रीशियन, वाहन मरम्मत (ऑटोमोटिव), खुदरा व्यापार/दुकान, कृषि, या कोई अनुभव नहीं।';
         quickReplies = [
-          'தையல் & ஆடை தயாரிப்பு (Tailoring)',
-          'மின்சார வேலை (Domestic Electrician)',
-          'டூவீலர் மெக்கானிக் (Automotive)',
-          'சில்லறை வியாபாரம் / மளிகை கடை',
-          'புதியவர் / அனுபவம் இல்லை',
+          'सिलाई एवं वस्त्र (Tailoring)',
+          'इलेक्ट्रीशियन (Domestic Electrician)',
+          'दोपहिया मैकेनिक (Automotive)',
+          'खुदरा व्यापार/किराना दुकान',
+          'कोई अनुभव नहीं (Fresh Learner)',
         ];
         nextStage = 3;
         break;
@@ -123,23 +123,23 @@ export async function POST(req: NextRequest) {
         // Capture Skills, ask Employment Preference
         nextState.skills = trimmedInput;
         botReply =
-          'அருமை! நீங்கள் மாத ஊதிய வேலை விரும்புகிறீர்களா அல்லது சொந்தமாக கடை/தொழில் தொடங்க விரும்புகிறீர்களா?\n(Do you prefer monthly wage employment or self-employment / micro-enterprise?)\n\n1️⃣ சொந்த தொழில் / கடை (Self Employment)\n2️⃣ மாத ஊதிய வேலை (Wage Employment)\n3️⃣ இரண்டும் சம்மதம் (Flexible)';
-        quickReplies = ['சொந்த தொழில் / கடை (Self-Employment)', 'மாத ஊதிய வேலை (Wage Work)', 'இரண்டும் சம்மதம்'];
+          'शानदार! आप मासिक वेतन वाली नौकरी चाहते हैं या अपनी स्वयं की दुकान/व्यवसाय शुरू करना चाहते हैं?\n(Do you prefer monthly wage employment or self-employment?)\n\n1️⃣ स्वरोजगार / अपनी दुकान (Self Employment)\n2️⃣ मासिक वेतन रोजगार (Wage Employment)\n3️⃣ दोनों स्वीकार्य (Flexible)';
+        quickReplies = ['स्वरोजगार / दुकान (Self-Employment)', 'मासिक वेतन नौकरी (Wage Work)', 'दोनों स्वीकार्य (Flexible)'];
         nextStage = 4;
         break;
       }
 
       case 4: {
         // Capture Preference, ask Mobility
-        nextState.employmentPreference = trimmedInput.includes('சொந்த')
+        nextState.employmentPreference = (trimmedInput.includes('சொந்த') || trimmedInput.includes('स्वरोजगार') || trimmedInput.includes('दुकान') || trimmedInput.includes('self'))
           ? 'self'
-          : trimmedInput.includes('ஊதியம்')
+          : (trimmedInput.includes('ஊதியம்') || trimmedInput.includes('वेतन') || trimmedInput.includes('नौकरी') || trimmedInput.includes('wage'))
           ? 'wage'
           : 'either';
 
         botReply =
-          'பயிற்சிக்கு அருகில் உள்ள அரசு ITI / PMKK மையத்திற்கு செல்ல முடியுமா?\n(Can you travel to the nearby ITI or skill training center in your district?)\n\n1️⃣ ஆம், மாவட்ட மையத்திற்கு செல்ல முடியும்\n2️⃣ உள்ளூர் கிராமத்திற்குள் மட்டும்';
-        quickReplies = ['ஆம், செல்ல முடியும்', 'உள்ளூர் கிராமத்திற்குள் மட்டும்'];
+          'क्या आप प्रशिक्षण के लिए नजदीकी सरकारी ITI या PMKK कौशल केंद्र जा सकते हैं?\n(Can you travel to the nearby ITI or skill training center in your district?)\n\n1️⃣ हाँ, जिला केंद्र जा सकते हैं\n2️⃣ केवल स्थानीय गाँव के भीतर';
+        quickReplies = ['हाँ, जा सकते हैं (Can Travel)', 'केवल स्थानीय गाँव (Local Only)'];
         nextStage = 5;
         break;
       }
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
         nextState.mobility = trimmedInput;
         const matchedCourses = getCoursesForSkills(nextState.skills);
 
-        botReply = `✨ உங்கள் விவரங்களை AI மதிப்பீடு செய்தது! PM-AJAY திட்டத்தில் உங்களுக்கான சிறந்த 3 வாய்ப்புகள்:\n\n1️⃣ ${matchedCourses[0].qp_name} (${matchedCourses[0].qp_code})\n   • உதவி: ${matchedCourses[0].stipend}\n\n2️⃣ ${matchedCourses[1].qp_name} (${matchedCourses[1].qp_code})\n   • உதவி: ${matchedCourses[1].stipend}\n\n3️⃣ ${matchedCourses[2].qp_name} (${matchedCourses[2].qp_code})\n   • உதவி: ${matchedCourses[2].stipend}\n\nஉங்களுக்கு விருப்பமான திட்டத்தின் எண்ணை தெரிவு செய்யவும் (1, 2, அல்லது 3):`;
+        botReply = `✨ AI ने आपके विवरण का मूल्यांकन किया! PM-AJAY योजना में आपके लिए शीर्ष 3 अवसर:\n\n1️⃣ ${matchedCourses[0].qp_name} (${matchedCourses[0].qp_code})\n   • सहायता: ${matchedCourses[0].stipend}\n\n2️⃣ ${matchedCourses[1].qp_name} (${matchedCourses[1].qp_code})\n   • सहायता: ${matchedCourses[1].stipend}\n\n3️⃣ ${matchedCourses[2].qp_name} (${matchedCourses[2].qp_code})\n   • सहायता: ${matchedCourses[2].stipend}\n\nकृपया अपनी पसंदीदा योजना का विकल्प चुनें (1, 2, या 3):`;
         quickReplies = [
           `1️⃣ ${matchedCourses[0].qp_name}`,
           `2️⃣ ${matchedCourses[1].qp_name}`,
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
           case_id: caseId,
           phone: citizenPhone,
           channel: 'whatsapp',
-          language: 'ta',
+          language: 'hi',
           status: 'COMPLETED',
           citizen_confirmed: true,
           notification_status: 'WHATSAPP_DISPATCHED',
@@ -226,8 +226,8 @@ export async function POST(req: NextRequest) {
           if (sRec) sanctionOrderNo = sRec.sanction_order_id;
         } catch {}
 
-        botReply = `🎉 வாழ்த்துகள் ${nextState.name || 'பயனாளி'} அவர்களே!\n\nஉங்கள் PM-AJAY விண்ணப்பம் WhatsApp மூலம் வெற்றிகரமாக பதிவு செய்யப்பட்டது! ✅\n\n📋 விண்ணப்ப எண் (Case ID): *${caseId}*\n📌 தேர்வு செய்த திட்டம்: *${selectedCourse.qp_name}* (NSQF Level ${selectedCourse.nsqf_level})\n💰 அரசு உதவி: ${selectedCourse.stipend}\n🏛️ சரிபார்ப்பு அலுவலர்: மாவட்ட சமூக நல அலுவலர் (DWO), ${nextState.district || 'Salem'}\n📄 ஆணை எண்: ${sanctionOrderNo}\n\nஅரசு சரிபார்ப்பு முடிவடைந்ததும் உங்களுக்கு WhatsApp செய்தி மற்றும் QR ஆணை அனுப்பப்படும். நன்றி!`;
-        quickReplies = ['📄 சரிபார்ப்பு ஆணை காண்க', '🔄 புதிய பதிவு தொடங்கு'];
+        botReply = `🎉 बधाई हो ${nextState.name || 'नागरिक'} जी!\n\nआपका PM-AJAY आवेदन WhatsApp के माध्यम से सफलतापूर्वक दर्ज कर लिया गया है! ✅\n\n📋 आवेदन संख्या (Case ID): *${caseId}*\n📌 चयनित योजना: *${selectedCourse.qp_name}* (NSQF Level ${selectedCourse.nsqf_level})\n💰 सरकारी सहायता: ${selectedCourse.stipend}\n🏛️ सत्यापन अधिकारी: जिला कल्याण अधिकारी (DWO), ${nextState.district || 'Salem'}\n📄 स्वीकृति आदेश संख्या: ${sanctionOrderNo}\n\nसत्यापन पूरा होने पर आपको WhatsApp संदेश एवं डिजिटल QR स्वीकृति आदेश भेजा जाएगा। धन्यवाद!`;
+        quickReplies = ['📄 स्वीकृति आदेश देखें', '🔄 नया पंजीकरण शुरू करें'];
 
         completedCase = {
           caseId,
@@ -242,8 +242,8 @@ export async function POST(req: NextRequest) {
 
       default: {
         botReply =
-          'உங்கள் பதிவு முடிந்தது. புதிய பயனாளியை பதிவு செய்ய கீழே உள்ள பொத்தானை கிளிக் செய்யவும்.';
-        quickReplies = ['🔄 புதிய பதிவு தொடங்கு'];
+          'आपका पंजीकरण पूरा हो चुका है। नया पंजीकरण शुरू करने के लिए नीचे दिए गए बटन पर क्लिक करें।';
+        quickReplies = ['🔄 नया पंजीकरण शुरू करें'];
         nextStage = 0;
         break;
       }

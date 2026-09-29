@@ -82,6 +82,9 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
 
       setSubmitted(true);
       onSubmitted?.();
+      setTimeout(() => {
+        window.location.href = '/officer/cases';
+      }, 1200);
     } catch (e: unknown) {
       console.error('Failed to submit officer decision:', e);
       const errMsg = e instanceof Error ? e.message : 'Network error occurred while submitting decision. Please retry.';
@@ -102,6 +105,9 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
           <p className="text-sm text-slate-700 max-w-md mx-auto">
             Case action: <strong className="text-[#0B3064] capitalize">{action}</strong>. Beneficiary status:{' '}
             <strong className="text-slate-900">{beneficiaryDecision.replace(/_/g, ' ')}</strong>.
+          </p>
+          <p className="text-xs font-bold text-[#0A783C] animate-pulse">
+            Returning to Case Queue automatically...
           </p>
           <p className="text-xs text-[var(--text-muted)]">
             Logged to the permanent audit trail. District planning and ITI allocation updates will reflect overnight.

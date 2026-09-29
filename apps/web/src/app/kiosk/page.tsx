@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Mic,
@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Sparkles,
   MessageCircle,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { IndicEar } from '@/components/icons/indic';
 import { KioskQRScanner } from '@/components/kiosk/KioskQRScanner';
@@ -26,6 +28,25 @@ export default function KioskDashboardPage() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [verifiedRecord, setVerifiedRecord] = useState<SanctionVerificationRecord | null>(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
+  const toggleKioskFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+      setIsFullScreen(true);
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+      setIsFullScreen(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -52,6 +73,28 @@ export default function KioskDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2 text-xs">
+          <button
+            type="button"
+            onClick={toggleKioskFullscreen}
+            id="kiosk-fullscreen-toggle"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+              isFullScreen
+                ? 'bg-[#0B3064] text-white border-[#0B3064]'
+                : 'bg-white hover:bg-slate-50 text-[#0B3064] border-[#0B3064]/30'
+            }`}
+          >
+            {isFullScreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5" />
+                <span>Exit Kiosk Mode</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>⤢ Kiosk Mode</span>
+              </>
+            )}
+          </button>
           <span className="inline-flex items-center gap-1.5 text-slate-600 font-semibold px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
             <ShieldCheck className="w-3.5 h-3.5 text-[#0A783C]" />
             DPDP Act 2023 Compliant
@@ -88,7 +131,7 @@ export default function KioskDashboardPage() {
                   New Citizen Voice Intake
                 </h2>
                 <p className="text-xs sm:text-sm text-white/80 font-medium mt-0.5">
-                  குரல் வழி புதிய பயனாளிகள் பதிவு
+                  आवाज द्वारा नया नागरिक पंजीकरण (Voice Intake)
                 </p>
               </div>
             </div>
@@ -101,7 +144,7 @@ export default function KioskDashboardPage() {
           <div className="mt-6 pt-4 border-t border-white/15 flex items-center justify-between text-xs font-bold text-white/90">
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-[#FF9933]" />
-              <span>Voice Intake in தமிழ் & English</span>
+              <span>Voice Intake in हिन्दी & English</span>
             </span>
             <span className="underline group-hover:no-underline">Start Intake →</span>
           </div>
@@ -135,7 +178,7 @@ export default function KioskDashboardPage() {
                   Scan & Verify QR Code
                 </h2>
                 <p className="text-xs sm:text-sm text-white/80 font-medium mt-0.5">
-                  சான்றிதழ் சரிபார்ப்பு (கேமரா ஸ்கேன்)
+                  प्रमाणपत्र सत्यापन (क्यूआर स्कैन)
                 </p>
               </div>
             </div>
@@ -173,7 +216,7 @@ export default function KioskDashboardPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#075E54] bg-[#E7F8EE] px-2 py-0.5 rounded-full">
                   Conversational Intake
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">வாட்ஸ்அப் உரையாடல்</span>
+                <span className="text-[10px] text-slate-400 font-mono">व्हाट्सएप बातचीत</span>
               </div>
               <span className="text-xs font-bold text-[#075E54] group-hover:translate-x-0.5 transition-transform">
                 Open Chat →
@@ -204,7 +247,7 @@ export default function KioskDashboardPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#0B3064] bg-[#EAF1FB] px-2 py-0.5 rounded-full">
                   Citizen Inquiry
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">நிலை அறிதல்</span>
+                <span className="text-[10px] text-slate-400 font-mono">आवेदन स्थिति</span>
               </div>
               <span className="text-xs font-bold text-[#0B3064] group-hover:translate-x-0.5 transition-transform">
                 Search →
@@ -224,20 +267,20 @@ export default function KioskDashboardPage() {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs">
         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
           <FileCheck className="w-4 h-4 text-[#0A783C]" />
-          <span>Documents Required for Kiosk Citizen Registration (தேவையான ஆவணங்கள்)</span>
+          <span>Documents Required for Kiosk Citizen Registration (पंजीकरण के लिए आवश्यक दस्तावेज)</span>
         </h4>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600 font-medium">
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-[#0A783C] shrink-0" />
-            <span>Aadhaar Card / ஆதார் அட்டை</span>
+            <span>Aadhaar Card / आधार कार्ड</span>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-[#0A783C] shrink-0" />
-            <span>SC Community Certificate / சாதி சான்றிதழ்</span>
+            <span>SC Community Certificate / जाति प्रमाण पत्र</span>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-[#0A783C] shrink-0" />
-            <span>Jan Dhan / Bank Passbook / வங்கிக் கணக்கு</span>
+            <span>Jan Dhan / Bank Passbook / बैंक पासबुक</span>
           </div>
         </div>
       </div>

@@ -27,7 +27,7 @@ interface KioskQRScannerProps {
 }
 
 export function KioskQRScanner({ isOpen, onClose, onVerified }: KioskQRScannerProps) {
-  const [activeTab, setActiveTab] = useState<'camera' | 'upload' | 'manual'>('camera');
+  const [activeTab, setActiveTab] = useState<'camera' | 'upload' | 'manual'>('upload');
   const [scannerLoading, setScannerLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [manualInput, setManualInput] = useState('');
@@ -232,7 +232,7 @@ export function KioskQRScanner({ isOpen, onClose, onVerified }: KioskQRScannerPr
                 </span>
               </div>
               <p className="text-xs text-white/70">
-                சான்றிதழ் சரிபார்ப்பு மையம் · Scan QR code on beneficiary sanction order
+                प्रमाणपत्र सत्यापन केंद्र · Scan QR code on beneficiary sanction order
               </p>
             </div>
           </div>
@@ -258,7 +258,7 @@ export function KioskQRScanner({ isOpen, onClose, onVerified }: KioskQRScannerPr
                   </div>
                   <div>
                     <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#0A783C]">
-                      உண்மையான சான்றிதழ் · AUTHENTIC DOCUMENT
+                      सत्यापित एवं वैध दस्तावेज · AUTHENTIC DOCUMENT
                     </span>
                     <h4 className="text-lg font-bold text-slate-900 font-display">
                       Verified PM-AJAY Sanction Order
