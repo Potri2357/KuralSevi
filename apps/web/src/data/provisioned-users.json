@@ -34,7 +34,7 @@
   },
   {
     "id": "officer-default-001",
-    "email": "officer@kuralsevi.gov.in",
+    "email": "dwo@gov.in",
     "password": "OfficerPassword123!",
     "full_name": "Dr. K. Meenakshi Sundaram",
     "role": "district_officer",
@@ -45,7 +45,7 @@
   },
   {
     "id": "kiosk-default-001",
-    "email": "kiosk@kuralsevi.gov.in",
+    "email": "vp@gov.in",
     "password": "KioskPassword123!",
     "full_name": "Thiru. S. Arumugam",
     "role": "panchayat_kiosk",

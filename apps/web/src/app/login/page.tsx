@@ -214,7 +214,6 @@ function LoginForm() {
                 >
                   Select Portal Role <span className="text-[#E05A1B]">*</span>
                 </label>
-                <span className="text-[10px] text-slate-400 font-mono font-medium">Strict Role Verified</span>
               </div>
 
               {/* Styled Dropdown */}
@@ -259,7 +258,7 @@ function LoginForm() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="official@tn.gov.in"
+                  placeholder="official@gov.in"
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064] focus:bg-white transition-all shadow-2xs"
                 />
               </div>

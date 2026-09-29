@@ -1,170 +1,265 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
 import {
-  ArrowRight,
   ShieldCheck,
   CheckCircle2,
   Lock,
-  Globe2,
   GraduationCap,
   Briefcase,
   Home,
   FileText,
   Phone,
-  Users,
-  MapPin,
+  HelpCircle,
+  Clock,
+  Building,
+  UserCheck,
+  Award,
   ChevronRight,
+  ExternalLink,
+  BookOpen,
+  Wrench,
+  Zap,
+  TrendingUp,
 } from 'lucide-react';
-import {
-  IndicEar,
-  IndicChakra,
-} from '@/components/icons/indic';
+import { IndicEar, IndicChakra } from '@/components/icons/indic';
 
 export const metadata: Metadata = {
-  title: 'Kural Sevi — Voice-First Livelihood Intelligence (PM-AJAY GIA)',
+  title: 'PM-AJAY | Pradhan Mantri Anusuchit Jaati Abhyuday Yojana — Official Portal',
   description:
-    'Voice-first intake, multilingual AI profiling, and explainable NSQF-aligned livelihood pathway recommendations for Scheduled Caste (SC) communities under PM-AJAY GIA.',
+    'Official information and scheme guidelines for PM-AJAY (Pradhan Mantri Anusuchit Jaati Abhyuday Yojana) under the Ministry of Social Justice and Empowerment, Government of India. Explore skill training jobs, livelihood grants, and Adarsh Gram benefits.',
 };
 
-const PM_AJAY_SCHEMES = [
+const SCHEME_COMPONENTS = [
   {
-    id: 'skill-dev',
+    id: 'skill-training',
+    tag: 'Component 1 · Employment & Jobs',
     icon: GraduationCap,
-    iconBg: 'bg-[#0B3064]',
-    cardBg: 'bg-[#EAF1FB] border-[#BACEEB]',
-    accentColor: 'text-[#0B3064]',
-    title: 'Skill Development & Training',
-    subtitle: 'NSQF-Aligned Vocational Pathways',
-    description:
-      'Free NSQF-certified skill training in over 40 trades — from textile & tailoring to electronics and construction — mapped to QP-NOS competency standards for SC youth aged 18–45.',
-    benefitTags: ['Free Training', 'Certificate on Completion', 'Job Placement Support'],
-    coverage: '₹15,000 – ₹1,00,000 stipend support',
+    headerColor: 'text-[#0B3064]',
+    badgeBg: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+    title: 'Skill Development & Vocational Training',
+    hindiTitle: 'कौशल विकास एवं व्यावसायिक प्रशिक्षण',
+    summary:
+      'Free NSQF-certified vocational training mapped to national QP-NOS standards, designed to prepare Scheduled Caste youth for formal wage employment and self-employment.',
+    stipend: '₹1,500/month training stipend + 100% course fee covered',
+    jobRoles: [
+      'Apparel & Garment: Sewing Machine Operator, Quality Assessor',
+      'Automotive: Two/Four-Wheeler Maintenance & Electrical Technician',
+      'Electronics: Mobile Phone Hardware Engineer, Solar Panel Installer',
+      'Healthcare: General Duty Assistant, Home Health Aide',
+      'Construction & Utilities: Domestic Electrician, Plumber, Mason',
+      'IT & Digital: Data Entry Operator, DTP Operator, Customer Care',
+    ],
+    highlights: [
+      'National Skill Qualification Framework (NSQF Levels 3–6)',
+      'Direct job placement tie-ups with MSMEs and industrial units',
+      'Free toolkit and course materials provided upon enrollment',
+      'Recognized certificate awarded by National Skill Development Corporation',
+    ],
   },
   {
-    id: 'livelihood',
+    id: 'livelihood-grants',
+    tag: 'Component 2 · Enterprise & Grants',
     icon: Briefcase,
-    iconBg: 'bg-[#E05A1B]',
-    cardBg: 'bg-[#FFF4ED] border-[#FDD8C2]',
-    accentColor: 'text-[#C24810]',
-    title: 'Livelihood & Self-Employment',
-    subtitle: 'GIA Grant Support for Micro-Enterprises',
-    description:
-      'Grant-in-Aid (GIA) for starting micro-enterprises, agricultural support, animal husbandry, and artisan livelihoods. Covers toolkits, working capital, and market linkage for SC households below poverty line.',
-    benefitTags: ['Up to ₹10 Lakh Grant', 'No Collateral Required', 'SHG Linkage'],
-    coverage: 'Direct benefit transfer to Jan Dhan account',
+    headerColor: 'text-[#C24810]',
+    badgeBg: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
+    title: 'Grant-in-Aid for Livelihood & Self-Employment',
+    hindiTitle: 'आजीविका एवं सूक्ष्म उद्यम सहायता अनुदान',
+    summary:
+      'Direct capital subsidy grants and financial assistance to help SC beneficiaries establish sustainable micro-enterprises and generate steady household income.',
+    stipend: 'Individual grants up to ₹50,000 · SHG Cluster grants up to ₹10 Lakhs',
+    jobRoles: [
+      'Dairy & Animal Husbandry: Milking units, cattle feed units, goatery',
+      'Artisan & Weaving: Powerloom, handloom fabrics, pottery, metalcraft',
+      'Agro-Processing: Flour mill, oil expeller, spice grinding units',
+      'Service Enterprises: Two-wheeler repair shop, mobile service center',
+      'Retail & Vending: Vegetable/fruit vending carts, grocery mini-stores',
+      'Women SHG Collectives: Sanitary napkin units, tailoring enterprises',
+    ],
+    highlights: [
+      'Up to ₹50,000 or 50% of project cost as direct capital subsidy',
+      'No collateral requirement for approved PM-AJAY beneficiaries',
+      'Linkage with PM Mudra Yojana and Stand-Up India bank credit',
+      'Direct Benefit Transfer (DBT) into Aadhaar-seeded Jan Dhan accounts',
+    ],
   },
   {
-    id: 'infrastructure',
+    id: 'adarsh-gram',
+    tag: 'Component 3 · Village Infrastructure',
     icon: Home,
-    iconBg: 'bg-[#0A783C]',
-    cardBg: 'bg-[#EDF9F1] border-[#BBE8CB]',
-    accentColor: 'text-[#0A783C]',
-    title: 'Village Infrastructure & Housing',
-    subtitle: 'Adarsh Gram Development Fund',
-    description:
-      'Development of basic amenities in Scheduled Caste dominated habitations — drinking water, pucca roads, solar streetlights, community halls, and anganwadi centers under the Adarsh Gram scheme.',
-    benefitTags: ['Community Infrastructure', 'Solar & Water', 'Road Connectivity'],
-    coverage: '100 highest-density SC villages per district',
+    headerColor: 'text-[#0A783C]',
+    badgeBg: 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]',
+    title: 'Adarsh Gram (Model Village) Development',
+    hindiTitle: 'प्रधानमंत्री आदर्श ग्राम योजना घटक',
+    summary:
+      'Comprehensive infrastructure enhancement in villages with more than 50% Scheduled Caste population to eliminate development gaps and provide all critical civic amenities.',
+    stipend: '₹21 Lakhs infrastructure grant per eligible Gram Panchayat',
+    jobRoles: [
+      'Piped clean drinking water supply & solar water filtration',
+      'All-weather concrete pucca roads and internal village lanes',
+      'Solar-powered LED street lighting on all village access routes',
+      'Modern Anganwadi centers and child daycare community facilities',
+      'Gram Panchayat digital service center & public reading room',
+      'Proper underground drainage and solid waste segregation systems',
+    ],
+    highlights: [
+      'Mandatory saturation of basic civic amenities in SC habitations',
+      'Villages selected based on census data (>50% SC concentration)',
+      'Monitored directly by District Welfare Officers & Panchayati Raj',
+      'Focus on health, education, connectivity, and sanitation',
+    ],
   },
   {
-    id: 'social-protection',
+    id: 'hostel-support',
+    tag: 'Component 4 · Education & Hostels',
     icon: FileText,
-    iconBg: 'bg-[#0B3064]',
-    cardBg: 'bg-[#EAF1FB] border-[#BACEEB]',
-    accentColor: 'text-[#0B3064]',
-    title: 'Social Protection & Welfare',
-    subtitle: 'Digital Verified Certificate & Entitlement',
-    description:
-      'Tamper-proof QR-verified digital certificates for caste, income, and scheme eligibility. Integrated with DigiLocker, Aadhaar e-KYC, and PM-JANMAN for last-mile grievance redressal and pension disbursement.',
-    benefitTags: ['DigiLocker Integration', 'Aadhaar-Linked', 'PM-JANMAN Benefits'],
-    coverage: 'Direct grievance resolution in 30 days',
+    headerColor: 'text-[#0B3064]',
+    badgeBg: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+    title: 'Babu Jagjivan Ram Hostels & Educational Aid',
+    hindiTitle: 'बाबू जगजीवन राम छात्रावास एवं शिक्षा संवर्धन',
+    summary:
+      'Construction and modernization of residential hostels for SC boys and girls pursuing middle, secondary, higher secondary, and technical vocational courses.',
+    stipend: '100% Central funding for girls’ hostels · 50% for boys’ hostels',
+    jobRoles: [
+      'Safe residential accommodation near government schools & colleges',
+      'Modern digital study rooms equipped with computers and internet',
+      'Free nutritious boarding and hygienic sanitary facilities',
+      'Academic mentoring, competitive exam coaching & career counseling',
+    ],
+    highlights: [
+      'Reduces dropout rates among rural SC students, especially girls',
+      'Priority admission to first-generation learners and BPL students',
+      'Equipped with solar heating and barrier-free access for Divyangjan',
+      'Integrated with State pre-matric and post-matric scholarship portals',
+    ],
   },
 ];
 
-const HOW_IT_WORKS = [
+const ELIGIBILITY_CRITERIA = [
   {
-    step: '01',
-    icon: Phone,
-    color: 'text-[#0A783C]',
-    bg: 'bg-[#EDF9F1] border-[#BBE8CB]',
-    title: 'Village Panchayat Intake',
-    desc: 'Beneficiary visits the Gram Panchayat Kiosk. Kiosk operator registers them with voice-based IVR intake in Tamil, Hindi, or Telugu — no literacy required.',
+    title: 'Community Status',
+    detail: 'Must belong to the Scheduled Caste (SC) community as recognized under the Constitution of India.',
+    icon: UserCheck,
   },
   {
-    step: '02',
-    icon: Users,
-    color: 'text-[#E05A1B]',
-    bg: 'bg-[#FFF4ED] border-[#FDD8C2]',
-    title: 'AI Profiling & Matching',
-    desc: 'The AI engine transcribes the voice call, profiles the beneficiary against NSQF QP-NOS skill standards, and recommends the 3 best livelihood pathways.',
+    title: 'Income Ceiling',
+    detail: 'Annual family income should not exceed ₹2,50,000 (Priority to BPL and Antyodaya households).',
+    icon: TrendingUp,
   },
   {
-    step: '03',
-    icon: MapPin,
-    color: 'text-[#0B3064]',
-    bg: 'bg-[#EAF1FB] border-[#BACEEB]',
-    title: 'District Officer Review',
-    desc: "The District Welfare Officer reviews the AI recommendation, verifies eligibility, and approves the beneficiary's livelihood certificate with a digital signature.",
+    title: 'Age Requirement',
+    detail: '18 to 45 years for Skill Development & Enterprise Grants; school/college going age for Hostels.',
+    icon: Clock,
   },
   {
-    step: '04',
-    icon: FileText,
-    color: 'text-[#0A783C]',
-    bg: 'bg-[#EDF9F1] border-[#BBE8CB]',
-    title: 'Certificate & Benefits',
-    desc: 'A tamper-proof QR-verified PDF certificate is issued instantly. Scheme benefits are disbursed directly to the beneficiary\'s Jan Dhan account.',
+    title: 'Bank & Aadhaar Linkage',
+    detail: 'Valid Aadhaar card linked with active DBT-enabled Jan Dhan or regular savings bank account.',
+    icon: Award,
+  },
+];
+
+const HOW_TO_APPLY_STEPS = [
+  {
+    step: '1',
+    title: 'Visit Village Panchayat Kiosk',
+    desc: 'Visit your local Gram Panchayat office or designated Kural Sevi Village Kiosk. Assistance is provided free of cost.',
+  },
+  {
+    step: '2',
+    title: 'Voice-Assisted Registration',
+    desc: 'State your personal details, skill interest, or livelihood preference in your native language (Tamil or Hindi). No form-filling required.',
+  },
+  {
+    step: '3',
+    title: 'District Welfare Review',
+    desc: 'The District Welfare Officer (DWO) verifies your caste status and eligibility against the official state database.',
+  },
+  {
+    step: '4',
+    title: 'Direct Benefit Transfer (DBT)',
+    desc: 'Approved grant subsidy is credited directly to your bank account, or you are enrolled into the upcoming skill training batch.',
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-slate-800 selection:bg-[#0B3064]/10 selection:text-[#0B3064] relative overflow-hidden flex flex-col">
-      {/* Universal 3px National Governance Saffron Accent Strip */}
-      <div className="fixed top-0 left-0 right-0 h-[3px] bg-[#E05A1B] z-50 shadow-xs" aria-hidden="true" />
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-[#0B3064]/10 selection:text-[#0B3064]">
+      {/* 1. NATIONAL TRICOLOR TOP STRIP */}
+      <div className="h-1.5 w-full flex" aria-hidden="true">
+        <div className="flex-1 bg-[#FF9933]" />
+        <div className="flex-1 bg-white" />
+        <div className="flex-1 bg-[#138808]" />
+      </div>
 
-      {/* TOP NAVIGATION BAR */}
-      <header className="sticky top-0 z-40 w-full bg-white/85 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.04)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Brand */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-sm shadow-[#0B3064]/20 group-hover:scale-105 transition-transform">
-              <IndicEar className="w-6 h-6 text-white" strokeWidth={2.2} />
+      {/* 2. OFFICIAL GOVERNMENT PORTAL TOP BAR */}
+      <div className="bg-[#0B3064] text-white py-1.5 px-4 sm:px-6 lg:px-8 text-xs border-b border-white/10">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold tracking-wide">भारत सरकार | Government of India</span>
+            <span className="text-white/40">|</span>
+            <span className="text-white/80">सामाजिक न्याय और अधिकारिता मंत्रालय | Ministry of Social Justice & Empowerment</span>
+          </div>
+          <div className="flex items-center gap-4 text-white/80 font-mono text-[11px]">
+            <span>PM-AJAY Centrally Sponsored Scheme</span>
+            <span className="hidden sm:inline text-white/40">|</span>
+            <span className="hidden sm:inline">Toll Free: 1800-11-2001</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. MAIN NAVIGATION BAR */}
+      <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          {/* Logo & Emblems */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-md">
+              <IndicChakra className="w-7 h-7 text-white" strokeWidth={2.4} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-bold tracking-tight text-[#0B3064] font-display">
-                  Kural Sevi
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB] font-mono">
+                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B3064] font-display">
                   PM-AJAY
                 </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#EDF9F1] text-[#0A783C] border border-[#BBE8CB]">
+                  Official Portal
+                </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-sans">
-                குரல் செவி · National Livelihood Intelligence Portal
+              <p className="text-xs text-slate-600 font-medium leading-tight">
+                Pradhan Mantri Anusuchit Jaati Abhyuday Yojana · Kural Sevi
+              </p>
+              <p className="text-[10px] text-slate-400 font-mono">
+                Department of Social Welfare · State & Central Governance
               </p>
             </div>
-          </Link>
+          </div>
 
-          {/* Quick Nav */}
-          <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#EDF9F1] border border-[#BBE8CB] text-[#0A783C]">
-              <span className="w-2 h-2 rounded-full bg-[#0A783C] animate-pulse" />
-              <span className="font-mono text-[11px] font-bold">Telephony & AI Active</span>
-            </div>
-            <a href="#schemes" className="hover:text-[#0B3064] transition-colors">
-              PM-AJAY Schemes
+          {/* Nav Items */}
+          <div className="hidden lg:flex items-center gap-6 text-xs font-bold text-slate-700">
+            <a href="#about" className="hover:text-[#0B3064] transition-colors">
+              About Scheme
             </a>
-            <a href="#how-it-works" className="hover:text-[#0B3064] transition-colors">
-              How It Works
+            <a href="#components" className="hover:text-[#0B3064] transition-colors">
+              Training & Jobs
+            </a>
+            <a href="#grants" className="hover:text-[#0B3064] transition-colors">
+              Enterprise Grants
+            </a>
+            <a href="#eligibility" className="hover:text-[#0B3064] transition-colors">
+              Eligibility
+            </a>
+            <a href="#process" className="hover:text-[#0B3064] transition-colors">
+              How to Apply
+            </a>
+            <a href="#helpline" className="hover:text-[#0B3064] transition-colors">
+              Contact & Helpline
             </a>
           </div>
 
-          {/* CTA */}
+          {/* Portal Access Button */}
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              id="header-login-btn"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white text-xs font-bold transition-all shadow-xs"
+              id="header-portal-signin"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white text-xs font-bold transition-all shadow-sm"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>Portal Sign In</span>
@@ -173,233 +268,539 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative z-10 pt-14 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-        {/* Ministry Badge */}
-        <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-4 py-1.5 rounded-full text-xs font-bold text-[#0B3064] mb-6 shadow-2xs">
-          <IndicChakra className="w-4 h-4 text-[#0B3064]" strokeWidth={2.4} />
-          <span>Ministry of Social Justice & Empowerment · Government of India · PM-AJAY GIA</span>
-        </div>
+      {/* 4. HERO SECTION */}
+      <section className="bg-gradient-to-b from-white to-slate-100/70 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left Content */}
+            <div className="lg:col-span-7 space-y-5">
+              <div className="inline-flex items-center gap-2 bg-[#FFF4ED] border border-[#FDD8C2] px-3.5 py-1.5 rounded-full text-xs font-bold text-[#C24810]">
+                <span className="w-2 h-2 rounded-full bg-[#E05A1B] animate-pulse" />
+                <span>Ministry of Social Justice & Empowerment · Scheme Guidelines</span>
+              </div>
 
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-[#0B3064] font-display mb-4 max-w-5xl mx-auto leading-[1.1]">
-          Voice-First Livelihood Intelligence for Rural SC Beneficiaries
-        </h1>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0B3064] font-display leading-[1.15] tracking-tight">
+                Pradhan Mantri Anusuchit Jaati Abhyuday Yojana
+              </h1>
+              <p className="text-base sm:text-lg text-slate-700 font-medium">
+                प्रधानमंत्री अनुसूचित जाति अभ्युदय योजना (PM-AJAY)
+              </p>
 
-        <p className="text-slate-600 text-base sm:text-lg mb-8 max-w-3xl mx-auto leading-relaxed font-normal font-sans">
-          Bridging the digital divide for Scheduled Caste (SC) citizens across Tamil Nadu through native conversational
-          telephony intake, automated NSQF QP-NOS skill matching, and tamper-proof QR-verified livelihood pathways under{' '}
-          <strong className="text-[#0B3064]">PM-AJAY GIA</strong>.
-        </p>
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
+                A flagship Centrally Sponsored Scheme aimed at reducing poverty and socio-economic vulnerability among
+                Scheduled Caste (SC) communities through free NSQF-aligned skill development, enterprise capital grants,
+                and comprehensive infrastructure creation in Adarsh Gram villages.
+              </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#0B3064] hover:bg-[#144282] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg"
-          >
-            <Lock className="w-4 h-4" />
-            Access Your Portal
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-          <a
-            href="#schemes"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold text-sm transition-all shadow-2xs"
-          >
-            Learn About PM-AJAY Schemes
-          </a>
-        </div>
+              {/* Key Indicators */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                  <div className="text-xl font-bold text-[#0B3064] font-display">100% Free</div>
+                  <div className="text-xs text-slate-600 mt-0.5">NSQF Skill Training</div>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                  <div className="text-xl font-bold text-[#C24810] font-display">Up to ₹10L</div>
+                  <div className="text-xs text-slate-600 mt-0.5">Livelihood Grants</div>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
+                  <div className="text-xl font-bold text-[#0A783C] font-display">₹21 Lakhs</div>
+                  <div className="text-xs text-slate-600 mt-0.5">Per Adarsh Gram</div>
+                </div>
+              </div>
 
-        {/* METRICS BAR */}
-        <div className="py-6 px-8 rounded-2xl bg-white border border-slate-200/90 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.04)] grid grid-cols-2 md:grid-cols-4 gap-6 text-center max-w-5xl mx-auto">
-          <div>
-            <div className="text-3xl font-bold text-[#0B3064] font-display">100%</div>
-            <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Voice-First Intake (Tamil / Hindi)</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold text-[#E05A1B] font-display">40+</div>
-            <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">NSQF Certified Roles Mapped</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold text-[#0A783C] font-display">38</div>
-            <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Tamil Nadu Districts Enabled</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold text-[#0B3064] font-display">30-Day</div>
-            <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Grievance Resolution SLA</div>
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <a
+                  href="#components"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[#0B3064] hover:bg-[#144282] text-white text-xs font-bold transition-all shadow-xs"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Explore Jobs & Skill Training
+                </a>
+                <a
+                  href="#eligibility"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold transition-all shadow-2xs"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-[#0A783C]" />
+                  Check Eligibility Criteria
+                </a>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[#E05A1B] hover:bg-[#c44c14] text-white text-xs font-bold transition-all shadow-xs"
+                >
+                  <Lock className="w-4 h-4" />
+                  Official Portal Login
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Graphic Banner */}
+            <div className="lg:col-span-5">
+              <div className="relative rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-white">
+                <div className="h-2 w-full flex">
+                  <div className="flex-1 bg-[#FF9933]" />
+                  <div className="flex-1 bg-white" />
+                  <div className="flex-1 bg-[#138808]" />
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/pmajay-hero.jpg"
+                  alt="PM-AJAY Scheme Community Beneficiaries"
+                  className="w-full h-auto object-cover max-h-[380px]"
+                />
+                <div className="p-4 bg-slate-900 text-white text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold uppercase tracking-wider text-[#FF9933]">PM-AJAY Field Mission</span>
+                    <span className="text-[11px] text-slate-400 font-mono">Govt. of India</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px] mt-1">
+                    Empowering rural Scheduled Caste families with wage employment, micro-enterprise toolkits, and social security.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* PM-AJAY SCHEMES SECTION */}
-      <section id="schemes" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-4 py-1.5 rounded-full text-xs font-bold text-[#0B3064] mb-4 shadow-2xs">
-            <IndicChakra className="w-3.5 h-3.5" strokeWidth={2.4} />
-            <span>PM-AJAY Grant-in-Aid Programmes</span>
+      {/* 5. ABOUT THE SCHEME */}
+      <section id="about" className="py-12 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0B3064] bg-[#EAF1FB] px-3 py-1 rounded-full border border-[#BACEEB]">
+              National Scheme Overview
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#0B3064] font-display mt-3 mb-4">
+              What is PM-AJAY (Pradhan Mantri Anusuchit Jaati Abhyuday Yojana)?
+            </h2>
+            <p className="text-slate-700 text-sm leading-relaxed mb-4">
+              PM-AJAY is a Centrally Sponsored Scheme formulated by the Ministry of Social Justice and Empowerment,
+              Government of India. It represents a unified merger of three erstwhile welfare schemes:
+            </p>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display mb-3 tracking-tight">
-            What PM-AJAY Offers for SC Communities
-          </h2>
-          <p className="text-slate-600 text-base max-w-2xl mx-auto font-sans">
-            PM Anudaan for Janjati and Adivasi Yojana provides comprehensive support covering skill training,
-            livelihood grants, village infrastructure, and social protection for Scheduled Caste households.
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {PM_AJAY_SCHEMES.map((scheme) => {
-            const Icon = scheme.icon;
-            return (
-              <div
-                key={scheme.id}
-                className={`p-7 rounded-2xl border ${scheme.cardBg} shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-5`}
-              >
-                {/* Header */}
-                <div className="flex items-start gap-4">
-                  <div className={`w-14 h-14 rounded-2xl ${scheme.iconBg} flex items-center justify-center shrink-0 shadow-md`}>
-                    <Icon className="w-7 h-7 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
+            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/80">
+              <div className="w-10 h-10 rounded-lg bg-[#0B3064] flex items-center justify-center text-white mb-3">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm mb-1">Erstwhile SCA to SCSP</h3>
+              <p className="text-xs text-slate-500 font-mono mb-2">Special Central Assistance</p>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Re-engineered into comprehensive Grant-in-Aid for income-generating schemes, vocational training, and SHG development.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/80">
+              <div className="w-10 h-10 rounded-lg bg-[#0A783C] flex items-center justify-center text-white mb-3">
+                <Home className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm mb-1">Erstwhile PMAGY</h3>
+              <p className="text-xs text-slate-500 font-mono mb-2">Pradhan Mantri Adarsh Gram Yojana</p>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Integrated as the Adarsh Gram component providing ₹21 Lakh per village to saturate infrastructure in high-density SC habitations.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/80">
+              <div className="w-10 h-10 rounded-lg bg-[#C24810] flex items-center justify-center text-white mb-3">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm mb-1">Erstwhile BJRCY</h3>
+              <p className="text-xs text-slate-500 font-mono mb-2">Babu Jagjivan Ram Chhatrawas</p>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Unified into residential educational hostels for SC boys and girls to enhance access to quality middle, higher, and technical education.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. DETAILED SCHEME COMPONENTS & JOBS */}
+      <section id="components" className="py-14 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0A783C] bg-[#EDF9F1] px-3.5 py-1 rounded-full border border-[#BBE8CB]">
+              Comprehensive Scheme Pillars
+            </span>
+            <h2 className="text-3xl font-bold text-[#0B3064] font-display mt-3 mb-2">
+              Opportunities, Jobs & Benefits Under PM-AJAY
+            </h2>
+            <p className="text-slate-600 text-sm">
+              Detailed breakdown of central assistance, vocational trades, grant amounts, and civic amenities available to eligible citizens.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {SCHEME_COMPONENTS.map((comp) => {
+              const Icon = comp.icon;
+              return (
+                <div
+                  key={comp.id}
+                  id={comp.id}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+                >
+                  {/* Top Bar */}
+                  <div className="p-6 border-b border-slate-100">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${comp.badgeBg}`}>
+                        {comp.tag}
+                      </span>
+                      <Icon className={`w-5 h-5 ${comp.headerColor}`} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 font-display">{comp.title}</h3>
+                    <p className="text-xs font-medium text-slate-500 mt-0.5">{comp.hindiTitle}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed mt-3">{comp.summary}</p>
+
+                    {/* Stipend Banner */}
+                    <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center gap-2.5">
+                      <Zap className="w-4 h-4 text-[#E05A1B] shrink-0" />
+                      <span className="text-xs font-bold text-slate-800">{comp.stipend}</span>
+                    </div>
+                  </div>
+
+                  {/* Trades & Job Roles */}
+                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
+                        <Wrench className="w-3.5 h-3.5 text-[#0B3064]" />
+                        <span>Key Trades, Enterprise Areas & Amenities</span>
+                      </h4>
+                      <ul className="space-y-1.5">
+                        {comp.jobRoles.map((role, idx) => (
+                          <li key={idx} className="text-xs text-slate-700 flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0B3064] shrink-0 mt-1.5" />
+                            <span>{role}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#0A783C]" />
+                        <span>Key Scheme Provisions</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {comp.highlights.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-700 flex items-start gap-1.5"
+                          >
+                            <span className="text-[#0A783C] font-bold">✓</span>
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. BENEFICIARY PROFILES & AVATARS SECTION */}
+      <section className="py-14 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left Image & Caption */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="rounded-2xl overflow-hidden border-4 border-slate-100 shadow-lg bg-slate-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/pmajay-avatars.jpg"
+                  alt="PM-AJAY Beneficiary Profiles and Avatars"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="p-4 bg-white border-t border-slate-200">
+                  <h4 className="text-xs font-bold text-[#0B3064] uppercase tracking-wider">
+                    Diverse Beneficiary Cohorts
+                  </h4>
+                  <p className="text-[11px] text-slate-600 mt-1">
+                    Directly reaching rural youth, women-led SHG micro-entrepreneurs, small artisans, and students from Scheduled Caste communities.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Beneficiary Breakdown */}
+            <div className="lg:col-span-7 space-y-5">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#C24810] bg-[#FFF4ED] px-3.5 py-1 rounded-full border border-[#FDD8C2]">
+                Target Beneficiaries
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#0B3064] font-display">
+                Who Does PM-AJAY Serve?
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                The scheme provides differentiated assistance tailored to the unique economic realities of distinct
+                demographic groups within the Scheduled Caste population:
+              </p>
+
+              <div className="space-y-3.5">
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg bg-[#0B3064] text-white flex items-center justify-center shrink-0">
+                    <GraduationCap className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className={`text-lg font-bold font-display leading-tight mb-0.5 ${scheme.accentColor}`}>
-                      {scheme.title}
-                    </h3>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">
-                      {scheme.subtitle}
+                    <h4 className="text-sm font-bold text-slate-900">Rural SC Youth (Age 18–45)</h4>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Provided with free residential or non-residential skill training, monthly stipend, travel allowance, and guaranteed placement linkages in manufacturing and services.
                     </p>
                   </div>
                 </div>
 
-                {/* Description */}
-                <p className="text-sm text-slate-700 leading-relaxed font-sans">
-                  {scheme.description}
-                </p>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2">
-                  {scheme.benefitTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded-full px-2.5 py-1"
-                    >
-                      <CheckCircle2 className="w-3 h-3 text-[#0A783C]" />
-                      {tag}
-                    </span>
-                  ))}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg bg-[#C24810] text-white flex items-center justify-center shrink-0">
+                    <Briefcase className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">Women-Led Self-Help Groups (SHGs)</h4>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Cluster grants up to ₹10 Lakhs with zero collateral for setting up shared production units, textile stitching centers, and food packaging collectives.
+                    </p>
+                  </div>
                 </div>
 
-                {/* Coverage */}
-                <div className="pt-4 border-t border-black/5 flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 font-sans">{scheme.coverage}</span>
-                  <span className={`text-xs font-bold uppercase tracking-wider font-mono ${scheme.accentColor}`}>
-                    PM-AJAY GIA
-                  </span>
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg bg-[#0A783C] text-white flex items-center justify-center shrink-0">
+                    <Wrench className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">Traditional Artisans & Marginal Farmers</h4>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Modern subsidized equipment, customized toolkits, and working capital grants to preserve traditional occupations while upgrading productivity and income.
+                    </p>
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display mb-3 tracking-tight">
-            How Kural Sevi Works
-          </h2>
-          <p className="text-slate-600 text-base max-w-2xl mx-auto font-sans">
-            A simple 4-step process from village intake to scheme benefit disbursement — entirely digitized and voice-accessible.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {HOW_IT_WORKS.map((step) => {
-            const Icon = step.icon;
-            return (
-              <div
-                key={step.step}
-                className={`p-6 rounded-2xl border ${step.bg} flex flex-col gap-4 hover:shadow-md transition-all duration-200 relative overflow-hidden`}
-              >
-                <div className="absolute top-3 right-3 text-5xl font-black font-display text-black/[0.04] leading-none select-none">
-                  {step.step}
-                </div>
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center bg-white shadow-sm border border-black/5`}>
-                  <Icon className={`w-5 h-5 ${step.color}`} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#0B3064] font-display text-base mb-2 leading-tight">
-                    {step.title}
-                  </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed font-sans">{step.desc}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* SIGN IN CTA BANNER */}
-      <section className="relative z-10 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
-        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-[#0B3064] to-[#144282] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-          <div className="space-y-2 max-w-xl text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-white/80 border border-white/20">
-              <Lock className="w-3.5 h-3.5" />
-              <span>Secure Role-Based Access</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white font-display">
-              Ready to Access Your Portal?
+          </div>
+        </div>
+      </section>
+
+      {/* 8. ELIGIBILITY CRITERIA */}
+      <section id="eligibility" className="py-14 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0B3064] bg-[#EAF1FB] px-3.5 py-1 rounded-full border border-[#BACEEB]">
+              Verification Standards
+            </span>
+            <h2 className="text-3xl font-bold text-[#0B3064] font-display mt-3 mb-2">
+              Citizen Eligibility Checklist
             </h2>
-            <p className="text-sm text-white/70 leading-relaxed font-sans">
-              Designated officials — District Welfare Officers, Gram Panchayat Kiosk Operators, and Central
-              Administrators — can sign in to their dedicated workspace.
+            <p className="text-slate-600 text-sm">
+              All benefits are subject to verification against official state and national revenue registries.
             </p>
           </div>
-          <div className="shrink-0">
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#E05A1B] hover:bg-[#c44c14] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg"
-            >
-              <Lock className="w-4 h-4" />
-              Portal Sign In
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {ELIGIBILITY_CRITERIA.map((crit, idx) => {
+              const Icon = crit.icon;
+              return (
+                <div key={idx} className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+                  <div>
+                    <div className="w-10 h-10 rounded-lg bg-[#0B3064]/10 text-[#0B3064] flex items-center justify-center mb-3">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 text-sm mb-1.5">{crit.title}</h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">{crit.detail}</p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] font-bold text-[#0A783C]">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Mandatory Verification</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Required Documents */}
+          <div className="mt-8 p-6 rounded-2xl bg-white border border-slate-200 max-w-4xl mx-auto">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#0B3064]" />
+              <span>Required Verification Documents for Citizen Intake</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-700">
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0B3064]" />
+                <span>Valid SC Community Certificate</span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0B3064]" />
+                <span>Aadhaar Number & Photo ID</span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0B3064]" />
+                <span>Jan Dhan / DBT Bank Passbook</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="relative z-10 border-t border-slate-200/80 bg-white/70 py-8 px-4 sm:px-6 lg:px-8 backdrop-blur-md mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#0B3064] flex items-center justify-center shadow-2xs">
-              <IndicEar className="w-4.5 h-4.5 text-white" strokeWidth={2.2} />
+      {/* 9. CITIZEN APPLICATION PROCESS (HOW TO APPLY) */}
+      <section id="process" className="py-14 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0A783C] bg-[#EDF9F1] px-3.5 py-1 rounded-full border border-[#BBE8CB]">
+              Accessible Public Delivery
+            </span>
+            <h2 className="text-3xl font-bold text-[#0B3064] font-display mt-3 mb-2">
+              How Beneficiaries Can Apply
+            </h2>
+            <p className="text-slate-600 text-sm">
+              Citizen intake is conducted at the grassroots level through Gram Panchayat Kiosks, ensuring zero technical or literacy barriers.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {HOW_TO_APPLY_STEPS.map((step) => (
+              <div
+                key={step.step}
+                className="p-6 rounded-2xl bg-slate-50 border border-slate-200 relative flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-full bg-[#0B3064] text-white font-bold font-display text-base flex items-center justify-center mb-4 shadow-sm">
+                    {step.step}
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-sm mb-2">{step.title}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">{step.desc}</p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-200/60 text-[11px] font-semibold text-[#0B3064]">
+                  Zero Application Fee
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 10. HELPLINE & GRIEVANCE REDRESSAL */}
+      <section id="helpline" className="py-12 bg-slate-100 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-[#E05A1B] uppercase tracking-wider">Citizen Assistance</span>
+                <h3 className="text-xl font-bold text-[#0B3064] font-display">Official Helpdesk & Enquiries</h3>
+                <p className="text-xs text-slate-600">
+                  National and state welfare representatives are available on working days (9:30 AM to 6:00 PM).
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-[#EAF1FB] text-[#0B3064] flex items-center justify-center shrink-0">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase">National Scheme Toll-Free</div>
+                    <div className="text-sm font-bold text-slate-900 font-mono">1800-11-2001</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-[#EDF9F1] text-[#0A783C] flex items-center justify-center shrink-0">
+                    <Building className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase">District Welfare Officer (DWO)</div>
+                    <div className="text-xs font-semibold text-slate-700">Available at all 38 District Collectorates</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-left md:text-right">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0B3064] hover:bg-[#144282] text-white text-xs font-bold transition-all shadow-sm"
+                >
+                  <Lock className="w-4 h-4" />
+                  Official Department Login
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+                <p className="text-[11px] text-slate-500 mt-2">
+                  Authorized access for DWO, Village Panchayat & Admin officials.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[#0B3064] font-bold text-sm font-display">Kural Sevi (குரல் செவி)</p>
-              <p className="text-[11px] text-slate-500 font-sans">
-                Department of Social Welfare & Women Empowerment · Government of Tamil Nadu
+          </div>
+        </div>
+      </section>
+
+      {/* 11. OFFICIAL GOVERNMENT FOOTER */}
+      <footer className="bg-white border-t border-slate-200 py-10 text-xs text-slate-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          {/* Top Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="md:col-span-2 space-y-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#0B3064] flex items-center justify-center text-white">
+                  <IndicChakra className="w-5 h-5 text-white" strokeWidth={2.4} />
+                </div>
+                <span className="font-bold text-[#0B3064] text-base font-display">
+                  Pradhan Mantri Anusuchit Jaati Abhyuday Yojana (PM-AJAY)
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 max-w-md leading-relaxed">
+                Department of Social Justice and Empowerment, Ministry of Social Justice and Empowerment,
+                Government of India in coordination with the Department of Social Welfare, Government of Tamil Nadu.
               </p>
             </div>
+
+            <div>
+              <h4 className="font-bold text-slate-900 mb-2 uppercase tracking-wider text-[11px]">Important Portals</h4>
+              <ul className="space-y-1.5 text-xs text-slate-600">
+                <li>
+                  <a href="https://socialjustice.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-[#0B3064] flex items-center gap-1">
+                    <span>socialjustice.gov.in</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://india.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-[#0B3064] flex items-center gap-1">
+                    <span>india.gov.in (National Portal)</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://ncs.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-[#0B3064] flex items-center gap-1">
+                    <span>National Career Service (NCS)</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-slate-900 mb-2 uppercase tracking-wider text-[11px]">Authorized Portal</h4>
+              <ul className="space-y-1.5 text-xs text-slate-600">
+                <li>
+                  <Link href="/login" className="hover:text-[#0B3064] font-medium text-[#0B3064]">
+                    Official Portal Sign In
+                  </Link>
+                </li>
+                <li className="text-[11px] text-slate-500">
+                  Role authenticated: District Welfare Officer, Village Panchayat, Central Admin.
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs font-semibold">
-            <span className="flex items-center gap-1.5 text-slate-700">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#0B3064]" />
-              DPDP Act 2023 Compliant
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-1.5 text-slate-700">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#0A783C]" />
-              NSQF Aligned
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-1.5 text-slate-700">
-              <Globe2 className="w-3.5 h-3.5 text-[#E05A1B]" />
-              Multilingual (Tamil, Hindi, Telugu)
-            </span>
-          </div>
-
-          <div className="text-slate-500 text-center md:text-right font-sans">
-            <p className="font-semibold text-slate-700">PM-AJAY GIA · Problem Statement #26097</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Strict Role-Based Access Control Protected</p>
+          {/* Bottom Compliance Strip */}
+          <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="flex items-center gap-1 text-slate-700 font-semibold">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#0B3064]" />
+                Digital Personal Data Protection (DPDP) Act 2023 Compliant
+              </span>
+              <span>·</span>
+              <span>Website Content Managed by Ministry of Social Justice & Empowerment</span>
+            </div>
+            <div className="font-mono text-[10px] text-slate-400">
+              PM-AJAY GIA · Kural Sevi v2.4 · National Governance Platform
+            </div>
           </div>
         </div>
       </footer>
