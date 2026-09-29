@@ -113,15 +113,6 @@ export function AssistedEnrollmentWizard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-            title="Toggle Fullscreen for Gram Panchayat Tablet Stands"
-          >
-            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-            <span>Kiosk Stand Mode</span>
-          </button>
           <Badge variant="chakra" className="px-3 py-1 text-xs font-bold">
             {form.language} · Step {step} of 3
           </Badge>

@@ -1,5 +1,99 @@
 [
   {
+    "session_id": "WA-SESS-1790681717076",
+    "case_id": "KS-WA-2026-5776",
+    "phone": "9841526309",
+    "channel": "whatsapp",
+    "language": "ta",
+    "status": "COMPLETED",
+    "citizen_confirmed": true,
+    "notification_status": "WHATSAPP_DISPATCHED",
+    "completed_at": "2026-09-29T11:35:17.076Z",
+    "confirmed_via": "WhatsApp",
+    "confirmed_at": "2026-09-29T11:35:17.076Z",
+    "citizen_selected_choice": 2,
+    "citizen_selected_course": "Self Employed Tailor",
+    "confirmed_fields": {
+      "beneficiary_name": "முருகன்",
+      "district": "Salem",
+      "educational_background": "10th Pass (SSLC)",
+      "skills_and_interests": "தையல் மற்றும் ஆடை தயாரிப்பு",
+      "employment_preference": "self",
+      "mobility_constraints": "ஆம், செல்ல முடியும்",
+      "family_occupation": "Agriculture / Traditional Labour",
+      "current_livelihood": "தையல் மற்றும் ஆடை தயாரிப்பு"
+    },
+    "recommended_courses": [
+      {
+        "rank": 1,
+        "qp_code": "APP/Q0103",
+        "qp_name": "Sewing Machine Operator",
+        "nsqf_level": 2
+      },
+      {
+        "rank": 2,
+        "qp_code": "APP/Q0301",
+        "qp_name": "Self Employed Tailor",
+        "nsqf_level": 4
+      },
+      {
+        "rank": 3,
+        "qp_code": "APP/Q0105",
+        "qp_name": "Quality Controller - Garment",
+        "nsqf_level": 4
+      }
+    ],
+    "transcript": [
+      {
+        "user": "WhatsApp Intake Initiated",
+        "assistant": "Welcome to Kural Sevi PM-AJAY"
+      },
+      {
+        "user": "Name & Location: முருகன், Salem",
+        "assistant": "Captured"
+      },
+      {
+        "user": "Education: 10th Pass (SSLC)",
+        "assistant": "Captured"
+      },
+      {
+        "user": "Skills: தையல் மற்றும் ஆடை தயாரிப்பு",
+        "assistant": "Evaluated"
+      },
+      {
+        "user": "Preference: self",
+        "assistant": "Evaluated"
+      },
+      {
+        "user": "Selected Course: Option 2 (Self Employed Tailor)",
+        "assistant": "Confirmed"
+      }
+    ]
+  },
+  {
+    "session_id": "wa-mumlelju-b4rd",
+    "case_id": "WA-0638-DEW",
+    "phone": "+919342900638",
+    "channel": "whatsapp",
+    "language": "ta",
+    "status": "RECEIPT_DISPATCHED",
+    "citizen_confirmed": false,
+    "notification_status": "WHATSAPP_DISPATCHED",
+    "completed_at": "2026-09-29 11:28:09 UTC",
+    "confirmed_fields": {},
+    "recommended_courses": [],
+    "turns_count": 1,
+    "transcript": [
+      {
+        "user": "WhatsApp Confirmation Outreach to Beneficiary",
+        "assistant": "Dispatched official PM-AJAY notification receipt to +919342900638",
+        "timestamp": "04:58 PM"
+      }
+    ],
+    "confirmed_via": "WhatsApp",
+    "confirmed_at": "2026-09-29T11:28:09.114Z"
+  },
+  {
     "session_id": "67253b03-59a2-4df4-befa-f93f3967232b",
     "case_id": "67253B03-59A",
     "phone": "07338845352",

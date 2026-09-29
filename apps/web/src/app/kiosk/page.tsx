@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Mic,
@@ -13,56 +13,26 @@ import {
   FileCheck,
   ChevronRight,
   Sparkles,
-  Maximize2,
-  Minimize2,
   MessageCircle,
 } from 'lucide-react';
 import { IndicEar } from '@/components/icons/indic';
 import { KioskQRScanner } from '@/components/kiosk/KioskQRScanner';
 import { KioskStatusModal } from '@/components/kiosk/KioskStatusModal';
-import { KioskWhatsAppModal } from '@/components/kiosk/KioskWhatsAppModal';
+import { KioskWhatsAppPlatform } from '@/components/kiosk/KioskWhatsAppPlatform';
 import type { SanctionVerificationRecord } from '@/lib/sanction-verification';
 
 export default function KioskDashboardPage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
-  const [isStandMode, setIsStandMode] = useState(false);
   const [verifiedRecord, setVerifiedRecord] = useState<SanctionVerificationRecord | null>(null);
 
-  // Fullscreen Kiosk Stand Mode toggle
-  const toggleStandMode = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        setIsStandMode(true);
-      }).catch(() => {
-        setIsStandMode(true);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().then(() => {
-          setIsStandMode(false);
-        }).catch(() => {
-          setIsStandMode(false);
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsStandMode(Boolean(document.fullscreenElement));
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
   return (
-    <div className={`space-y-6 ${isStandMode ? 'py-4' : ''}`}>
-      {/* 1. TOP KIOSK UTILITY STRIP (Clean & uncluttered with Kiosk Stand Mode button) */}
+    <div className="space-y-6">
+      {/* 1. TOP KIOSK STATUS STRIP */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#0A783C] text-white flex items-center justify-center shrink-0 shadow-xs">
+          <div className="w-10 h-10 rounded-xl bg-[#0A783C] text-white flex items-center justify-center shrink-0 shadow-xs">
             <IndicEar className="w-5 h-5 text-white" strokeWidth={2.4} />
           </div>
           <div>
@@ -81,26 +51,11 @@ export default function KioskDashboardPage() {
           </div>
         </div>
 
-        {/* KIOSK STAND MODE BUTTON (Exact styling matching screenshot) */}
-        <div>
-          <button
-            type="button"
-            onClick={toggleStandMode}
-            id="kiosk-stand-mode-toggle"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 bg-white text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-50 active:bg-slate-100 transition-all shadow-xs cursor-pointer select-none"
-          >
-            {isStandMode ? (
-              <>
-                <Minimize2 className="w-4 h-4 text-slate-700" />
-                <span>Exit Stand Mode</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-4 h-4 text-slate-700" />
-                <span>Kiosk Stand Mode</span>
-              </>
-            )}
-          </button>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 text-slate-600 font-semibold px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#0A783C]" />
+            DPDP Act 2023 Compliant
+          </span>
         </div>
       </div>
 
@@ -200,30 +155,35 @@ export default function KioskDashboardPage() {
         </button>
       </div>
 
-      {/* 3. SECONDARY KIOSK UTILITIES (WhatsApp Outreach & Track Status) */}
+      {/* 3. SECONDARY KIOSK UTILITIES (WhatsApp Conversational Intake & Track Status) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* TILE 3: WHATSAPP CITIZEN OUTREACH (Requested WhatsApp Option) */}
+        {/* TILE 3: CONVERSATIONAL WHATSAPP PLATFORM & SIMULATOR */}
         <button
           type="button"
           onClick={() => setIsWhatsAppOpen(true)}
-          id="kiosk-action-whatsapp"
-          className="p-5 rounded-2xl bg-white border border-[#25D366]/40 hover:border-[#25D366] hover:shadow-md transition-all duration-200 flex items-start gap-4 cursor-pointer text-left group"
+          id="kiosk-action-whatsapp-platform"
+          className="p-5 rounded-3xl bg-white border border-[#25D366]/40 hover:border-[#25D366] hover:shadow-lg transition-all duration-200 flex items-start gap-4 cursor-pointer text-left group"
         >
-          <div className="w-12 h-12 rounded-xl bg-[#E7F8EE] text-[#075E54] flex items-center justify-center shrink-0 shadow-xs group-hover:bg-[#25D366] group-hover:text-white transition-colors">
-            <MessageCircle className="w-6 h-6 text-[#25D366] group-hover:text-white transition-colors" />
+          <div className="w-13 h-13 rounded-2xl bg-[#E7F8EE] text-[#075E54] flex items-center justify-center shrink-0 shadow-xs group-hover:bg-[#25D366] group-hover:text-white transition-colors">
+            <MessageCircle className="w-7 h-7 text-[#25D366] group-hover:text-white transition-colors" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#075E54] bg-[#E7F8EE] px-2 py-0.5 rounded">
-                WhatsApp Outreach
+          <div className="flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#075E54] bg-[#E7F8EE] px-2 py-0.5 rounded-full">
+                  Conversational Intake
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">வாட்ஸ்அப் உரையாடல்</span>
+              </div>
+              <span className="text-xs font-bold text-[#075E54] group-hover:translate-x-0.5 transition-transform">
+                Open Chat →
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">வாட்ஸ்அப் சேவை</span>
             </div>
             <h3 className="font-bold text-base text-slate-900 font-display mt-1">
-              WhatsApp Receipts & Registration
+              WhatsApp Platform & Simulator
             </h3>
-            <p className="text-xs text-slate-500 font-sans mt-0.5">
-              Send registration receipt, case tracking links, or approved sanction orders directly to citizen WhatsApp.
+            <p className="text-xs text-slate-500 font-sans mt-0.5 leading-relaxed">
+              Interactive Q&A intake: questions sent and answers captured in real-time, matching NSQF trades and enrolling case directly.
             </p>
           </div>
         </button>
@@ -233,23 +193,28 @@ export default function KioskDashboardPage() {
           type="button"
           onClick={() => setIsStatusOpen(true)}
           id="kiosk-action-track-status"
-          className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-[#0B3064]/40 hover:shadow-md transition-all duration-200 flex items-start gap-4 cursor-pointer text-left group"
+          className="p-5 rounded-3xl bg-white border border-slate-200 hover:border-[#0B3064]/40 hover:shadow-lg transition-all duration-200 flex items-start gap-4 cursor-pointer text-left group"
         >
-          <div className="w-12 h-12 rounded-xl bg-[#EAF1FB] text-[#0B3064] flex items-center justify-center shrink-0 shadow-xs group-hover:bg-[#0B3064] group-hover:text-white transition-colors">
-            <Search className="w-6 h-6" />
+          <div className="w-13 h-13 rounded-2xl bg-[#EAF1FB] text-[#0B3064] flex items-center justify-center shrink-0 shadow-xs group-hover:bg-[#0B3064] group-hover:text-white transition-colors">
+            <Search className="w-7 h-7 text-[#0B3064] group-hover:text-white transition-colors" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0B3064] bg-[#EAF1FB] px-2 py-0.5 rounded">
-                Citizen Inquiry
+          <div className="flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#0B3064] bg-[#EAF1FB] px-2 py-0.5 rounded-full">
+                  Citizen Inquiry
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">நிலை அறிதல்</span>
+              </div>
+              <span className="text-xs font-bold text-[#0B3064] group-hover:translate-x-0.5 transition-transform">
+                Search →
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">நிலை அறிதல்</span>
             </div>
             <h3 className="font-bold text-base text-slate-900 font-display mt-1">
               Track Application Status
             </h3>
-            <p className="text-xs text-slate-500 font-sans mt-0.5">
-              Check progress by entering the beneficiary’s 10-digit mobile number or case reference number.
+            <p className="text-xs text-slate-500 font-sans mt-0.5 leading-relaxed">
+              Check application progress by entering the beneficiary’s 10-digit mobile number or Case Reference ID.
             </p>
           </div>
         </button>
@@ -293,10 +258,13 @@ export default function KioskDashboardPage() {
         }}
       />
 
-      {/* MODAL 3: WHATSAPP CITIZEN OUTREACH */}
-      <KioskWhatsAppModal
+      {/* MODAL 3: CONVERSATIONAL WHATSAPP INTAKE PLATFORM & SIMULATOR */}
+      <KioskWhatsAppPlatform
         isOpen={isWhatsAppOpen}
         onClose={() => setIsWhatsAppOpen(false)}
+        onOpenVerify={(caseId) => {
+          setIsScannerOpen(true);
+        }}
       />
     </div>
   );

@@ -218,5 +218,115 @@
     "created_at": "2026-09-29T11:21:08.412Z",
     "scan_count": 2,
     "last_scanned_at": "2026-09-29T11:21:23.726Z"
+  },
+  "KS-WA-2026-5776": {
+    "sanction_order_id": "ORD-AJAY-KS-WA-2026-5776",
+    "case_id": "KS-WA-2026-5776",
+    "beneficiary_name_masked": "Citizen (98XXXXXX09)",
+    "phone_masked": "98XXXXXX09",
+    "phone": "9841526309",
+    "state": "Tamil Nadu",
+    "district": "Salem",
+    "block_village": "Salem Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Handloom Weaver",
+    "qp_code": "HAN/Q0101",
+    "nsqf_level": 3,
+    "pathway_type": "Home-Based Enterprise",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Salem",
+    "course_duration": "180 Hours (approx. 6 Months)",
+    "batch_id": "BATCH-SAL-2026-Q3",
+    "commencement_date": "06 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Salem",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:D984EA32CFF456DF34F47B6E0ADAEE24",
+    "verification_url": "http://localhost:3000/verify/KS-WA-2026-5776",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-29T11:35:17.088Z",
+    "scan_count": 1,
+    "last_scanned_at": "2026-09-29T11:35:32.732Z"
+  },
+  "ORD-AJAY-KS-WA-2026-5776": {
+    "sanction_order_id": "ORD-AJAY-KS-WA-2026-5776",
+    "case_id": "KS-WA-2026-5776",
+    "beneficiary_name_masked": "Citizen (98XXXXXX09)",
+    "phone_masked": "98XXXXXX09",
+    "phone": "9841526309",
+    "state": "Tamil Nadu",
+    "district": "Salem",
+    "block_village": "Salem Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Handloom Weaver",
+    "qp_code": "HAN/Q0101",
+    "nsqf_level": 3,
+    "pathway_type": "Home-Based Enterprise",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Salem",
+    "course_duration": "180 Hours (approx. 6 Months)",
+    "batch_id": "BATCH-SAL-2026-Q3",
+    "commencement_date": "06 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Salem",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:D984EA32CFF456DF34F47B6E0ADAEE24",
+    "verification_url": "http://localhost:3000/verify/KS-WA-2026-5776",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-29T11:35:17.088Z",
+    "scan_count": 1,
+    "last_scanned_at": "2026-09-29T11:35:32.732Z"
   }
 }
