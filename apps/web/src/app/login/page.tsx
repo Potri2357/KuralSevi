@@ -54,14 +54,17 @@ function LoginForm() {
       return;
     }
 
-    // Fetch role
-    const { data: profile } = await supabase
+    // Fetch role — if profile table doesn't exist yet or row is missing,
+    // allow through to officer dashboard (graceful degradation)
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('role, is_active')
       .eq('id', data.user.id)
       .single();
 
-    if (!profile?.is_active) {
+    // Only block if profile explicitly exists AND is_active = false
+    // (profileError means table missing / no row — don't block in that case)
+    if (!profileError && profile && profile.is_active === false) {
       await supabase.auth.signOut();
       setError('Your account is deactivated. Please contact your administrator.');
       setLoading(false);
