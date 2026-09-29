@@ -25,7 +25,6 @@ type UserRole = 'admin' | 'district_officer' | 'panchayat_kiosk';
 interface RoleOption {
   value: UserRole;
   label: string;
-  tamilLabel: string;
   badge: string;
   description: string;
   icon: typeof ShieldCheck;
@@ -39,7 +38,6 @@ const ROLES: RoleOption[] = [
   {
     value: 'admin',
     label: 'Central Administrator',
-    tamilLabel: 'மத்திய நிர்வாகி',
     badge: 'State & Central Level',
     description: 'System parameters, user management, audit logs, and aggregate data export.',
     icon: ShieldCheck,
@@ -51,7 +49,6 @@ const ROLES: RoleOption[] = [
   {
     value: 'district_officer',
     label: 'District Welfare Officer',
-    tamilLabel: 'மாவட்ட நல அலுவலர்',
     badge: 'District Level',
     description: 'Citizen case assessments, AI voice transcripts, NSQF matching, and certificate approvals.',
     icon: Building2,
@@ -63,7 +60,6 @@ const ROLES: RoleOption[] = [
   {
     value: 'panchayat_kiosk',
     label: 'Gram Panchayat Kiosk',
-    tamilLabel: 'கிராம பஞ்சாயத்து கியோஸ்க்',
     badge: 'Village Level',
     description: 'Kiosk voice intake terminal, outbound IVR call trigger, and direct citizen registration.',
     icon: Users,
@@ -234,7 +230,7 @@ function LoginForm() {
                 >
                   {ROLES.map((r) => (
                     <option key={r.value} value={r.value} className="text-slate-900 py-1.5">
-                      {r.label} ({r.tamilLabel}) — {r.badge}
+                      {r.label} — {r.badge}
                     </option>
                   ))}
                 </select>
