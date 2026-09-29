@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Inbox,
   BarChart3,
-  UserPlus,
   AlertTriangle,
   CheckCircle2,
   Menu,
@@ -121,7 +120,6 @@ export function TopNav() {
     { href: '/officer/cases', label: 'Queue', icon: Inbox, badge: queueBadge },
     { href: '/officer/calls', label: 'Calls', icon: PhoneCall },
     { href: '/officer/planning', label: 'Planning', icon: BarChart3 },
-    { href: '/officer/beneficiary/new', label: 'Intake', icon: UserPlus },
   ];
 
   const initials = profile?.full_name

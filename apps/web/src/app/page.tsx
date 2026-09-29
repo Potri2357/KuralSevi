@@ -4,11 +4,16 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
-  QrCode,
-  Building2,
-  Users,
   Lock,
   Globe2,
+  GraduationCap,
+  Briefcase,
+  Home,
+  FileText,
+  Phone,
+  Users,
+  MapPin,
+  ChevronRight,
 } from 'lucide-react';
 import {
   IndicEar,
@@ -21,15 +26,105 @@ export const metadata: Metadata = {
     'Voice-first intake, multilingual AI profiling, and explainable NSQF-aligned livelihood pathway recommendations for Scheduled Caste (SC) communities under PM-AJAY GIA.',
 };
 
+const PM_AJAY_SCHEMES = [
+  {
+    id: 'skill-dev',
+    icon: GraduationCap,
+    iconBg: 'bg-[#0B3064]',
+    cardBg: 'bg-[#EAF1FB] border-[#BACEEB]',
+    accentColor: 'text-[#0B3064]',
+    title: 'Skill Development & Training',
+    subtitle: 'NSQF-Aligned Vocational Pathways',
+    description:
+      'Free NSQF-certified skill training in over 40 trades — from textile & tailoring to electronics and construction — mapped to QP-NOS competency standards for SC youth aged 18–45.',
+    benefitTags: ['Free Training', 'Certificate on Completion', 'Job Placement Support'],
+    coverage: '₹15,000 – ₹1,00,000 stipend support',
+  },
+  {
+    id: 'livelihood',
+    icon: Briefcase,
+    iconBg: 'bg-[#E05A1B]',
+    cardBg: 'bg-[#FFF4ED] border-[#FDD8C2]',
+    accentColor: 'text-[#C24810]',
+    title: 'Livelihood & Self-Employment',
+    subtitle: 'GIA Grant Support for Micro-Enterprises',
+    description:
+      'Grant-in-Aid (GIA) for starting micro-enterprises, agricultural support, animal husbandry, and artisan livelihoods. Covers toolkits, working capital, and market linkage for SC households below poverty line.',
+    benefitTags: ['Up to ₹10 Lakh Grant', 'No Collateral Required', 'SHG Linkage'],
+    coverage: 'Direct benefit transfer to Jan Dhan account',
+  },
+  {
+    id: 'infrastructure',
+    icon: Home,
+    iconBg: 'bg-[#0A783C]',
+    cardBg: 'bg-[#EDF9F1] border-[#BBE8CB]',
+    accentColor: 'text-[#0A783C]',
+    title: 'Village Infrastructure & Housing',
+    subtitle: 'Adarsh Gram Development Fund',
+    description:
+      'Development of basic amenities in Scheduled Caste dominated habitations — drinking water, pucca roads, solar streetlights, community halls, and anganwadi centers under the Adarsh Gram scheme.',
+    benefitTags: ['Community Infrastructure', 'Solar & Water', 'Road Connectivity'],
+    coverage: '100 highest-density SC villages per district',
+  },
+  {
+    id: 'social-protection',
+    icon: FileText,
+    iconBg: 'bg-[#0B3064]',
+    cardBg: 'bg-[#EAF1FB] border-[#BACEEB]',
+    accentColor: 'text-[#0B3064]',
+    title: 'Social Protection & Welfare',
+    subtitle: 'Digital Verified Certificate & Entitlement',
+    description:
+      'Tamper-proof QR-verified digital certificates for caste, income, and scheme eligibility. Integrated with DigiLocker, Aadhaar e-KYC, and PM-JANMAN for last-mile grievance redressal and pension disbursement.',
+    benefitTags: ['DigiLocker Integration', 'Aadhaar-Linked', 'PM-JANMAN Benefits'],
+    coverage: 'Direct grievance resolution in 30 days',
+  },
+];
+
+const HOW_IT_WORKS = [
+  {
+    step: '01',
+    icon: Phone,
+    color: 'text-[#0A783C]',
+    bg: 'bg-[#EDF9F1] border-[#BBE8CB]',
+    title: 'Village Panchayat Intake',
+    desc: 'Beneficiary visits the Gram Panchayat Kiosk. Kiosk operator registers them with voice-based IVR intake in Tamil, Hindi, or Telugu — no literacy required.',
+  },
+  {
+    step: '02',
+    icon: Users,
+    color: 'text-[#E05A1B]',
+    bg: 'bg-[#FFF4ED] border-[#FDD8C2]',
+    title: 'AI Profiling & Matching',
+    desc: 'The AI engine transcribes the voice call, profiles the beneficiary against NSQF QP-NOS skill standards, and recommends the 3 best livelihood pathways.',
+  },
+  {
+    step: '03',
+    icon: MapPin,
+    color: 'text-[#0B3064]',
+    bg: 'bg-[#EAF1FB] border-[#BACEEB]',
+    title: 'District Officer Review',
+    desc: "The District Welfare Officer reviews the AI recommendation, verifies eligibility, and approves the beneficiary's livelihood certificate with a digital signature.",
+  },
+  {
+    step: '04',
+    icon: FileText,
+    color: 'text-[#0A783C]',
+    bg: 'bg-[#EDF9F1] border-[#BBE8CB]',
+    title: 'Certificate & Benefits',
+    desc: 'A tamper-proof QR-verified PDF certificate is issued instantly. Scheme benefits are disbursed directly to the beneficiary\'s Jan Dhan account.',
+  },
+];
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-slate-800 selection:bg-[#0B3064]/10 selection:text-[#0B3064] relative overflow-hidden flex flex-col justify-between">
+    <div className="min-h-screen bg-[var(--bg-base)] text-slate-800 selection:bg-[#0B3064]/10 selection:text-[#0B3064] relative overflow-hidden flex flex-col">
       {/* Universal 3px National Governance Saffron Accent Strip */}
       <div className="fixed top-0 left-0 right-0 h-[3px] bg-[#E05A1B] z-50 shadow-xs" aria-hidden="true" />
 
       {/* TOP NAVIGATION BAR */}
       <header className="sticky top-0 z-40 w-full bg-white/85 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.04)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-sm shadow-[#0B3064]/20 group-hover:scale-105 transition-transform">
@@ -50,30 +145,22 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Quick Nav & Telemetry */}
+          {/* Quick Nav */}
           <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#EDF9F1] border border-[#BBE8CB] text-[#0A783C]">
               <span className="w-2 h-2 rounded-full bg-[#0A783C] animate-pulse" />
               <span className="font-mono text-[11px] font-bold">Telephony & AI Active</span>
             </div>
-            <a href="#portals" className="hover:text-[#0B3064] transition-colors">
-              Role Portals
+            <a href="#schemes" className="hover:text-[#0B3064] transition-colors">
+              PM-AJAY Schemes
             </a>
-            <Link href="/verify" className="flex items-center gap-1.5 hover:text-[#E05A1B] transition-colors">
-              <QrCode className="w-3.5 h-3.5 text-[#E05A1B]" />
-              <span>Verify QR</span>
-            </Link>
+            <a href="#how-it-works" className="hover:text-[#0B3064] transition-colors">
+              How It Works
+            </a>
           </div>
 
-          {/* CTA Buttons */}
+          {/* CTA */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/verify"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700 transition-all shadow-2xs"
-            >
-              <QrCode className="w-3.5 h-3.5 text-[#0B3064]" />
-              <span>Public Verify</span>
-            </Link>
             <Link
               href="/login"
               id="header-login-btn"
@@ -87,138 +174,42 @@ export default function HomePage() {
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative z-10 pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+      <section className="relative z-10 pt-14 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
         {/* Ministry Badge */}
         <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-4 py-1.5 rounded-full text-xs font-bold text-[#0B3064] mb-6 shadow-2xs">
           <IndicChakra className="w-4 h-4 text-[#0B3064]" strokeWidth={2.4} />
           <span>Ministry of Social Justice & Empowerment · Government of India · PM-AJAY GIA</span>
         </div>
 
-        {/* Title */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-[#0B3064] font-display mb-3 max-w-5xl mx-auto leading-[1.12]">
-          Voice-First Livelihood Intelligence for Rural Beneficiaries
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-[#0B3064] font-display mb-4 max-w-5xl mx-auto leading-[1.1]">
+          Voice-First Livelihood Intelligence for Rural SC Beneficiaries
         </h1>
 
-        <p className="text-lg sm:text-xl text-slate-700 font-semibold tracking-wide mb-4 font-sans">
-          குரல் செவி · <span className="text-[#E05A1B]">कुरल सेवी</span> · Zero-Literacy AI Empowerment
-        </p>
-
-        <p className="text-slate-600 text-base sm:text-lg mb-10 max-w-3xl mx-auto leading-relaxed font-normal font-sans">
+        <p className="text-slate-600 text-base sm:text-lg mb-8 max-w-3xl mx-auto leading-relaxed font-normal font-sans">
           Bridging the digital divide for Scheduled Caste (SC) citizens across Tamil Nadu through native conversational
-          telephony intake, automated NSQF QP-NOS skill matching, and tamper-proof QR verified livelihood pathways.
+          telephony intake, automated NSQF QP-NOS skill matching, and tamper-proof QR-verified livelihood pathways under{' '}
+          <strong className="text-[#0B3064]">PM-AJAY GIA</strong>.
         </p>
 
-        {/* ROLE PORTAL SELECTOR CARDS (STRICT RESTRICTION GATEWAYS) */}
-        <div id="portals" className="pt-2 pb-10">
-          <div className="text-center mb-6">
-            <span className="text-xs uppercase tracking-widest font-mono text-slate-500 font-bold">
-              Designated Authority Workspaces
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-5xl mx-auto">
-            {/* Card 1: Central Admin */}
-            <Link
-              href="/login?role=admin"
-              className="group p-6 rounded-2xl bg-white border border-[#BACEEB]/80 hover:border-[#0B3064] shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center text-[#0B3064] shadow-2xs">
-                    <ShieldCheck className="w-6 h-6 text-[#0B3064]" />
-                  </div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB] font-mono">
-                    Admin Portal
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-[#0B3064] font-display mb-1 group-hover:text-[#144282] transition-colors">
-                  Central Administrator
-                </h2>
-                <p className="text-xs text-slate-500 font-sans mb-3">
-                  மத்திய நிர்வாகி · Master Governance
-                </p>
-                <p className="text-xs text-slate-600 leading-relaxed font-normal font-sans">
-                  Manage user profiles, calibrate AHP matching engine weights, monitor system telemetry, and export scheme analytics.
-                </p>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0B3064] group-hover:translate-x-1 transition-transform">
-                <span>Enter Admin Console</span>
-                <ArrowRight className="w-4 h-4" />
-              </div>
-            </Link>
-
-            {/* Card 2: District Welfare Officer */}
-            <Link
-              href="/login?role=district_officer"
-              className="group p-6 rounded-2xl bg-white border border-[#FDD8C2]/90 hover:border-[#E05A1B] shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between relative overflow-hidden"
-            >
-              {/* Highlight badge */}
-              <div className="absolute top-0 right-0 bg-[#E05A1B] text-white text-[9px] uppercase font-bold px-3 py-1 rounded-bl-xl font-mono">
-                Primary Ops
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#FFF4ED] border border-[#FDD8C2] flex items-center justify-center text-[#C24810] shadow-2xs">
-                    <Building2 className="w-6 h-6 text-[#C24810]" />
-                  </div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-[#FFF4ED] text-[#C24810] border border-[#FDD8C2] font-mono">
-                    District Level
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-[#0B3064] font-display mb-1 group-hover:text-[#E05A1B] transition-colors">
-                  District Welfare Officer
-                </h2>
-                <p className="text-xs text-slate-500 font-sans mb-3">
-                  மாவட்ட நல அலுவலர் · Case Assessment
-                </p>
-                <p className="text-xs text-slate-600 leading-relaxed font-normal font-sans">
-                  Inspect incoming voice notes, listen to beneficiary audio calls, verify NSQF course recommendations, and issue signed PDF pathways.
-                </p>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#C24810] group-hover:translate-x-1 transition-transform">
-                <span>Open Officer Workspace</span>
-                <ArrowRight className="w-4 h-4" />
-              </div>
-            </Link>
-
-            {/* Card 3: Gram Panchayat Kiosk */}
-            <Link
-              href="/login?role=panchayat_kiosk"
-              className="group p-6 rounded-2xl bg-white border border-[#BBE8CB]/90 hover:border-[#0A783C] shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#EDF9F1] border border-[#BBE8CB] flex items-center justify-center text-[#0A783C] shadow-2xs">
-                    <Users className="w-6 h-6 text-[#0A783C]" />
-                  </div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-[#EDF9F1] text-[#0A783C] border border-[#BBE8CB] font-mono">
-                    Village Kiosk
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-[#0B3064] font-display mb-1 group-hover:text-[#0A783C] transition-colors">
-                  Gram Panchayat Kiosk
-                </h2>
-                <p className="text-xs text-slate-500 font-sans mb-3">
-                  கிராம பஞ்சாயத்து கியோஸ்க் · Direct Intake
-                </p>
-                <p className="text-xs text-slate-600 leading-relaxed font-normal font-sans">
-                  Touchscreen kiosk mode for village centers: initiate citizen IVR call-backs, record speech audio, and submit on-the-spot registrations.
-                </p>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0A783C] group-hover:translate-x-1 transition-transform">
-                <span>Launch Kiosk Terminal</span>
-                <ArrowRight className="w-4 h-4" />
-              </div>
-            </Link>
-          </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#0B3064] hover:bg-[#144282] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg"
+          >
+            <Lock className="w-4 h-4" />
+            Access Your Portal
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+          <a
+            href="#schemes"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold text-sm transition-all shadow-2xs"
+          >
+            Learn About PM-AJAY Schemes
+          </a>
         </div>
 
-        {/* METRICS TELEMETRY BAR (MATCHING UNIVERSAL GLASS-CARD) */}
-        <div className="mt-4 py-6 px-8 rounded-2xl bg-white border border-slate-200/90 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.04)] grid grid-cols-2 md:grid-cols-4 gap-6 text-center max-w-5xl mx-auto">
+        {/* METRICS BAR */}
+        <div className="py-6 px-8 rounded-2xl bg-white border border-slate-200/90 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.04)] grid grid-cols-2 md:grid-cols-4 gap-6 text-center max-w-5xl mx-auto">
           <div>
             <div className="text-3xl font-bold text-[#0B3064] font-display">100%</div>
             <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Voice-First Intake (Tamil / Hindi)</div>
@@ -232,50 +223,150 @@ export default function HomePage() {
             <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Tamil Nadu Districts Enabled</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-[#0B3064] font-display">0-Sec</div>
-            <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Instant Tamper-Proof QR Verify</div>
+            <div className="text-3xl font-bold text-[#0B3064] font-display">30-Day</div>
+            <div className="text-xs text-slate-500 font-sans mt-0.5 font-medium">Grievance Resolution SLA</div>
           </div>
         </div>
       </section>
 
-      {/* PUBLIC VERIFICATION DOSSIER CALLOUT BANNER */}
+      {/* PM-AJAY SCHEMES SECTION */}
+      <section id="schemes" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-4 py-1.5 rounded-full text-xs font-bold text-[#0B3064] mb-4 shadow-2xs">
+            <IndicChakra className="w-3.5 h-3.5" strokeWidth={2.4} />
+            <span>PM-AJAY Grant-in-Aid Programmes</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display mb-3 tracking-tight">
+            What PM-AJAY Offers for SC Communities
+          </h2>
+          <p className="text-slate-600 text-base max-w-2xl mx-auto font-sans">
+            PM Anudaan for Janjati and Adivasi Yojana provides comprehensive support covering skill training,
+            livelihood grants, village infrastructure, and social protection for Scheduled Caste households.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {PM_AJAY_SCHEMES.map((scheme) => {
+            const Icon = scheme.icon;
+            return (
+              <div
+                key={scheme.id}
+                className={`p-7 rounded-2xl border ${scheme.cardBg} shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-5`}
+              >
+                {/* Header */}
+                <div className="flex items-start gap-4">
+                  <div className={`w-14 h-14 rounded-2xl ${scheme.iconBg} flex items-center justify-center shrink-0 shadow-md`}>
+                    <Icon className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className={`text-lg font-bold font-display leading-tight mb-0.5 ${scheme.accentColor}`}>
+                      {scheme.title}
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">
+                      {scheme.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-slate-700 leading-relaxed font-sans">
+                  {scheme.description}
+                </p>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2">
+                  {scheme.benefitTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded-full px-2.5 py-1"
+                    >
+                      <CheckCircle2 className="w-3 h-3 text-[#0A783C]" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Coverage */}
+                <div className="pt-4 border-t border-black/5 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700 font-sans">{scheme.coverage}</span>
+                  <span className={`text-xs font-bold uppercase tracking-wider font-mono ${scheme.accentColor}`}>
+                    PM-AJAY GIA
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section id="how-it-works" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display mb-3 tracking-tight">
+            How Kural Sevi Works
+          </h2>
+          <p className="text-slate-600 text-base max-w-2xl mx-auto font-sans">
+            A simple 4-step process from village intake to scheme benefit disbursement — entirely digitized and voice-accessible.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {HOW_IT_WORKS.map((step) => {
+            const Icon = step.icon;
+            return (
+              <div
+                key={step.step}
+                className={`p-6 rounded-2xl border ${step.bg} flex flex-col gap-4 hover:shadow-md transition-all duration-200 relative overflow-hidden`}
+              >
+                <div className="absolute top-3 right-3 text-5xl font-black font-display text-black/[0.04] leading-none select-none">
+                  {step.step}
+                </div>
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center bg-white shadow-sm border border-black/5`}>
+                  <Icon className={`w-5 h-5 ${step.color}`} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#0B3064] font-display text-base mb-2 leading-tight">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed font-sans">{step.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* SIGN IN CTA BANNER */}
       <section className="relative z-10 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
-        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-[#EAF1FB] via-white to-[#EDF9F1] border border-[#BACEEB] flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_4px_25px_-2px_rgba(11,48,100,0.06)]">
-          <div className="space-y-2.5 max-w-xl text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#BACEEB] text-xs font-bold text-[#0B3064] shadow-2xs">
-              <QrCode className="w-3.5 h-3.5 text-[#E05A1B]" />
-              <span>Public Verification Gateway</span>
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-[#0B3064] to-[#144282] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="space-y-2 max-w-xl text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-white/80 border border-white/20">
+              <Lock className="w-3.5 h-3.5" />
+              <span>Secure Role-Based Access</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#0B3064] font-display">
-              Scan & Verify Any Issued Livelihood Certificate
+            <h2 className="text-2xl sm:text-3xl font-bold text-white font-display">
+              Ready to Access Your Portal?
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
-              Every beneficiary approval generates an official PDF containing a tamper-proof QR code.
-              Employers, ITI centers, and panchayat leaders can scan the QR code to instantly verify authenticity without requiring a login.
+            <p className="text-sm text-white/70 leading-relaxed font-sans">
+              Designated officials — District Welfare Officers, Gram Panchayat Kiosk Operators, and Central
+              Administrators — can sign in to their dedicated workspace.
             </p>
           </div>
-
-          <div className="shrink-0 flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/verify"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#0B3064] hover:bg-[#144282] text-white font-bold text-xs transition-all shadow-xs"
-            >
-              <QrCode className="w-4 h-4" />
-              <span>Launch QR Scanner</span>
-            </Link>
+          <div className="shrink-0">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs transition-all shadow-2xs"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#E05A1B] hover:bg-[#c44c14] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg"
             >
-              <Lock className="w-4 h-4 text-slate-500" />
-              <span>Officer Sign In</span>
+              <Lock className="w-4 h-4" />
+              Portal Sign In
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* COMPLIANCE & GOVERNANCE FOOTER */}
-      <footer className="relative z-10 border-t border-slate-200/80 bg-white/70 py-8 px-4 sm:px-6 lg:px-8 backdrop-blur-md">
+      {/* FOOTER */}
+      <footer className="relative z-10 border-t border-slate-200/80 bg-white/70 py-8 px-4 sm:px-6 lg:px-8 backdrop-blur-md mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#0B3064] flex items-center justify-center shadow-2xs">
