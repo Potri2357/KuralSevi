@@ -940,7 +940,10 @@
         "assistant": "பதிவு முடிந்தது.",
         "timestamp": "11:25:30"
       }
-    ]
+    ],
+    "officer_action": "approved",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T13:09:00.272Z"
   },
   {
     "session_id": "b2f47183-ec86-493a-a711-895b6102b218",
@@ -1054,7 +1057,10 @@
         "assistant": "விவரங்கள் சேர்க்கப்பட்டன.",
         "timestamp": "15:15:30"
       }
-    ]
+    ],
+    "officer_action": "rejected",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T13:02:25.325Z"
   },
   {
     "session_id": "wa001-5f7a-4b9c-a23d-111222333444",

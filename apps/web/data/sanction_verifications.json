@@ -328,5 +328,221 @@
     "created_at": "2026-09-29T11:35:17.088Z",
     "scan_count": 1,
     "last_scanned_at": "2026-09-29T11:35:32.732Z"
+  },
+  "KS-2026-00120": {
+    "sanction_order_id": "ORD-AJAY-KS-2026-00120",
+    "case_id": "KS-2026-00120",
+    "beneficiary_name_masked": "Citizen (09XXXXXX46)",
+    "phone_masked": "09XXXXXX46",
+    "phone": "09841122446",
+    "state": "Tamil Nadu",
+    "district": "Tiruchirappalli",
+    "block_village": "Tiruchirappalli Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Retail Sales Associate / Shopkeeper",
+    "qp_code": "RAS/Q0104",
+    "nsqf_level": 3,
+    "pathway_type": "Self-Employment / Enterprise Linkage",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Tiruchirappalli",
+    "course_duration": "120 Hours (approx. 4 Months)",
+    "batch_id": "BATCH-TIR-2026-Q3",
+    "commencement_date": "06 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Tiruchirappalli",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:9B3864B9D5AE1755E2DFA3E82C377894",
+    "verification_url": "http://localhost:3000/verify/KS-2026-00120",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-29T13:02:36.348Z",
+    "scan_count": 0
+  },
+  "ORD-AJAY-KS-2026-00120": {
+    "sanction_order_id": "ORD-AJAY-KS-2026-00120",
+    "case_id": "KS-2026-00120",
+    "beneficiary_name_masked": "Citizen (09XXXXXX46)",
+    "phone_masked": "09XXXXXX46",
+    "phone": "09841122446",
+    "state": "Tamil Nadu",
+    "district": "Tiruchirappalli",
+    "block_village": "Tiruchirappalli Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Retail Sales Associate / Shopkeeper",
+    "qp_code": "RAS/Q0104",
+    "nsqf_level": 3,
+    "pathway_type": "Self-Employment / Enterprise Linkage",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Tiruchirappalli",
+    "course_duration": "120 Hours (approx. 4 Months)",
+    "batch_id": "BATCH-TIR-2026-Q3",
+    "commencement_date": "06 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Tiruchirappalli",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:9B3864B9D5AE1755E2DFA3E82C377894",
+    "verification_url": "http://localhost:3000/verify/KS-2026-00120",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-29T13:02:36.348Z",
+    "scan_count": 0
+  },
+  "KS-2026-00117": {
+    "sanction_order_id": "ORD-AJAY-KS-2026-00117",
+    "case_id": "KS-2026-00117",
+    "beneficiary_name_masked": "Citizen (09XXXXXX78)",
+    "phone_masked": "09XXXXXX78",
+    "phone": "09842345678",
+    "state": "Tamil Nadu",
+    "district": "Erode",
+    "block_village": "Erode Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Electrician (Domestic)",
+    "qp_code": "ELE/Q3101",
+    "nsqf_level": 4,
+    "pathway_type": "Self-Employment / Enterprise Linkage",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Erode",
+    "course_duration": "200 Hours (approx. 7 Months)",
+    "batch_id": "BATCH-ERO-2026-Q3",
+    "commencement_date": "06 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Erode",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:E1960F351777078289C2857B1126391B",
+    "verification_url": "http://localhost:3000/verify/KS-2026-00117",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-29T13:09:00.300Z",
+    "scan_count": 0
+  },
+  "ORD-AJAY-KS-2026-00117": {
+    "sanction_order_id": "ORD-AJAY-KS-2026-00117",
+    "case_id": "KS-2026-00117",
+    "beneficiary_name_masked": "Citizen (09XXXXXX78)",
+    "phone_masked": "09XXXXXX78",
+    "phone": "09842345678",
+    "state": "Tamil Nadu",
+    "district": "Erode",
+    "block_village": "Erode Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Electrician (Domestic)",
+    "qp_code": "ELE/Q3101",
+    "nsqf_level": 4,
+    "pathway_type": "Self-Employment / Enterprise Linkage",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Erode",
+    "course_duration": "200 Hours (approx. 7 Months)",
+    "batch_id": "BATCH-ERO-2026-Q3",
+    "commencement_date": "06 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Erode",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:E1960F351777078289C2857B1126391B",
+    "verification_url": "http://localhost:3000/verify/KS-2026-00117",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-29T13:09:00.300Z",
+    "scan_count": 0
   }
 }

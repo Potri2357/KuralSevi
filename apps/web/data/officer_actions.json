@@ -40,5 +40,19 @@
     "beneficiary_decision": "ready",
     "officer_notes": "",
     "actioned_at": "2026-09-29T12:02:15.358Z"
+  },
+  "KS-2026-00120": {
+    "case_id": "KS-2026-00120",
+    "action": "rejected",
+    "beneficiary_decision": "ready",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T13:02:25.325Z"
+  },
+  "KS-2026-00117": {
+    "case_id": "KS-2026-00117",
+    "action": "approved",
+    "beneficiary_decision": "ready",
+    "officer_notes": "",
+    "actioned_at": "2026-09-29T13:09:00.272Z"
   }
 }
