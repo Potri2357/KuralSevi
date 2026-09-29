@@ -17,6 +17,7 @@ import {
   Lock,
   Mail,
   CheckCircle2,
+  ChevronDown,
 } from 'lucide-react';
 import { IndicChakra, IndicEar } from '@/components/icons/indic';
 
@@ -225,16 +226,16 @@ function LoginForm() {
                     setSelectedRole(e.target.value as UserRole);
                     setError('');
                   }}
-                  className="w-full appearance-none px-4 py-3 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064] focus:bg-white transition-all cursor-pointer shadow-2xs"
+                  className="w-full appearance-none px-4 py-3.5 pr-12 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064] focus:bg-white transition-all cursor-pointer shadow-2xs"
                 >
                   {ROLES.map((r) => (
-                    <option key={r.value} value={r.value} className="text-slate-900 py-1.5">
+                    <option key={r.value} value={r.value} className="text-slate-900 py-2">
                       {r.label} — {r.badge}
                     </option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">
-                  ▼
+                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center justify-center">
+                  <ChevronDown className="w-4 h-4 stroke-[2.2]" />
                 </div>
               </div>
             </div>

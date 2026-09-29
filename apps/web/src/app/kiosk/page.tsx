@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Mic,
@@ -11,71 +11,102 @@ import {
   Building,
   Phone,
   FileCheck,
-  Award,
   ChevronRight,
   Sparkles,
+  Maximize2,
+  Minimize2,
+  MessageCircle,
 } from 'lucide-react';
 import { IndicEar } from '@/components/icons/indic';
 import { KioskQRScanner } from '@/components/kiosk/KioskQRScanner';
 import { KioskStatusModal } from '@/components/kiosk/KioskStatusModal';
+import { KioskWhatsAppModal } from '@/components/kiosk/KioskWhatsAppModal';
 import type { SanctionVerificationRecord } from '@/lib/sanction-verification';
 
 export default function KioskDashboardPage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const [isStandMode, setIsStandMode] = useState(false);
   const [verifiedRecord, setVerifiedRecord] = useState<SanctionVerificationRecord | null>(null);
 
-  const handleOpenScannerWithId = (id?: string) => {
-    setIsScannerOpen(true);
+  // Fullscreen Kiosk Stand Mode toggle
+  const toggleStandMode = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsStandMode(true);
+      }).catch(() => {
+        setIsStandMode(true);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => {
+          setIsStandMode(false);
+        }).catch(() => {
+          setIsStandMode(false);
+        });
+      }
+    }
   };
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsStandMode(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
-    <div className="space-y-6">
-      {/* 1. KIOSK HEADER BANNER (Direct Touchscreen Kiosk Appearance) */}
-      <div className="bg-white rounded-3xl border border-[#BBE8CB] shadow-[0_4px_24px_-4px_rgba(10,120,60,0.12)] p-6 sm:p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#EDF9F1] to-transparent rounded-full -mr-20 -mt-20 pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[#0A783C] text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#0A783C]/25">
-              <IndicEar className="w-9 h-9 text-white" strokeWidth={2.4} />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-3 py-1 rounded-full">
-                  கிராம ஊராட்சி கணினி மையம் · Panchayat Kiosk Terminal
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] rounded-full px-3 py-1">
-                  <span className="w-2 h-2 rounded-full bg-[#0A783C] animate-pulse" />
-                  Kiosk Active
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B3064] font-display tracking-tight">
-                Kural Sevi — குரல் செவி
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
-                Department of Social Welfare & Women Empowerment · Government of Tamil Nadu
-              </p>
-            </div>
+    <div className={`space-y-6 ${isStandMode ? 'py-4' : ''}`}>
+      {/* 1. TOP KIOSK UTILITY STRIP (Clean & uncluttered with Kiosk Stand Mode button) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#0A783C] text-white flex items-center justify-center shrink-0 shadow-xs">
+            <IndicEar className="w-5 h-5 text-white" strokeWidth={2.4} />
           </div>
-
-          {/* Quick Stats Pill */}
-          <div className="flex items-center gap-2 self-stretch md:self-auto bg-slate-50 p-2 sm:p-2.5 rounded-2xl border border-slate-200 text-xs">
-            <div className="px-3 py-1.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs text-center">
-              <div className="font-bold text-[#0A783C] font-mono">100% Free</div>
-              <div className="text-[10px] text-slate-500">Citizen Services</div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-[#0B3064] font-display">
+                Panchayat Kiosk Terminal
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-2.5 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0A783C] animate-pulse" />
+                Online
+              </span>
             </div>
-            <div className="px-3 py-1.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs text-center">
-              <div className="font-bold text-[#0B3064] font-mono">Tamil / Hindi</div>
-              <div className="text-[10px] text-slate-500">Voice Assisted</div>
-            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Melpadi Gram Panchayat · Salem District · PM-AJAY GIA
+            </p>
           </div>
+        </div>
+
+        {/* KIOSK STAND MODE BUTTON (Exact styling matching screenshot) */}
+        <div>
+          <button
+            type="button"
+            onClick={toggleStandMode}
+            id="kiosk-stand-mode-toggle"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 bg-white text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-50 active:bg-slate-100 transition-all shadow-xs cursor-pointer select-none"
+          >
+            {isStandMode ? (
+              <>
+                <Minimize2 className="w-4 h-4 text-slate-700" />
+                <span>Exit Stand Mode</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-4 h-4 text-slate-700" />
+                <span>Kiosk Stand Mode</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* 2. DIRECT PRIMARY TOUCH ACTIONS (High Visibility, Kiosk Touch Tiles) */}
+      {/* 2. DIRECT PRIMARY TOUCH ACTIONS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* TILE 1: VOICE INTAKE REGISTRATION (Primary - Highlighted) */}
+        {/* TILE 1: VOICE INTAKE REGISTRATION (Primary Action) */}
         <Link
           href="/kiosk/intake"
           id="kiosk-primary-intake"
@@ -121,7 +152,7 @@ export default function KioskDashboardPage() {
           </div>
         </Link>
 
-        {/* TILE 2: QR SANCTION ORDER VERIFICATION (Interactive Kiosk Scanner) */}
+        {/* TILE 2: QR SANCTION ORDER VERIFICATION (Interactive Scanner) */}
         <button
           type="button"
           onClick={() => setIsScannerOpen(true)}
@@ -169,48 +200,59 @@ export default function KioskDashboardPage() {
         </button>
       </div>
 
-      {/* 3. SECONDARY KIOSK UTILITIES (Track Status & Helpdesk) */}
+      {/* 3. SECONDARY KIOSK UTILITIES (WhatsApp Outreach & Track Status) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* TILE 3: TRACK APPLICATION STATUS */}
+        {/* TILE 3: WHATSAPP CITIZEN OUTREACH (Requested WhatsApp Option) */}
         <button
           type="button"
-          onClick={() => setIsStatusOpen(true)}
-          id="kiosk-action-track-status"
-          className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-[#0B3064]/40 hover:shadow-md transition-all duration-200 flex items-start gap-4 cursor-pointer text-left"
+          onClick={() => setIsWhatsAppOpen(true)}
+          id="kiosk-action-whatsapp"
+          className="p-5 rounded-2xl bg-white border border-[#25D366]/40 hover:border-[#25D366] hover:shadow-md transition-all duration-200 flex items-start gap-4 cursor-pointer text-left group"
         >
-          <div className="w-12 h-12 rounded-xl bg-[#EAF1FB] text-[#0B3064] flex items-center justify-center shrink-0 shadow-xs">
-            <Search className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl bg-[#E7F8EE] text-[#075E54] flex items-center justify-center shrink-0 shadow-xs group-hover:bg-[#25D366] group-hover:text-white transition-colors">
+            <MessageCircle className="w-6 h-6 text-[#25D366] group-hover:text-white transition-colors" />
           </div>
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#0B3064]">
-              Citizen Inquiry
-            </span>
-            <h3 className="font-bold text-base text-slate-900 font-display mt-0.5">
-              Track Application Status
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#075E54] bg-[#E7F8EE] px-2 py-0.5 rounded">
+                WhatsApp Outreach
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">வாட்ஸ்அப் சேவை</span>
+            </div>
+            <h3 className="font-bold text-base text-slate-900 font-display mt-1">
+              WhatsApp Receipts & Registration
             </h3>
-            <p className="text-xs text-slate-500 font-sans mt-1">
-              Check progress by entering the beneficiary’s 10-digit mobile number or case reference number.
+            <p className="text-xs text-slate-500 font-sans mt-0.5">
+              Send registration receipt, case tracking links, or approved sanction orders directly to citizen WhatsApp.
             </p>
           </div>
         </button>
 
-        {/* TILE 4: BLOCK & DISTRICT WELFARE HELPDESK */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-200 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#FFF4ED] text-[#C24810] flex items-center justify-center shrink-0 shadow-xs">
-            <Phone className="w-6 h-6" />
+        {/* TILE 4: TRACK APPLICATION STATUS */}
+        <button
+          type="button"
+          onClick={() => setIsStatusOpen(true)}
+          id="kiosk-action-track-status"
+          className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-[#0B3064]/40 hover:shadow-md transition-all duration-200 flex items-start gap-4 cursor-pointer text-left group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-[#EAF1FB] text-[#0B3064] flex items-center justify-center shrink-0 shadow-xs group-hover:bg-[#0B3064] group-hover:text-white transition-colors">
+            <Search className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#C24810]">
-              Toll-Free Helpline
-            </span>
-            <h3 className="font-bold text-base text-slate-900 font-display mt-0.5">
-              1800-11-2001
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0B3064] bg-[#EAF1FB] px-2 py-0.5 rounded">
+                Citizen Inquiry
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">நிலை அறிதல்</span>
+            </div>
+            <h3 className="font-bold text-base text-slate-900 font-display mt-1">
+              Track Application Status
             </h3>
-            <p className="text-xs text-slate-500 font-sans mt-1">
-              Ministry of Social Justice & Empowerment Helpdesk · Open Mon–Sat 9:30 AM to 6:00 PM.
+            <p className="text-xs text-slate-500 font-sans mt-0.5">
+              Check progress by entering the beneficiary’s 10-digit mobile number or case reference number.
             </p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* 4. CITIZEN NOTICE & KIOSK GUIDELINES */}
@@ -249,6 +291,12 @@ export default function KioskDashboardPage() {
         onOpenVerify={(sanctionId) => {
           setIsScannerOpen(true);
         }}
+      />
+
+      {/* MODAL 3: WHATSAPP CITIZEN OUTREACH */}
+      <KioskWhatsAppModal
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
       />
     </div>
   );
