@@ -11,7 +11,7 @@ const {
   jidNormalizedUser
 } = require('@whiskeysockets/baileys');
 
-const PORT = parseInt(process.env.WHATSAPP_BOT_PORT || '5005', 10);
+const PORT = parseInt(process.env.PORT || process.env.WHATSAPP_BOT_PORT || '5005', 10);
 const AUTH_DIR = path.join(__dirname, 'auth_info_baileys');
 
 let sock = null;
