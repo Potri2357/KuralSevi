@@ -439,39 +439,6 @@ export function CaseDetailView({ caseData }: Props) {
             {/* Tab 1: Top 3 Pathways Grid & Detailed Breakdown */}
             {activeTab === 'pathways' ? (
               <div className="space-y-5">
-                {/* Citizen Expressed Choice Callout Banner */}
-                {caseData.citizen_confirmed && (
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-[#EDF9F1] via-[#F0FDF4] to-[#E2F5E9] border border-[#BBE8CB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                    <div className="flex items-start sm:items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#0A783C] text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <UserCheck className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-extrabold uppercase tracking-wide text-[#0A783C]">
-                            Citizen's Preferred Choice Recorded
-                          </span>
-                          <span className="text-[10px] font-bold bg-white text-[#0A783C] px-2 py-0.5 rounded border border-[#BBE8CB]">
-                            Confirmed via {caseData.confirmed_via || 'WhatsApp'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-700 font-medium pt-0.5">
-                          The beneficiary chosen pathway is <strong>Priority {caseData.citizen_selected_choice || 1}: {caseData.citizen_selected_course || recommendations[0]?.qp_name}</strong>.
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPathwayIndex(initialIndex)}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#0A783C] text-white hover:bg-[#085C2E] transition-colors shrink-0 shadow-2xs cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Align to Citizen Choice</span>
-                    </button>
-                  </div>
-                )}
-
                 {/* Top 3 Comparative Cards Grid */}
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
