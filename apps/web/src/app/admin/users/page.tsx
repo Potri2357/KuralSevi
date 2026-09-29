@@ -179,7 +179,7 @@ export default function AdminUsersPage() {
         <button
           onClick={() => setShowCreate(true)}
           id="create-user-btn"
-          className="inline-flex items-center gap-2 bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-2 bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 neuro-btn cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Official</span>
@@ -188,13 +188,13 @@ export default function AdminUsersPage() {
 
       {/* Create Modal */}
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in-50 duration-150">
-          <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in-50 duration-150">
+          <div className="neuro-glass rounded-3xl w-full max-w-md p-6 space-y-5 border border-white/60 shadow-[0_25px_60px_-15px_rgba(11,48,100,0.3)]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
               <h2 className="text-lg font-bold text-[#0B3064] font-display">Create Official Account</h2>
               <button
                 onClick={() => setShowCreate(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
                     placeholder={f.placeholder}
                     value={form[f.key as keyof typeof form]}
                     onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064] focus:bg-white transition"
+                    className="w-full px-3.5 py-2.5 rounded-xl neuro-inset bg-slate-100/80 border border-slate-200/80 text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/20 focus:border-[#0B3064] transition"
                   />
                 </div>
               ))}
@@ -231,7 +231,7 @@ export default function AdminUsersPage() {
                 <select
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064]"
+                  className="w-full px-3.5 py-2.5 rounded-xl neuro-inset bg-slate-100/80 border border-slate-200/80 text-slate-900 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0B3064]/20 focus:border-[#0B3064] cursor-pointer"
                 >
                   <option value="district_officer">District Welfare Officer</option>
                   <option value="panchayat_kiosk">Gram Panchayat Kiosk Operator</option>
@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full flex items-center justify-center gap-2 bg-[#0B3064] hover:bg-[#144282] disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-xs cursor-pointer mt-2"
+                className="w-full flex items-center justify-center gap-2 bg-[#0B3064] hover:bg-[#144282] disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95 neuro-btn cursor-pointer mt-2"
               >
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 {creating ? 'Creating Official Account…' : 'Save & Provision Account'}
@@ -263,10 +263,10 @@ export default function AdminUsersPage() {
           <p className="text-slate-600 font-medium">No users found. Click &quot;Add New Official&quot; above to create one.</p>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
+        <div className="neuro-glass rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200/80 bg-slate-50/70">
+              <tr className="border-b border-slate-200/80 bg-white/40 backdrop-blur-xs">
                 <th className="text-left px-5 py-3.5 text-xs font-bold text-slate-600 uppercase tracking-wider">User</th>
                 <th className="text-left px-5 py-3.5 text-xs font-bold text-slate-600 uppercase tracking-wider">Role</th>
                 <th className="text-left px-5 py-3.5 text-xs font-bold text-slate-600 uppercase tracking-wider hidden sm:table-cell">Jurisdiction</th>
@@ -274,9 +274,9 @@ export default function AdminUsersPage() {
                 <th className="text-right px-5 py-3.5 text-xs font-bold text-slate-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100/80">
               {users.map((u) => (
-                <tr key={u.id} className="transition-colors hover:bg-slate-50/80">
+                <tr key={u.id} className="transition-colors hover:bg-white/50">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-[#0B3064] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-2xs">
@@ -294,7 +294,7 @@ export default function AdminUsersPage() {
                     <select
                       value={u.role}
                       onChange={(e) => changeRole(u.id, e.target.value as UserRole)}
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full border ${ROLE_COLORS[u.role]} bg-white cursor-pointer focus:outline-none shadow-2xs`}
+                      className={`text-xs font-bold px-2.5 py-1 rounded-full border ${ROLE_COLORS[u.role]} bg-white/90 cursor-pointer focus:outline-none shadow-2xs glass-pill`}
                     >
                       {Object.entries(ROLE_LABELS).map(([val, label]) => (
                         <option key={val} value={val}>{label}</option>
@@ -315,7 +315,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border shadow-2xs ${
+                      className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border shadow-2xs glass-pill ${
                         u.is_active
                           ? 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]'
                           : 'bg-slate-100 text-slate-500 border-slate-200'
@@ -329,10 +329,10 @@ export default function AdminUsersPage() {
                     <button
                       onClick={() => toggleActive(u.id, u.is_active)}
                       title={u.is_active ? 'Deactivate user' : 'Activate user'}
-                      className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                      className={`p-2 rounded-xl border transition-all cursor-pointer active:scale-95 ${
                         u.is_active
-                          ? 'border-slate-200 text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-200'
-                          : 'border-slate-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200'
+                          ? 'border-slate-200 bg-white/70 text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-200'
+                          : 'border-slate-200 bg-white/70 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200'
                       }`}
                     >
                       {u.is_active ? <ToggleRight className="w-5 h-5 text-emerald-600" /> : <ToggleLeft className="w-5 h-5 text-slate-400" />}
@@ -352,7 +352,7 @@ export default function AdminUsersPage() {
           { role: 'district_officer' as UserRole, icon: User, desc: 'Citizen case review, approvals, and district planning intelligence.' },
           { role: 'panchayat_kiosk' as UserRole, icon: MapPin, desc: 'Village kiosk touch terminal: rapid citizen voice intake.' },
         ] as const).map(({ role, icon: Icon, desc }) => (
-          <div key={role} className={`p-4 rounded-2xl border ${ROLE_COLORS[role]} bg-white shadow-2xs`}>
+          <div key={role} className={`p-4 rounded-2xl border ${ROLE_COLORS[role]} neuro-glass`}>
             <div className="flex items-center gap-2 mb-1.5">
               <Icon className="w-4 h-4" />
               <span className="font-bold text-xs">{ROLE_LABELS[role]}</span>

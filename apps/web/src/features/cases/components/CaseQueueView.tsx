@@ -167,11 +167,11 @@ export function CaseQueueView({ initialCases }: Props) {
       {/* 1. Workstation Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center text-[#0B3064] shadow-2xs shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center text-[#0B3064] neuro-icon shrink-0">
             <IndicScroll className="w-6 h-6 text-[#0B3064]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B3064] tracking-tight font-display">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B3064] tracking-tight font-display drop-shadow-xs">
               Case Review Docket & Triage Workstation
             </h1>
             <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-0.5 font-sans">
@@ -184,14 +184,14 @@ export function CaseQueueView({ initialCases }: Props) {
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
           <Link
             href="/officer/beneficiary/new"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#EAF1FB] hover:bg-[#DDE8F8] text-[#0B3064] border border-[#BACEEB] text-xs font-bold transition-all hover:shadow-2xs active:scale-[0.98]"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl glass-chakra text-[#0B3064] text-xs font-bold transition-all neuro-btn cursor-pointer"
           >
-            <UserPlus className="w-3.5 h-3.5" />
+            <UserPlus className="w-3.5 h-3.5 text-[#0B3064]" />
             <span>Assisted Intake</span>
           </Link>
           <Link
             href="/officer/export"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl glass-panel hover:bg-white text-slate-700 text-xs font-bold transition-all neuro-btn cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export Docket</span>
@@ -200,7 +200,7 @@ export function CaseQueueView({ initialCases }: Props) {
       </div>
 
       {/* 2. Interactive Workflow Pipeline Ribbon (Stages) */}
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2 border border-slate-200/90 shadow-2xs">
+      <div className="neuro-glass rounded-2xl p-2.5">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" role="tablist" aria-label="Triage pipeline stages">
           {PIPELINE_STAGES.map((stage) => {
             const isSelected = filter === stage.id;
@@ -213,10 +213,10 @@ export function CaseQueueView({ initialCases }: Props) {
                 role="tab"
                 aria-selected={isSelected}
                 onClick={() => setFilter(stage.id)}
-                className={`flex flex-col items-start p-3 rounded-xl transition-all duration-150 text-left cursor-pointer relative group border ${
+                className={`flex flex-col items-start p-3 rounded-xl transition-all duration-200 text-left cursor-pointer relative group border ${
                   isSelected
-                    ? `${stage.activeBg} ${stage.activeBorder} shadow-2xs`
-                    : 'bg-white hover:bg-slate-50 border-transparent hover:border-slate-200'
+                    ? `${stage.activeBg} ${stage.activeBorder} shadow-[inset_1px_1px_3px_rgba(0,0,0,0.04),0_2px_8px_rgba(11,48,100,0.06)]`
+                    : 'bg-white/60 hover:bg-white/90 border-transparent hover:border-slate-200/80'
                 }`}
               >
                 <div className="flex items-center justify-between w-full mb-1">
@@ -227,7 +227,7 @@ export function CaseQueueView({ initialCases }: Props) {
                     </span>
                   </div>
                   <span
-                    className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-mono font-bold rounded-md border shadow-2xs ${stage.badgeBg}`}
+                    className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-mono font-bold rounded-md border shadow-2xs glass-pill ${stage.badgeBg}`}
                   >
                     {stage.count}
                   </span>
@@ -248,7 +248,7 @@ export function CaseQueueView({ initialCases }: Props) {
 
       {/* 3. Batch Success Toast */}
       {batchSuccessMessage && (
-        <div className="bg-[#EDF9F1] border border-[#BBE8CB] rounded-xl p-3.5 flex items-center justify-between gap-3 text-xs text-[#0A783C] shadow-2xs animate-in fade-in">
+        <div className="glass-green rounded-xl p-3.5 flex items-center justify-between gap-3 text-xs text-[#0A783C] shadow-sm animate-in fade-in">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-[#0A783C] shrink-0" />
             <span className="font-bold">{batchSuccessMessage}</span>
@@ -264,28 +264,28 @@ export function CaseQueueView({ initialCases }: Props) {
 
       {/* 4. Floating Sticky Bulk Action Toolbar */}
       {selectedIds.length > 0 && (
-        <div className="sticky top-4 z-20 bg-[#0B3064] text-white border border-[#144282] rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs shadow-lg animate-in slide-in-from-top-2">
+        <div className="sticky top-4 z-20 bg-[#0B3064]/95 backdrop-blur-xl text-white border border-[#144282] rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs shadow-[0_16px_40px_-6px_rgba(11,48,100,0.4)] animate-in slide-in-from-top-2">
           <div className="flex items-center gap-2.5 font-bold">
-            <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center">
-              <Layers className="w-3.5 h-3.5 text-white" />
+            <div className="w-7 h-7 rounded-lg bg-white/15 backdrop-blur-xs flex items-center justify-center border border-white/20">
+              <Layers className="w-4 h-4 text-white" />
             </div>
-            <span>
+            <span className="text-sm">
               {selectedIds.length} citizen docket{selectedIds.length > 1 ? 's' : ''} selected
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setSelectedIds([])}
-              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer border border-white/15"
             >
               Deselect All
             </button>
             <button
               onClick={handleBatchApprove}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0A783C] hover:bg-[#085C2E] text-white font-bold transition-colors shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0A783C] hover:bg-[#085C2E] text-white font-bold transition-all neuro-btn cursor-pointer"
             >
-              <IndicCertificate className="w-3.5 h-3.5" />
+              <IndicCertificate className="w-4 h-4" />
               <span>Issue Bulk Sanctions</span>
             </button>
           </div>

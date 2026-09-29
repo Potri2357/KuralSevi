@@ -45,7 +45,7 @@ export function MonthlyIntakeTrendChart({ data }: Props) {
   if (!data || data.length === 0) return null;
 
   return (
-    <Card className="bg-[var(--bg-card)] border-[var(--border)] shadow-2xs">
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -33,6 +33,17 @@
     "created_at": "2026-09-29T09:53:52.479Z"
   },
   {
+    "id": "admin-alias-002",
+    "email": "admin@gov.in",
+    "password": "AdminPassword123!",
+    "full_name": "State Welfare Administrator",
+    "role": "admin",
+    "district": "Chennai HQ",
+    "panchayat": null,
+    "is_active": true,
+    "created_at": "2026-09-29T09:53:52.479Z"
+  },
+  {
     "id": "officer-default-001",
     "email": "dwo@gov.in",
     "password": "OfficerPassword123!",
@@ -44,8 +55,30 @@
     "created_at": "2026-09-29T09:55:00.000Z"
   },
   {
+    "id": "officer-alias-002",
+    "email": "officer@gov.in",
+    "password": "OfficerPassword123!",
+    "full_name": "Dr. K. Meenakshi Sundaram",
+    "role": "district_officer",
+    "district": "Salem",
+    "panchayat": null,
+    "is_active": true,
+    "created_at": "2026-09-29T09:55:00.000Z"
+  },
+  {
     "id": "kiosk-default-001",
     "email": "vp@gov.in",
+    "password": "KioskPassword123!",
+    "full_name": "Thiru. S. Arumugam",
+    "role": "panchayat_kiosk",
+    "district": "Salem",
+    "panchayat": "Melpadi Gram Panchayat",
+    "is_active": true,
+    "created_at": "2026-09-29T09:55:00.000Z"
+  },
+  {
+    "id": "kiosk-alias-002",
+    "email": "kiosk@gov.in",
     "password": "KioskPassword123!",
     "full_name": "Thiru. S. Arumugam",
     "role": "panchayat_kiosk",

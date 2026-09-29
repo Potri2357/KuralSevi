@@ -39,13 +39,13 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
   };
 
   return (
-    <Card className="bg-white border-slate-200/80 hover:border-slate-300 rounded-2xl flex flex-col justify-between shadow-[0_1px_4px_0_rgba(11,48,100,0.04)] transition-all hover:shadow-[0_4px_16px_-4px_rgba(11,48,100,0.08)]">
+    <Card styleVariant="neuro-glass" className="rounded-2xl flex flex-col justify-between transition-all hover:shadow-lg">
       <div>
-        <CardHeader className="pb-3 border-b border-slate-100">
+        <CardHeader className="pb-3 border-b border-slate-200/60">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 shadow-2xs ${option.iconBg} ${option.iconColor}`}
+                className={`w-10 h-10 rounded-xl neuro-icon flex items-center justify-center border shrink-0 ${option.iconBg} ${option.iconColor}`}
               >
                 <CardIcon className="w-5 h-5" />
               </div>
@@ -73,7 +73,7 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
               </div>
             </div>
 
-            <Badge variant={option.badgeVariant} className="flex items-center gap-1 shrink-0 px-2.5 py-0.5">
+            <Badge variant={option.badgeVariant} className="flex items-center gap-1 shrink-0 px-2.5 py-0.5 glass-pill">
               {BadgeIcon && <BadgeIcon className="w-3 h-3" />}
               <span>{option.badge}</span>
             </Badge>
@@ -96,7 +96,7 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
                 return (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 text-xs bg-slate-50 text-slate-800 px-2.5 py-1 rounded-lg border border-slate-200/90 font-medium shadow-2xs hover:bg-slate-100/80 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs bg-white/70 text-slate-800 px-2.5 py-1 rounded-lg border border-slate-200/80 font-medium shadow-2xs hover:bg-white transition-all glass-pill"
                   >
                     {FieldIcon && <FieldIcon className="w-3 h-3 text-[#0B3064] shrink-0" />}
                     <span>{f.name}</span>
@@ -108,7 +108,7 @@ export function ExportCard({ option, isExporting, onExport }: Props) {
         </CardContent>
       </div>
 
-      <div className="p-4 border-t border-slate-100 bg-slate-50/70 rounded-b-2xl">
+      <div className="p-4 border-t border-slate-200/60 bg-white/40 backdrop-blur-xs rounded-b-2xl">
         <div className="flex flex-wrap items-center gap-2">
           {/* CSV Export Button (Primary for Government Officers) */}
           <Button

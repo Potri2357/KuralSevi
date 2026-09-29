@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { IndicChakra, IndicEar } from '@/components/icons/indic';
 import { KuralSeviIcon, KuralSeviLogo } from '@/components/common/KuralSeviLogo';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 type UserRole = 'admin' | 'district_officer' | 'panchayat_kiosk';
 
@@ -90,10 +91,17 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [checkingSession, setCheckingSession] = useState(true);
+  const [checkingSession, setCheckingSession] = useState(false);
+
+  const isSwitching = searchParams.get('switch') === 'true' || searchParams.get('logout') === 'true';
 
   // Check if session already active
   useEffect(() => {
+    if (isSwitching) {
+      setCheckingSession(false);
+      return;
+    }
+
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((data) => {
@@ -108,7 +116,7 @@ function LoginForm() {
       .catch(() => {
         setCheckingSession(false);
       });
-  }, [redirectTo, router]);
+  }, [redirectTo, router, isSwitching]);
 
   const activeRoleConfig = ROLES.find((r) => r.value === selectedRole) || ROLES[1];
 
@@ -187,14 +195,19 @@ function LoginForm() {
 
       {/* Main Login Card Container */}
       <div className="relative z-10 w-full max-w-lg mx-auto px-4 py-4 sm:py-6">
-        <div className="bg-white/95 rounded-3xl border border-slate-200/90 shadow-[0_12px_40px_-6px_rgba(11,48,100,0.08)] p-6 sm:p-9 backdrop-blur-xl">
+        <div className="neuro-glass rounded-3xl p-6 sm:p-9 relative overflow-hidden shadow-[12px_12px_36px_-6px_rgba(11,48,100,0.08),-12px_-12px_36px_rgba(255,255,255,0.95)]">
+          {/* Subtle top specular accent highlight */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+
           {/* Logo & Header */}
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <KuralSeviIcon size="xl" className="shadow-lg shadow-[#0B3064]/25" />
+              <div className="p-1 rounded-2xl neuro-icon bg-white">
+                <KuralSeviIcon size="xl" />
+              </div>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display tracking-tight drop-shadow-xs">
               Kural Sevi
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-sans mt-0.5">
@@ -215,27 +228,16 @@ function LoginForm() {
                 </label>
               </div>
 
-              {/* Styled Dropdown */}
-              <div className="relative">
-                <select
-                  id="role-select"
-                  value={selectedRole}
-                  onChange={(e) => {
-                    setSelectedRole(e.target.value as UserRole);
-                    setError('');
-                  }}
-                  className="w-full appearance-none px-4 py-3.5 pr-12 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064] focus:bg-white transition-all cursor-pointer shadow-2xs"
-                >
-                  {ROLES.map((r) => (
-                    <option key={r.value} value={r.value} className="text-slate-900 py-2">
-                      {r.label} — {r.badge}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center justify-center">
-                  <ChevronDown className="w-4 h-4 stroke-[2.2]" />
-                </div>
-              </div>
+              <CustomSelect
+                id="role-select"
+                value={selectedRole}
+                onChange={(val) => {
+                  setSelectedRole(val as UserRole);
+                  setError('');
+                }}
+                options={ROLES}
+                aria-label="Select Portal Role"
+              />
             </div>
 
             {/* Email Field */}
@@ -258,7 +260,7 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="official@gov.in"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064] focus:bg-white transition-all shadow-2xs"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl neuro-inset text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/20 focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -283,12 +285,12 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full pl-10 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/15 focus:border-[#0B3064] focus:bg-white transition-all shadow-2xs"
+                  className="w-full pl-10 pr-11 py-3 rounded-xl neuro-inset text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/20 focus:bg-white transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -298,7 +300,7 @@ function LoginForm() {
 
             {/* Error Banner */}
             {error && (
-              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-start gap-2.5 shadow-2xs">
+              <div className="p-3.5 rounded-xl bg-red-50/90 border border-red-200 text-red-700 text-xs font-medium flex items-start gap-2.5 shadow-2xs backdrop-blur-xs">
                 <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
                   <p className="font-bold text-red-800">Access Restriction Warning</p>
@@ -309,7 +311,7 @@ function LoginForm() {
 
             {/* Success Banner */}
             {successMsg && (
-              <div className="p-3.5 rounded-xl bg-[#EDF9F1] border border-[#BBE8CB] text-[#0A783C] text-xs font-semibold flex items-center gap-2.5 shadow-2xs">
+              <div className="p-3.5 rounded-xl glass-green text-[#0A783C] text-xs font-semibold flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#0A783C] shrink-0" />
                 <span>{successMsg}</span>
               </div>
@@ -320,7 +322,7 @@ function LoginForm() {
               id="login-submit-btn"
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] disabled:opacity-60 text-white rounded-xl px-6 py-3.5 font-bold text-sm transition-all duration-150 shadow-xs cursor-pointer mt-3"
+              className="w-full flex items-center justify-center gap-2 bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] disabled:opacity-60 text-white rounded-xl px-6 py-3.5 font-bold text-sm transition-all neuro-btn cursor-pointer mt-3"
             >
               {loading ? (
                 <>
@@ -337,8 +339,8 @@ function LoginForm() {
           </form>
 
           {/* Strict Role Policy Notice */}
-          <div className="mt-5 pt-4 border-t border-slate-100 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 font-semibold mb-1">
+          <div className="mt-5 pt-4 border-t border-slate-200/60 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-600 font-semibold mb-1">
               <Compass className="w-3.5 h-3.5 text-[#0B3064]" />
               <span>Strict Role-Based Governance Access</span>
             </div>

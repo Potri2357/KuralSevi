@@ -21,7 +21,7 @@ export function SkillGapsProgressList({ skillGaps }: Props) {
   const maxCount = Math.max(...skillGaps.map((sg) => sg.count), 1);
 
   return (
-    <Card className="bg-[var(--bg-card)] border-[var(--border)] shadow-2xs">
+    <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#FFF4ED] border border-[#FDD8C2] flex items-center justify-center">

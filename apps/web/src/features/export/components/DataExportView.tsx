@@ -162,10 +162,10 @@ export function DataExportView() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
       {/* Header Banner with Icon & Metadata */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_4px_0_rgba(11,48,100,0.04)]">
+      <div className="neuro-glass rounded-2xl p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0B3064] shrink-0 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl neuro-icon bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0B3064] shrink-0">
               <DownloadCloud className="w-6 h-6 text-[#0B3064]" />
             </div>
             <div>
@@ -173,7 +173,7 @@ export function DataExportView() {
                 <h1 className="text-xl sm:text-2xl font-extrabold text-[#0B3064] font-display tracking-tight">
                   Inter-Department Data Export & Coordination
                 </h1>
-                <span className="text-[11px] font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                <span className="text-[11px] font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-2.5 py-0.5 rounded-full flex items-center gap-1 glass-pill">
                   <ShieldCheck className="w-3 h-3 text-[#0A783C]" />
                   DPDP 2023
                 </span>
@@ -185,7 +185,7 @@ export function DataExportView() {
           </div>
 
           {/* Quick Metrics Strip */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 p-2.5 rounded-xl shrink-0">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 neuro-inset bg-slate-100/70 p-2.5 rounded-xl shrink-0">
             <div className="flex items-center gap-1 px-2 border-r border-slate-200">
               <Database className="w-3.5 h-3.5 text-[#0B3064]" />
               <span>4 Data Feeds</span>
@@ -216,7 +216,7 @@ export function DataExportView() {
       </div>
 
       {/* Statutory Data Governance Notice Card with Rich Icons */}
-      <Card className="border-[#FDD8C2] bg-[#FFF5EE] rounded-2xl shadow-2xs">
+      <Card className="border-[#FDD8C2] bg-[#FFF5EE]/90 rounded-2xl shadow-sm">
         <CardContent className="py-5 px-6 space-y-3">
           <div className="flex items-start gap-3.5">
             <div className="p-2 rounded-xl bg-white text-[#E05A1B] border border-[#FDD8C2] shrink-0 shadow-2xs mt-0.5">

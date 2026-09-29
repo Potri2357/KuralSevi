@@ -79,12 +79,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     : 'A';
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] flex flex-col">
+    <div className="min-h-screen bg-[var(--bg-base)] flex flex-col relative overflow-hidden">
       {/* Universal 3px National Governance Saffron Accent Strip */}
       <div className="h-[3px] w-full bg-[#E05A1B]" aria-hidden="true" />
 
-      {/* Sticky Top Header Bar (Matching TopNav exactly) */}
-      <header className="sticky top-0 z-40 w-full bg-white/85 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.04)]">
+      {/* Ambient background refraction orbs */}
+      <div className="fixed top-20 right-1/4 w-96 h-96 rounded-full bg-[#0B3064]/5 blur-3xl pointer-events-none -z-10" />
+      <div className="fixed bottom-20 left-10 w-96 h-96 rounded-full bg-[#E05A1B]/5 blur-3xl pointer-events-none -z-10" />
+
+      {/* Sticky Top Header Bar with glass-nav */}
+      <header className="sticky top-0 z-40 w-full glass-nav">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left: Brand + Admin Badge */}
@@ -99,7 +103,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Middle: Desktop Navigation Items */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-1.5">
               {ADMIN_NAV.map((item) => {
                 const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
                 const Icon = item.icon;
@@ -110,8 +114,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150',
                       active
-                        ? 'bg-[#0B3064] text-white shadow-xs'
-                        : 'text-slate-600 hover:text-[#0B3064] hover:bg-slate-100'
+                        ? 'bg-[#0B3064] text-white shadow-md shadow-[#0B3064]/20 border border-white/20'
+                        : 'text-slate-600 hover:text-[#0B3064] hover:bg-slate-100/70 hover:backdrop-blur-xs'
                     )}
                   >
                     <Icon className={cn('w-4 h-4', active ? 'text-white' : 'text-slate-500')} />
@@ -123,7 +127,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
             {/* Right: User Profile & Logout */}
             <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/70 backdrop-blur-md border border-white/60 shadow-2xs">
                 <div className="w-7 h-7 rounded-lg bg-[#0B3064] flex items-center justify-center text-white text-[11px] font-bold shadow-2xs">
                   {initials}
                 </div>
@@ -141,7 +145,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
                 disabled={loggingOut}
                 title="Sign out of Admin Console"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-200 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200/80 bg-white/70 backdrop-blur-xs text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-200 text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
               >
                 {loggingOut ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

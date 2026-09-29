@@ -12,8 +12,8 @@ COPY . .
 # Create and grant read/write permissions for WhatsApp auth state
 RUN mkdir -p /app/auth_info_baileys && chmod -R 777 /app/auth_info_baileys
 
-# Hugging Face Spaces routes traffic to port 7860
-ENV PORT=7860
-EXPOSE 7860
+# Port configuration (overridden automatically by Render/cloud providers)
+ENV PORT=5005
+EXPOSE 5005
 
 CMD ["node", "server.js"]

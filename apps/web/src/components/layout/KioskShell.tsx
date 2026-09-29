@@ -81,9 +81,13 @@ export function KioskShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#EDF9F1] via-white to-[#EAF1FB] flex flex-col">
+    <div className="min-h-screen bg-[var(--bg-base)] flex flex-col relative overflow-hidden">
+      {/* Ambient soft glow orbs */}
+      <div className="absolute top-10 left-10 w-96 h-96 bg-[#0A783C]/6 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/2 right-10 w-96 h-96 bg-[#0B3064]/6 rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-[#BBE8CB]/60 shadow-sm">
+      <header className="sticky top-0 z-40 glass-nav">
         <div className="h-[3px] w-full bg-gradient-to-r from-[#0A783C] via-[#E05A1B] to-[#0B3064]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Brand */}
@@ -102,7 +106,7 @@ export function KioskShell({ children }: { children: React.ReactNode }) {
               <div className="hidden sm:block text-right">
                 <p className="text-xs font-bold text-[#0B3064]">{profile.panchayat || profile.full_name}</p>
                 {profile.district && (
-                  <p className="text-xs text-slate-500">{profile.district}</p>
+                  <p className="text-xs text-slate-500 font-medium">{profile.district}</p>
                 )}
               </div>
             )}
@@ -110,10 +114,10 @@ export function KioskShell({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={toggleKioskFullscreen}
               id="kiosk-shell-fullscreen-btn"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer neuro-btn ${
                 isFullScreen
-                  ? 'bg-[#0B3064] text-white border-[#0B3064]'
-                  : 'bg-white hover:bg-slate-50 text-[#0B3064] border-[#0B3064]/30'
+                  ? 'bg-[#0B3064] text-white border border-[#0B3064]'
+                  : 'glass-panel text-[#0B3064] hover:bg-white'
               }`}
               title={isFullScreen ? 'Exit Kiosk Fullscreen' : 'Enter Kiosk Stand Mode'}
             >
@@ -133,7 +137,7 @@ export function KioskShell({ children }: { children: React.ReactNode }) {
               onClick={handleLogout}
               disabled={loggingOut}
               id="kiosk-logout-btn"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-100 transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50/80 glass-pill border border-red-200/80 transition-all cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               {loggingOut ? '…' : 'Exit'}

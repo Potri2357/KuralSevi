@@ -189,42 +189,42 @@ export function CaseDetailView({ caseData }: Props) {
       </div>
 
       {/* Top Case Header Banner Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_4px_0_rgba(11,48,100,0.04)] p-5 sm:p-6">
+      <div className="neuro-glass rounded-2xl p-5 sm:p-6 shadow-[8px_8px_24px_-4px_rgba(11,48,100,0.06),-8px_-8px_24px_0_rgba(255,255,255,0.95)]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2.5">
             {/* Top row: Case ID & Badges */}
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B3064] font-mono tracking-normal">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B3064] font-mono tracking-normal drop-shadow-xs">
                 {caseData.case_id}
               </h1>
 
               {/* Confidence badge */}
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB] px-2.5 py-1 rounded-md shadow-2xs">
-                <Sparkles className="w-3 h-3 text-[#0B3064]" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B3064] glass-chakra px-3 py-1 rounded-full border border-[#BACEEB]">
+                <Sparkles className="w-3.5 h-3.5 text-[#0B3064]" />
                 High Confidence
               </span>
 
               {/* Citizen Choice Status badge */}
               {caseData.citizen_confirmed ? (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-2.5 py-1 rounded-md shadow-2xs">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A783C] glass-green px-3 py-1 rounded-full border border-[#BBE8CB]">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#0A783C]" />
                   <span>Citizen Choice: Priority {caseData.citizen_selected_choice || 1} ({caseData.citizen_selected_course || currentRec?.qp_name})</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md shadow-2xs">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-50/90 border border-amber-200 px-3 py-1 rounded-full glass-pill">
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                   <span>Verification Dispatched (Awaiting Citizen Choice)</span>
                 </span>
               )}
 
               {/* SLA Remaining badge */}
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-[#C24810] bg-[#FFF4ED] border border-[#FDD8C2] px-2.5 py-1 rounded-md shadow-2xs">
-                <Clock className="w-3 h-3 text-[#E05A1B]" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#C24810] glass-saffron px-3 py-1 rounded-full border border-[#FDD8C2]">
+                <Clock className="w-3.5 h-3.5 text-[#E05A1B]" />
                 2 Days Remaining
               </span>
 
               {/* Specialist Review Advised badge */}
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-[#2563EB] bg-[#F0F4FF] border border-[#BFDBFE] px-2.5 py-1 rounded-md shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2563EB] bg-[#F0F4FF]/90 border border-[#BFDBFE] px-3 py-1 rounded-full glass-pill">
                 Specialist Review Advised
               </span>
             </div>
@@ -272,25 +272,25 @@ export function CaseDetailView({ caseData }: Props) {
         {/* ── LEFT COLUMN (8 COLS) ────────────────────────────────────────── */}
         <div className="lg:col-span-8 space-y-6">
           {/* Card 1: Beneficiary Intake Dossier */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_4px_0_rgba(11,48,100,0.04)] p-6 space-y-5">
+          <div className="neuro-glass rounded-2xl p-6 space-y-5">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-blue-50/80 border border-blue-100 flex items-center justify-center text-[#0B3064]">
+                <div className="w-8 h-8 rounded-xl bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center text-[#0B3064] neuro-icon">
                   <User className="w-4 h-4" />
                 </div>
                 <h2 className="font-display font-bold text-lg text-[#0B3064]">
                   Beneficiary Intake Dossier
                 </h2>
               </div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB] px-3 py-1 rounded-full shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A783C] glass-green px-3 py-1 rounded-full">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#0A783C]" />
                 DPDP Verified
               </span>
             </div>
 
             {/* Mobility & Availability Constraints Alert Box */}
-            <div className="bg-[#FFF5EE] border border-[#FDD8C2] rounded-xl p-4 space-y-1">
+            <div className="glass-saffron rounded-xl p-4 space-y-1">
               <p className="text-[11px] font-bold text-[#C24810] uppercase tracking-wider flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-[#E05A1B] shrink-0" />
                 <span>MOBILITY & AVAILABILITY CONSTRAINTS</span>

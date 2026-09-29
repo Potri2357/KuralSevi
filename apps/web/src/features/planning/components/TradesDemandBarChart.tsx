@@ -58,7 +58,7 @@ export function TradesDemandBarChart({ data }: Props) {
   const maxCount = Math.max(...chartData.map((d) => d.count), 1);
 
   return (
-    <Card className="xl:col-span-2 bg-[var(--bg-card)] border-[var(--border)] shadow-2xs">
+    <Card className="xl:col-span-2">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

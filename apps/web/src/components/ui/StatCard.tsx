@@ -57,10 +57,13 @@ export function StatCard({
     <div
       id={id}
       className={cn(
-        'bg-white/88 backdrop-blur-md rounded-2xl p-4 sm:p-5 border shadow-[0_4px_20px_-2px_rgba(11,48,100,0.04),0_1px_3px_0_rgba(11,48,100,0.03)] ring-1 ring-white/70 hover:-translate-y-1 hover:shadow-[0_14px_28px_-6px_rgba(11,48,100,0.09),0_6px_12px_-4px_rgba(11,48,100,0.04)] active:scale-[0.98] transition-all duration-200 cursor-pointer group flex flex-col justify-between overflow-hidden',
+        'neuro-glass rounded-2xl p-4 sm:p-5 hover:-translate-y-1.5 hover:shadow-[10px_10px_28px_-4px_rgba(11,48,100,0.1),-10px_-10px_28px_0_rgba(255,255,255,1)] active:scale-[0.98] transition-all duration-200 cursor-pointer group flex flex-col justify-between overflow-hidden relative',
         a.border
       )}
     >
+      {/* Subtle top specular accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+
       <div>
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
@@ -70,14 +73,14 @@ export function StatCard({
             >
               {label}
             </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight font-mono group-hover:text-[#0B3064] transition-colors">
+            <p className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight font-mono group-hover:text-[#0B3064] transition-colors drop-shadow-xs">
               {value}
             </p>
           </div>
           {icon && (
             <div
               className={cn(
-                'p-2 sm:p-2.5 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs group-hover:scale-105 transition-transform duration-200',
+                'p-2 sm:p-2.5 rounded-xl flex items-center justify-center shrink-0 border neuro-icon group-hover:scale-108 transition-all duration-200',
                 a.icon
               )}
             >
@@ -87,23 +90,25 @@ export function StatCard({
         </div>
 
         {trend && (
-          <p
-            className={cn(
-              'text-[11px] sm:text-xs mb-3 font-bold flex items-center gap-1 whitespace-nowrap',
-              trend.value >= 0 ? 'text-[#0A783C]' : 'text-[#C24810]'
-            )}
-          >
-            {trend.value >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-            <span>
-              {Math.abs(trend.value)}% {trend.label}
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold whitespace-nowrap glass-pill mb-2">
+            <span
+              className={cn(
+                'flex items-center gap-1',
+                trend.value >= 0 ? 'text-[#0A783C]' : 'text-[#C24810]'
+              )}
+            >
+              {trend.value >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+              <span>
+                {Math.abs(trend.value)}% {trend.label}
+              </span>
             </span>
-          </p>
+          </div>
         )}
       </div>
 
       {/* Motion Sparkline Graph (All animation & hover interaction strictly within graph container) */}
       {sparkline && (
-        <div className="mt-2 pt-2 border-t border-slate-100/80 -mx-1">
+        <div className="mt-2 pt-2 border-t border-slate-200/50 -mx-1">
           <MotionGraph
             data={sparkline}
             accent={a.motion}

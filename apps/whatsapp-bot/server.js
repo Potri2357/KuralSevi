@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const pino = require('pino');
@@ -12,7 +13,8 @@ const {
 } = require('@whiskeysockets/baileys');
 
 const PORT = parseInt(process.env.PORT || process.env.WHATSAPP_BOT_PORT || '5005', 10);
-const AUTH_DIR = path.join(__dirname, 'auth_info_baileys');
+const AUTH_DIR = process.env.AUTH_DIR || path.join(__dirname, 'auth_info_baileys');
+const VOICE_API_URL = process.env.VOICE_API_URL || 'http://localhost:8000';
 
 let sock = null;
 let currentQR = null;
@@ -22,8 +24,104 @@ let connectedPhone = null;
 const app = express();
 app.use(express.json());
 
+// Supabase Cloud Session Persistence (keeps WhatsApp session across Render Free Tier resets)
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
+let supabaseClient = null;
+
+function getSupabase() {
+  if (!supabaseClient && SUPABASE_URL && SUPABASE_KEY) {
+    try {
+      const { createClient } = require('@supabase/supabase-js');
+      supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (_) {}
+  }
+  return supabaseClient;
+}
+
+const BUCKET_NAME = 'whatsapp-bot-sessions';
+
+async function restoreSessionFromCloud() {
+  const sb = getSupabase();
+  if (!sb) return;
+
+  const credsFile = path.join(AUTH_DIR, 'creds.json');
+  if (fs.existsSync(credsFile)) return;
+
+  try {
+    console.log('[WhatsApp Bot] Checking Supabase Storage for saved WhatsApp session...');
+    const { data, error } = await sb.storage.from(BUCKET_NAME).download('session.tar.gz');
+    if (error || !data) {
+      console.log('[WhatsApp Bot] No existing remote session found in Supabase Storage.');
+      return;
+    }
+
+    const buffer = Buffer.from(await data.arrayBuffer());
+    if (buffer.length < 100) return;
+
+    const authParent = path.dirname(AUTH_DIR);
+    const tarPath = path.join(authParent, 'session.tar.gz');
+    fs.writeFileSync(tarPath, buffer);
+
+    const { execSync } = require('child_process');
+    execSync(`tar -xzf "${tarPath}" -C "${authParent}"`);
+    try { fs.unlinkSync(tarPath); } catch (_) {}
+
+    if (fs.existsSync(credsFile)) {
+      console.log('✅ [WhatsApp Bot] Successfully restored session credentials from Supabase Storage!');
+    }
+  } catch (err) {
+    console.warn('[WhatsApp Bot] Notice while restoring session from Supabase:', err.message);
+  }
+}
+
+let syncTimeout = null;
+function scheduleSessionBackup() {
+  const sb = getSupabase();
+  if (!sb) return;
+
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    try {
+      const credsFile = path.join(AUTH_DIR, 'creds.json');
+      if (!fs.existsSync(credsFile)) return;
+
+      const authParent = path.dirname(AUTH_DIR);
+      const authFolder = path.basename(AUTH_DIR);
+      const tarPath = path.join(authParent, 'session.tar.gz');
+
+      const { execSync } = require('child_process');
+      execSync(`tar -czf "${tarPath}" "${authFolder}"`, { cwd: authParent });
+
+      if (!fs.existsSync(tarPath)) return;
+      const fileBuffer = fs.readFileSync(tarPath);
+
+      await sb.storage.createBucket(BUCKET_NAME, { public: false }).catch(() => {});
+
+      const { error } = await sb.storage.from(BUCKET_NAME).upload('session.tar.gz', fileBuffer, {
+        upsert: true,
+        contentType: 'application/gzip'
+      });
+
+      try { fs.unlinkSync(tarPath); } catch (_) {}
+
+      if (!error) {
+        console.log('☁️ [WhatsApp Bot] WhatsApp session backed up to Supabase Storage!');
+      } else {
+        console.warn('[WhatsApp Bot] Supabase session upload notice:', error.message);
+      }
+    } catch (e) {
+      console.warn('[WhatsApp Bot] Supabase backup notice:', e.message);
+    }
+  }, 5000);
+}
+
 // Initialize Baileys Multi-Device WhatsApp Socket
 async function startWhatsAppBot() {
+  if (!fs.existsSync(AUTH_DIR)) {
+    fs.mkdirSync(AUTH_DIR, { recursive: true });
+  }
+  await restoreSessionFromCloud();
   const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
   const { version, isLatest } = await fetchLatestBaileysVersion();
   console.log(`[WhatsApp Bot] Initializing Baileys v${version.join('.')} (Latest: ${isLatest})...`);
@@ -38,7 +136,10 @@ async function startWhatsAppBot() {
     generateHighQualityLinkPreview: true,
   });
 
-  sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('creds.update', async () => {
+    await saveCreds();
+    scheduleSessionBackup();
+  });
 
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
@@ -73,6 +174,7 @@ async function startWhatsAppBot() {
       console.log(`✅ WhatsApp Bot Connected! Account: +${connectedPhone}`);
       console.log(`📡 Ready to send automated messages via POST http://localhost:${PORT}/send`);
       console.log('============================================================');
+      scheduleSessionBackup();
     }
   });
 
@@ -92,7 +194,7 @@ async function startWhatsAppBot() {
 
       // Forward citizen confirmation replies to Kural Sevi Voice API
       try {
-        const resp = await fetch('http://localhost:8000/api/citizen-confirm', {
+        const resp = await fetch(`${VOICE_API_URL.replace(/\/$/, '')}/api/citizen-confirm`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: cleanPhone, channel: 'WHATSAPP', text: body }),
@@ -113,13 +215,15 @@ async function startWhatsAppBot() {
 
 // 1. Health & Connection Status
 app.get('/status', (req, res) => {
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.get('host');
   res.json({
     status: connectionState,
     connected: connectionState === 'connected',
     phone: connectedPhone,
     user: sock?.user,
     qrAvailable: !!currentQR,
-    qrUrl: `http://localhost:${PORT}/qr`
+    qrUrl: `${protocol}://${host}/qr`
   });
 });
 
@@ -147,9 +251,14 @@ app.get('/qr', async (req, res) => {
         try { await sock.logout(); } catch (_) {}
       }
     } catch (_) {}
-    const fs = require('fs');
     if (fs.existsSync(AUTH_DIR)) {
       fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+    }
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.storage.from(BUCKET_NAME).remove(['session.tar.gz']).catch(() => {});
+      } catch (_) {}
     }
     connectionState = 'disconnected';
     connectedPhone = null;
@@ -219,10 +328,12 @@ app.post('/send', async (req, res) => {
   }
 
   if (connectionState !== 'connected' || !sock) {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host');
     return res.status(503).json({
       success: false,
       error: 'WhatsApp Bot is not connected yet.',
-      qrUrl: `http://localhost:${PORT}/qr`
+      qrUrl: `${protocol}://${host}/qr`
     });
   }
 
@@ -300,7 +411,6 @@ app.post('/send', async (req, res) => {
 // 4. Open-Source SMS Gateway (Android Gateway + ADB + Mirror)
 // ============================================================
 const { execFile } = require('child_process');
-const fs = require('fs');
 
 function getEnvVar(key, defaultValue = '') {
   const candidatePaths = [

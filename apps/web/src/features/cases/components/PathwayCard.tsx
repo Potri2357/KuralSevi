@@ -15,20 +15,21 @@ export function PathwayCard({ recommendation: rec, isPrimary = false }: Props) {
 
   return (
     <Card
+      styleVariant="neuro-glass"
       className={cn(
-        'transition-all duration-200 shadow-2xs hover:-translate-y-1 hover:shadow-[0_14px_28px_-6px_rgba(11,48,100,0.09)] cursor-pointer',
+        'transition-all duration-200 cursor-pointer',
         isRankOne
-          ? 'border-[#0B3064] bg-white ring-2 ring-[#0B3064]/20 shadow-xs'
-          : 'border-slate-200/85 hover:border-[#BACEEB]'
+          ? 'border-[#BACEEB] outline outline-2 outline-[#0B3064]/25 shadow-[8px_8px_28px_-4px_rgba(11,48,100,0.12),-8px_-8px_28px_0_rgba(255,255,255,1)]'
+          : 'border-slate-200/80 hover:border-[#BACEEB]'
       )}
     >
-      <CardHeader className={isRankOne ? 'bg-[#EAF1FB]/80 border-b border-[#BACEEB]' : undefined}>
+      <CardHeader className={isRankOne ? 'bg-[#EAF1FB]/80 backdrop-blur-xs border-b border-[#BACEEB]' : undefined}>
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span
                 className={cn(
-                  'text-xs font-bold px-2 py-0.5 rounded-md border shadow-2xs',
+                  'text-xs font-bold px-2.5 py-0.5 rounded-full border shadow-2xs glass-pill',
                   isRankOne
                     ? 'bg-[#0B3064] text-white border-[#0B3064]'
                     : 'bg-slate-100 text-slate-700 border-slate-200'
@@ -47,7 +48,7 @@ export function PathwayCard({ recommendation: rec, isPrimary = false }: Props) {
           <div className="text-right shrink-0">
             <span
               className={cn(
-                'inline-block text-xs font-bold px-2.5 py-1 rounded-md border shadow-2xs',
+                'inline-block text-xs font-bold px-2.5 py-1 rounded-md border shadow-2xs glass-pill',
                 nsqfLevelColor(rec.nsqf_level)
               )}
             >
@@ -59,11 +60,11 @@ export function PathwayCard({ recommendation: rec, isPrimary = false }: Props) {
 
       <CardContent className="space-y-4 pt-4">
         {/* Pathway Type & Income Potential */}
-        <div className="flex items-center justify-between gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+        <div className="flex items-center justify-between gap-2 text-xs neuro-inset p-3 rounded-xl">
           <Badge variant="chakra">
             {pathwayTypeLabel(rec.pathway_type)}
           </Badge>
-          <span className="text-[#0A783C] font-bold flex items-center gap-1">
+          <span className="text-[#0A783C] font-bold flex items-center gap-1.5 glass-green px-2.5 py-1 rounded-lg">
             <TrendingUp className="w-3.5 h-3.5 text-[#0A783C]" />
             {rec.income_range}
           </span>

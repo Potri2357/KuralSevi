@@ -49,7 +49,7 @@ export function EmploymentPreferencePieChart({ data }: Props) {
   const total = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <Card className="bg-[var(--bg-card)] border-[var(--border)]">
+    <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#FFF4ED] border border-[#FDD8C2] flex items-center justify-center">

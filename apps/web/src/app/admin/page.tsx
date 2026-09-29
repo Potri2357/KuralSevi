@@ -71,14 +71,14 @@ export default async function AdminPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/admin/users"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white text-xs font-bold transition-all shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white text-xs font-bold transition-all shadow-md active:scale-95 neuro-btn"
           >
             <Users className="w-4 h-4" />
             <span>Manage Staff</span>
           </Link>
           <Link
             href="/admin/export"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold transition-all shadow-2xs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/80 hover:bg-white border border-slate-200/80 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95 neuro-btn"
           >
             <Download className="w-4 h-4 text-[#0B3064]" />
             <span>Export Data</span>
@@ -98,13 +98,13 @@ export default async function AdminPage() {
           return (
             <div
               key={stat.label}
-              className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs flex items-center justify-between"
+              className="neuro-glass rounded-2xl p-5 flex items-center justify-between"
             >
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stat.label}</p>
                 <p className="text-2xl font-bold text-slate-900 font-display mt-0.5">{stat.value}</p>
               </div>
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 shadow-2xs ${stat.color}`}>
+              <div className={`w-10 h-10 rounded-xl neuro-icon flex items-center justify-center shrink-0 ${stat.color}`}>
                 <Icon className="w-5 h-5" />
               </div>
             </div>
@@ -129,14 +129,14 @@ export default async function AdminPage() {
             return (
               <div
                 key={mod.title}
-                className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-[#0B3064]/50 transition-all duration-200 p-6 flex flex-col justify-between"
+                className="neuro-glass rounded-2xl p-6 flex flex-col justify-between card-hover"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-2xs ${mod.iconContainer}`}>
+                    <div className={`w-12 h-12 rounded-xl neuro-icon flex items-center justify-center ${mod.iconContainer}`}>
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border font-mono ${mod.badgeClass}`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border font-mono glass-pill ${mod.badgeClass}`}>
                       {mod.badge}
                     </span>
                   </div>

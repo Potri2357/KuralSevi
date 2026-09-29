@@ -48,7 +48,7 @@ const URGENCY_STYLES: Record<string, { border: string; bg: string; text: string;
 
 export function PlanningInsightsGrid({ insights }: Props) {
   return (
-    <Card className="bg-[var(--bg-card)] border-[var(--border)] shadow-2xs">
+    <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#EAF1FB] border border-[#BACEEB] flex items-center justify-center">

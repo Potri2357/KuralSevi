@@ -34,7 +34,7 @@ export function TopNav() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [counts, setCounts] = useState<{ total: number; pending: number; slaBreached: number } | null>(null);
+  const [counts, setCounts] = useState<{ total: number; pending: number; slaBreached: number } | null>({ total: 30, pending: 23, slaBreached: 2 });
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -134,7 +134,7 @@ export function TopNav() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(11,48,100,0.05)] transition-all">
+    <header className="sticky top-0 z-40 w-full glass-nav transition-all">
       <div className="h-[3px] w-full bg-[#E05A1B]" aria-hidden="true" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -144,7 +144,7 @@ export function TopNav() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-slate-600 hover:text-[#0B3064] hover:bg-slate-100/80 md:hidden focus:outline-none focus:ring-2 focus:ring-[#0B3064] transition-colors"
+              className="p-2 rounded-xl text-slate-600 hover:text-[#0B3064] hover:bg-white/80 md:hidden focus:outline-none focus:ring-2 focus:ring-[#0B3064] transition-colors"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -179,10 +179,10 @@ export function TopNav() {
                   {item.badge !== undefined && (
                     <span
                       className={cn(
-                        'text-xs px-2 py-0.5 rounded-full font-bold ml-0.5 transition-colors',
+                        'text-xs px-2 py-0.5 rounded-full font-bold ml-1 transition-all inline-flex items-center justify-center min-w-[20px] shadow-xs',
                         item.badge === '0'
-                          ? 'bg-slate-200 text-slate-700'
-                          : 'bg-[#0B3064] text-white'
+                          ? 'bg-slate-100 text-slate-600 border border-slate-200/80'
+                          : 'bg-[#0B3064] text-white border border-[#0B3064]'
                       )}
                     >
                       {item.badge}
@@ -198,10 +198,10 @@ export function TopNav() {
             <Link
               href="/officer/cases?filter=sla_breached"
               className={cn(
-                'hidden sm:flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full shadow-2xs whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]',
+                'hidden sm:flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]',
                 slaCount > 0
-                  ? 'text-[#C24810] bg-[#FFF4ED] hover:bg-[#FFE8DC] border border-[#FDD8C2]'
-                  : 'text-[#0A783C] bg-[#EDF9F1] hover:bg-[#DDF4E4] border border-[#BBE8CB]'
+                  ? 'glass-saffron text-[#C24810] hover:bg-[#FFF4ED]'
+                  : 'glass-green text-[#0A783C] hover:bg-[#EDF9F1]'
               )}
               title={slaCount > 0 ? `${slaCount} case(s) breach SLA` : 'All cases within SLA'}
             >
@@ -218,11 +218,11 @@ export function TopNav() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0B3064]"
+                className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full glass-panel hover:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-[#0B3064] cursor-pointer"
                 aria-label="User menu"
                 id="user-menu-btn"
               >
-                <div className="w-7 h-7 rounded-full bg-[#0B3064] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-2xs">
+                <div className="w-7 h-7 rounded-full bg-[#0B3064] flex items-center justify-center text-white text-xs font-bold shrink-0 neuro-icon">
                   {initials}
                 </div>
                 <div className="hidden md:flex flex-col text-left">
@@ -245,9 +245,9 @@ export function TopNav() {
                     aria-hidden="true"
                   />
                   {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-[0_8px_40px_-4px_rgba(11,48,100,0.16)] border border-slate-100 z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-60 neuro-glass rounded-2xl shadow-[0_12px_40px_-4px_rgba(11,48,100,0.16)] border border-white/80 z-50 overflow-hidden">
                     {/* Profile header */}
-                    <div className="px-4 py-4 bg-gradient-to-br from-[#EAF1FB] to-white border-b border-slate-100">
+                    <div className="px-4 py-4 bg-gradient-to-br from-[#EAF1FB]/80 to-white/80 border-b border-slate-100">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-[#0B3064] flex items-center justify-center text-white text-sm font-bold shadow-sm">
                           {initials}

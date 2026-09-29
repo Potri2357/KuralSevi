@@ -227,10 +227,14 @@ export function KioskWhatsAppPlatform({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-5xl h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150">
+      {/* Ambient background refraction */}
+      <div className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/3 w-96 h-96 rounded-full bg-[#0B3064]/20 blur-3xl pointer-events-none" />
+
+      <div className="relative w-full max-w-5xl h-[92vh] neuro-glass rounded-3xl overflow-hidden flex flex-col z-10 border border-white/60 shadow-[0_25px_60px_-15px_rgba(7,94,84,0.3),0_10px_30px_-5px_rgba(11,48,100,0.15)]">
         {/* WHATSAPP TOP HEADER BAR */}
-        <div className="bg-[#075E54] text-white p-3.5 sm:p-4 px-5 flex items-center justify-between shadow-md shrink-0">
+        <div className="bg-gradient-to-r from-[#075E54] via-[#0b6b60] to-[#128C7E] text-white p-3.5 sm:p-4 px-5 flex items-center justify-between shadow-[0_4px_16px_rgba(7,94,84,0.25)] border-b border-white/20 shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/40 shadow-inner flex items-center justify-center bg-[#0B3064]">
@@ -385,7 +389,7 @@ export function KioskWhatsAppPlatform({
 
             {/* QUICK REPLY SUGGESTION CHIPS (One-Touch Kiosk Interaction) */}
             {quickReplies.length > 0 && !isTyping && (
-              <div className="relative z-10 px-4 py-2 bg-white/90 backdrop-blur-xs border-t border-slate-200 flex flex-wrap gap-2 items-center">
+              <div className="relative z-10 px-4 py-2.5 bg-white/70 backdrop-blur-md border-t border-slate-200/80 flex flex-wrap gap-2 items-center">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Quick Reply:
                 </span>
@@ -394,7 +398,7 @@ export function KioskWhatsAppPlatform({
                     key={idx}
                     type="button"
                     onClick={() => handleSendMessage(qr)}
-                    className="px-3 py-1.5 rounded-full bg-[#E7F8EE] hover:bg-[#d0f3dd] text-[#075E54] border border-[#25D366]/40 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+                    className="px-3.5 py-1.5 rounded-full bg-emerald-50/80 hover:bg-emerald-100 text-[#075E54] border border-[#25D366]/40 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95 glass-pill hover:shadow-xs"
                   >
                     {qr}
                   </button>
@@ -403,43 +407,45 @@ export function KioskWhatsAppPlatform({
             )}
 
             {/* INPUT & VOICE NOTE BAR */}
-            <div className="relative z-10 p-3 bg-[#F0F2F5] border-t border-slate-200 flex items-center gap-2">
+            <div className="relative z-10 p-3 bg-slate-50/90 backdrop-blur-md border-t border-slate-200/80 flex items-center gap-2.5">
               {/* Voice Note Simulation Button */}
               <button
                 type="button"
                 onClick={handleSimulateVoiceNote}
                 disabled={isTyping}
                 title="Send Voice Note (आवाज संदेश)"
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-xs cursor-pointer shrink-0 ${
+                className={`w-11 h-11 rounded-full flex items-center justify-center text-white transition-all shadow-md cursor-pointer shrink-0 active:scale-95 ${
                   isRecordingVoice
-                    ? 'bg-red-600 animate-pulse'
-                    : 'bg-[#128C7E] hover:bg-[#075E54]'
+                    ? 'bg-red-600 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.5)]'
+                    : 'bg-[#128C7E] hover:bg-[#075E54] shadow-[0_2px_8px_rgba(18,140,126,0.3)]'
                 }`}
               >
                 <Mic className="w-5 h-5" />
               </button>
 
-              {/* Text Input */}
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSendMessage(inputText);
-                  }
-                }}
-                placeholder="Type your reply or tap quick options above… (उत्तर टाइप करें)"
-                disabled={isTyping}
-                className="flex-1 px-4 py-2.5 rounded-full bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#128C7E]/30 focus:border-[#128C7E]"
-              />
+              {/* Text Input with neuro-inset */}
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSendMessage(inputText);
+                    }
+                  }}
+                  placeholder="Type your reply or tap quick options above… (उत्तर टाइप करें)"
+                  disabled={isTyping}
+                  className="w-full px-4 py-2.5 rounded-full neuro-inset bg-slate-100/80 border border-slate-200/80 text-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#128C7E]/40 focus:border-[#128C7E] placeholder:text-slate-400 transition-all"
+                />
+              </div>
 
               {/* Send Button */}
               <button
                 type="button"
                 onClick={() => handleSendMessage(inputText)}
                 disabled={!inputText.trim() || isTyping}
-                className="w-10 h-10 rounded-full bg-[#128C7E] hover:bg-[#075E54] disabled:opacity-40 text-white flex items-center justify-center transition-all shadow-xs cursor-pointer shrink-0"
+                className="w-11 h-11 rounded-full bg-[#128C7E] hover:bg-[#075E54] disabled:opacity-40 text-white flex items-center justify-center transition-all shadow-[0_2px_8px_rgba(18,140,126,0.3)] active:scale-95 cursor-pointer shrink-0"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -447,7 +453,7 @@ export function KioskWhatsAppPlatform({
           </div>
 
           {/* RIGHT: REAL-TIME BENEFICIARY PROFILE EXTRACTION DOSSIER */}
-          <div className="hidden lg:flex w-80 bg-white border-l border-slate-200 p-5 flex-col justify-between overflow-y-auto">
+          <div className="hidden lg:flex w-80 bg-white/60 backdrop-blur-md border-l border-slate-200/80 p-5 flex-col justify-between overflow-y-auto">
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">

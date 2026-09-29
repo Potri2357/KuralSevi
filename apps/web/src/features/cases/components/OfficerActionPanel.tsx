@@ -118,8 +118,8 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
   }
 
   return (
-    <Card className="border-[#BACEEB]/70 bg-[var(--bg-card)] shadow-2xs">
-      <CardHeader>
+    <Card styleVariant="neuro-glass">
+      <CardHeader className="border-b border-slate-200/50 bg-white/50 backdrop-blur-xs">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-base text-[#0B3064]">
@@ -132,9 +132,9 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-5">
         {submitError && (
-          <div className="bg-[#FFF4ED] border border-[#FDD8C2] rounded-lg p-4 flex items-start gap-3 text-[#C24810]">
+          <div className="glass-saffron rounded-xl p-4 flex items-start gap-3 text-[#C24810]">
             <AlertCircle className="w-5 h-5 text-[#E05A1B] shrink-0 mt-0.5" />
             <div className="flex-1 text-xs">
               <p className="font-bold text-sm mb-0.5">Submission Failed</p>
@@ -173,8 +173,10 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
                     id={`action-${val}`}
                     onClick={() => setAction(val)}
                     className={cn(
-                      'w-full text-left px-4 py-3 rounded-lg text-sm border transition-all flex items-center gap-3 cursor-pointer min-h-[48px]',
-                      isSelected ? item.active : item.inactive
+                      'w-full text-left px-4 py-3.5 rounded-xl text-sm border transition-all duration-200 flex items-center gap-3 cursor-pointer min-h-[48px] neuro-btn',
+                      isSelected
+                        ? item.active
+                        : 'bg-white/80 border-slate-200/80 text-slate-700 hover:bg-white hover:text-slate-900'
                     )}
                   >
                     <Icon className={cn('w-5 h-5 shrink-0', isSelected ? item.badgeColor : 'text-slate-400')} />
@@ -203,10 +205,10 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
                     id={`decision-${item.id}`}
                     onClick={() => setBeneficiaryDecision(item.id)}
                     className={cn(
-                      'w-full text-left px-4 py-3 rounded-lg text-sm border transition-all cursor-pointer min-h-[48px]',
+                      'w-full text-left px-4 py-3.5 rounded-xl text-sm border transition-all duration-200 cursor-pointer min-h-[48px] neuro-btn',
                       isSelected
-                        ? 'bg-[#EAF1FB] border-[#0B3064] text-[#0B3064] font-bold ring-1 ring-[#0B3064]/30'
-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-[#EAF1FB] border-[#0B3064] text-[#0B3064] font-bold shadow-xs ring-1 ring-[#0B3064]/30'
+                        : 'bg-white/80 border-slate-200/80 text-slate-700 hover:bg-white hover:text-slate-900'
                     )}
                   >
                     {item.label}
@@ -232,12 +234,12 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add specific context, local ITI referral instructions, bank linkage details, or justification for modification/rejection..."
             rows={3}
-            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#0B3064] focus:border-[#0B3064] resize-none shadow-2xs"
+            className="w-full neuro-inset focus:bg-white rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#0B3064]/20 focus:border-[#0B3064] resize-none transition-all"
           />
         </div>
 
         {action === 'rejected' && (
-          <div className="bg-[#FFF4ED] border border-[#FDD8C2] rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-[#C24810]">
+          <div className="glass-saffron rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-[#C24810]">
             <AlertTriangle className="w-4 h-4 text-[#E05A1B] shrink-0 mt-0.5" />
             <p>
               <strong>Rejection Notice:</strong> Rejection removes this case from active sanction workflows. Please ensure mandatory officer notes describe the reason for audit compliance.
@@ -246,9 +248,9 @@ export function OfficerActionPanel({ caseId, onSubmitted }: Props) {
         )}
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className="bg-slate-50/40 backdrop-blur-xs">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-muted)] font-medium">
             Action will be officially committed under DSWO credentials.
           </p>
           <Button

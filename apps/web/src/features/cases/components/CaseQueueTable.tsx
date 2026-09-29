@@ -113,11 +113,11 @@ export function CaseQueueTable({
   const isAllSelected = cases.length > 0 && selectedIds.length === cases.length;
 
   return (
-    <Card className="overflow-hidden shadow-2xs">
+    <Card styleVariant="neuro-glass" className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left border-collapse">
           <thead>
-            <tr className="border-b border-[var(--border-subtle)] bg-slate-50/70">
+            <tr className="border-b border-slate-200/60 bg-slate-50/60 backdrop-blur-xs">
               {onToggleSelect && (
                 <th scope="col" className="px-4 py-3.5 w-10 text-center">
                   <label htmlFor="select-all-cases-checkbox" className="sr-only">Select all cases in view</label>
@@ -126,7 +126,7 @@ export function CaseQueueTable({
                     type="checkbox"
                     checked={isAllSelected}
                     onChange={onSelectAll}
-                    className="w-4 h-4 rounded text-blue-600 bg-white border-slate-300 focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 rounded text-[#0B3064] bg-white border-slate-300 focus:ring-[#0B3064] cursor-pointer"
                     aria-label="Select all cases in view"
                   />
                 </th>

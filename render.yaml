@@ -1,0 +1,20 @@
+services:
+  # WhatsApp Bot & Communication Hub (Render 100% Free Tier)
+  - type: web
+    name: kural-sevi-whatsapp-bot
+    runtime: node
+    rootDir: apps/whatsapp-bot
+    plan: free # 100% Free Tier ($0/month)
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /status
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: SUPABASE_URL
+        sync: false # Optional: your Supabase project URL for cloud session persistence
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Optional: your Supabase service role key
+      - key: VOICE_API_URL
+        sync: false # Optional: your deployed Voice API URL
