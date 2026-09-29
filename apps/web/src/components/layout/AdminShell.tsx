@@ -25,22 +25,46 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('full_name, role')
-        .eq('id', user.id)
-        .single();
-      if (data) setProfile(data);
-    });
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.user) {
+          setProfile(data.user);
+        } else {
+          supabase.auth.getUser().then(async ({ data: { user } }) => {
+            if (!user) return;
+            const { data: dbProfile } = await supabase
+              .from('user_profiles')
+              .select('full_name, role')
+              .eq('id', user.id)
+              .single();
+            if (dbProfile) setProfile(dbProfile);
+          });
+        }
+      })
+      .catch(() => {
+        supabase.auth.getUser().then(async ({ data: { user } }) => {
+          if (!user) return;
+          const { data: dbProfile } = await supabase
+            .from('user_profiles')
+            .select('full_name, role')
+            .eq('id', user.id)
+            .single();
+          if (dbProfile) setProfile(dbProfile);
+        });
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleLogout() {
     setLoggingOut(true);
-    await supabase.auth.signOut();
-    router.replace('/login');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
+    window.location.href = '/login';
   }
 
   const initials = profile?.full_name
