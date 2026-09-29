@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import { IndicEar } from '@/components/icons/indic';
+import { KuralSeviLogo } from '@/components/common/KuralSeviLogo';
 
 export const metadata: Metadata = {
   title: 'Kural Sevi — Voice-First Livelihood Intelligence (PM-AJAY)',
@@ -86,27 +87,13 @@ export default function HomePage() {
       <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           {/* Kural Sevi Logo & Subtitle */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="w-11 h-11 rounded-xl bg-[#0B3064] flex items-center justify-center text-white shadow-md shadow-[#0B3064]/15 group-hover:scale-105 transition-transform">
-              <IndicEar className="w-6 h-6 text-white" strokeWidth={2.4} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B3064] font-display">
-                  Kural Sevi
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB] font-mono">
-                  குரல் செவி
-                </span>
-                <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#EDF9F1] text-[#0A783C] border border-[#BBE8CB]">
-                  PM-AJAY GIA
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 font-medium leading-tight">
-                Voice-First Livelihood Intelligence Portal · Government of Tamil Nadu
-              </p>
-            </div>
-          </Link>
+          <KuralSeviLogo
+            href="/"
+            size="lg"
+            badge="PM-AJAY GIA"
+            badgeVariant="green"
+            subtitle="Voice-First Livelihood Intelligence Portal · Government of Tamil Nadu"
+          />
 
           {/* Portal Access Button */}
           <div className="flex items-center gap-3">
@@ -262,14 +249,14 @@ export default function HomePage() {
       {/* 4. FOOTER */}
       <footer className="mt-auto bg-white border-t border-slate-200 py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#0B3064] flex items-center justify-center text-white">
-              <IndicEar className="w-4 h-4 text-white" strokeWidth={2.2} />
-            </div>
-            <span className="font-bold text-[#0B3064] text-sm font-display">
-              Kural Sevi (குரல் செவி)
-            </span>
-            <span className="text-slate-400">·</span>
+          <div className="flex items-center gap-3">
+            <KuralSeviLogo
+              href="/"
+              size="xs"
+              badge="PM-AJAY GIA"
+              badgeVariant="green"
+            />
+            <span className="text-slate-300">|</span>
             <span className="text-[11px] text-slate-500">
               Department of Social Welfare & Women Empowerment, Government of Tamil Nadu
             </span>

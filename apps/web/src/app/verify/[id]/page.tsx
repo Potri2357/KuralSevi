@@ -26,13 +26,22 @@ export default async function VerifyPage({
       <header className="bg-slate-900 text-white border-b border-amber-600/40">
         <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center font-serif text-amber-300 font-bold text-xl">
-              🇮🇳
-            </div>
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm flex items-center justify-center shrink-0 bg-[#0B3064] border border-white/20 group-hover:scale-105 transition-transform">
+                <img
+                  src="/icons/kural-sevi-logo.svg"
+                  alt="Kural Sevi"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </Link>
             <div>
-              <div className="text-xs uppercase tracking-widest text-slate-400 font-medium">Government of India & Government of Tamil Nadu</div>
-              <div className="text-sm font-semibold text-slate-100">Pradhan Mantri Anusuchit Jaati Abhyuday Yojana (PM-AJAY)</div>
-              <div className="text-xs text-amber-400/90 font-medium">Grant-in-Aid (GIA) Component • National Verification Registry</div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-white font-display">Kural Sevi</span>
+                <span className="text-[10px] text-amber-300 font-mono px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/30">National Verification Registry</span>
+              </div>
+              <div className="text-xs text-slate-300 font-medium">Pradhan Mantri Anusuchit Jaati Abhyuday Yojana (PM-AJAY)</div>
+              <div className="text-[11px] text-amber-400/90 font-mono">Grant-in-Aid (GIA) Component · Ministry of Social Justice</div>
             </div>
           </div>
           <div className="flex items-center gap-2">

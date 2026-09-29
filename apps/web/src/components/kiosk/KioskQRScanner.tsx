@@ -219,8 +219,12 @@ export function KioskQRScanner({ isOpen, onClose, onVerified }: KioskQRScannerPr
         {/* Header Bar */}
         <div className="bg-[#0B3064] text-white p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-              <QrCode className="w-5 h-5 text-[#FF9933]" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs flex items-center justify-center shrink-0 border border-white/20 bg-white/10">
+              <img
+                src="/icons/kural-sevi-logo.svg"
+                alt="Kural Sevi"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">

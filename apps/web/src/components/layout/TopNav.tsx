@@ -18,6 +18,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
+import { KuralSeviLogo } from '@/components/common/KuralSeviLogo';
 
 type UserRole = 'admin' | 'district_officer' | 'panchayat_kiosk';
 
@@ -149,17 +150,11 @@ export function TopNav() {
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <Link
+            <KuralSeviLogo
               href="/officer"
-              className="flex items-center gap-2.5 group transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <div className="w-8 h-8 rounded-lg bg-[#0B3064] flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-2xs group-hover:bg-[#144282] transition-colors shrink-0">
-                KS
-              </div>
-              <span className="text-xl sm:text-2xl font-bold font-display text-[#0B3064] tracking-tight">
-                Kural Sevi
-              </span>
-            </Link>
+              size="md"
+              subtitle="PM-AJAY Officer Console"
+            />
           </div>
 
           {/* Desktop Nav */}

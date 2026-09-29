@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { LogOut, Maximize2, Minimize2 } from 'lucide-react';
 import { IndicEar, IndicChakra } from '@/components/icons/indic';
+import { KuralSeviLogo } from '@/components/common/KuralSeviLogo';
 import { useState, useEffect } from 'react';
 
 interface UserProfile {
@@ -86,18 +87,14 @@ export function KioskShell({ children }: { children: React.ReactNode }) {
         <div className="h-[3px] w-full bg-gradient-to-r from-[#0A783C] via-[#E05A1B] to-[#0B3064]" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#0A783C] flex items-center justify-center shadow-sm">
-              <IndicEar className="w-5 h-5 text-white" strokeWidth={2.2} />
-            </div>
-            <div>
-              <span className="text-lg font-bold font-display text-[#0A783C] tracking-tight">Kural Sevi</span>
-              <div className="flex items-center gap-1.5">
-                <IndicChakra className="w-3 h-3 text-slate-400" strokeWidth={2} />
-                <span className="text-xs text-slate-500 font-medium">Panchayat Kiosk</span>
-              </div>
-            </div>
-          </div>
+          <KuralSeviLogo
+            href="/kiosk"
+            size="md"
+            badge="Panchayat Kiosk"
+            badgeVariant="green"
+            textColor="text-[#0A783C]"
+            subtitle="Salem District · PM-AJAY GIA"
+          />
 
           {/* Location + Logout */}
           <div className="flex items-center gap-3">

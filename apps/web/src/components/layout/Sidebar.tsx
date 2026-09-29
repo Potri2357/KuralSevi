@@ -14,6 +14,7 @@ import {
 
 import { IndicEar } from '@/components/icons/indic';
 import { cn } from '@/lib/utils';
+import { KuralSeviLogo } from '@/components/common/KuralSeviLogo';
 
 const navItems = [
   { href: '/officer', label: 'Overview', icon: LayoutDashboard, exact: true },
@@ -51,15 +52,11 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       >
         {/* Logo / Header */}
         <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#0B3064] rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-xs">
-              <IndicEar className="w-5 h-5 text-white" strokeWidth={2.2} />
-            </div>
-            <div>
-              <p className="font-bold text-base font-display text-[var(--text-primary)] tracking-tight">Kural Sevi</p>
-              <p className="text-[11px] text-[var(--text-muted)] font-medium font-sans">PM-AJAY GIA Portal</p>
-            </div>
-          </div>
+          <KuralSeviLogo
+            href="/officer"
+            size="sm"
+            subtitle="PM-AJAY GIA Portal"
+          />
 
           {onClose && (
             <button

@@ -20,6 +20,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { IndicChakra, IndicEar } from '@/components/icons/indic';
+import { KuralSeviIcon, KuralSeviLogo } from '@/components/common/KuralSeviLogo';
 
 type UserRole = 'admin' | 'district_officer' | 'panchayat_kiosk';
 
@@ -171,17 +172,16 @@ function LoginForm() {
 
       {/* Top Header Bar */}
       <header className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#0B3064] transition-colors bg-white/80 border border-slate-200/80 px-3.5 py-1.5 rounded-full shadow-2xs backdrop-blur-md"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 text-[#0B3064]" />
-          <span>Back to Public Portal</span>
-        </Link>
+        <KuralSeviLogo href="/" size="sm" badge="Single Sign-On" badgeVariant="blue" />
 
-        <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-3 py-1 rounded-full text-xs font-bold text-[#0B3064] shadow-2xs">
-          <IndicChakra className="w-3.5 h-3.5 text-[#0B3064]" strokeWidth={2.5} />
-          <span>PM-AJAY GIA · Single Sign-On</span>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#0B3064] transition-colors bg-white/80 border border-slate-200/80 px-3.5 py-1.5 rounded-full shadow-2xs backdrop-blur-md"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-[#0B3064]" />
+            <span>Public Portal</span>
+          </Link>
         </div>
       </header>
 
@@ -191,9 +191,7 @@ function LoginForm() {
           {/* Logo & Header */}
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <div className="w-14 h-14 rounded-2xl bg-[#0B3064] flex items-center justify-center shadow-md shadow-[#0B3064]/20">
-                <IndicEar className="w-8 h-8 text-white" strokeWidth={2.2} />
-              </div>
+              <KuralSeviIcon size="xl" className="shadow-lg shadow-[#0B3064]/25" />
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-bold text-[#0B3064] font-display tracking-tight">

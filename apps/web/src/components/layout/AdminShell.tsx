@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { IndicEar } from '@/components/icons/indic';
 import { createClient } from '@/utils/supabase/client';
+import { KuralSeviLogo } from '@/components/common/KuralSeviLogo';
 
 const ADMIN_NAV = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
@@ -88,25 +89,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between h-16">
             {/* Left: Brand + Admin Badge */}
             <div className="flex items-center gap-3">
-              <Link href="/admin" className="flex items-center gap-2.5 group">
-                <div className="w-9 h-9 rounded-xl bg-[#0B3064] flex items-center justify-center shadow-sm shadow-[#0B3064]/20 group-hover:scale-105 transition-transform">
-                  <IndicEar className="w-5 h-5 text-white" strokeWidth={2.2} />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-base text-[#0B3064] font-display tracking-tight leading-tight">
-                      Kural Sevi
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#EAF1FB] text-[#0B3064] border border-[#BACEEB] font-mono">
-                      <Shield className="w-2.5 h-2.5" />
-                      Admin
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-500 font-sans leading-none">
-                    மத்திய நிர்வாக போர்டல்
-                  </span>
-                </div>
-              </Link>
+              <KuralSeviLogo
+                href="/admin"
+                size="md"
+                badge="Admin"
+                badgeVariant="blue"
+                subtitle="केंद्रीय प्रशासन पोर्टल · Central Administration Portal"
+              />
             </div>
 
             {/* Middle: Desktop Navigation Items */}

@@ -18,6 +18,7 @@ import {
   Minimize2,
 } from 'lucide-react';
 import { IndicEar } from '@/components/icons/indic';
+import { KuralSeviIcon } from '@/components/common/KuralSeviLogo';
 import { KioskQRScanner } from '@/components/kiosk/KioskQRScanner';
 import { KioskStatusModal } from '@/components/kiosk/KioskStatusModal';
 import { KioskWhatsAppPlatform } from '@/components/kiosk/KioskWhatsAppPlatform';
@@ -53,9 +54,7 @@ export default function KioskDashboardPage() {
       {/* 1. TOP KIOSK STATUS STRIP */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#0A783C] text-white flex items-center justify-center shrink-0 shadow-xs">
-            <IndicEar className="w-5 h-5 text-white" strokeWidth={2.4} />
-          </div>
+          <KuralSeviIcon size="md" />
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-[#0B3064] font-display">
