@@ -4,18 +4,13 @@ import {
   Mic,
   Sparkles,
   ShieldCheck,
-  CheckCircle2,
   Lock,
   GraduationCap,
   Briefcase,
   Home,
   FileText,
-  Phone,
-  ArrowRight,
   ChevronRight,
-  ExternalLink,
   Users,
-  Award,
 } from 'lucide-react';
 import { IndicEar } from '@/components/icons/indic';
 
@@ -87,7 +82,7 @@ const SCHEME_COMPONENTS = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-[#0B3064]/10 selection:text-[#0B3064] flex flex-col">
-      {/* 1. HEADER (Only Kural Sevi branding and Sign In button - No top government banners or nav links) */}
+      {/* 1. HEADER (Only Kural Sevi branding and Sign In button) */}
       <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           {/* Kural Sevi Logo & Subtitle */}
@@ -129,79 +124,45 @@ export default function HomePage() {
 
       {/* 2. HERO SECTION: ALL ABOUT KURAL SEVI */}
       <section className="bg-gradient-to-b from-white to-slate-100/60 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left Content */}
-            <div className="lg:col-span-7 space-y-5">
-              <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-3.5 py-1.5 rounded-full text-xs font-bold text-[#0B3064]">
-                <Mic className="w-3.5 h-3.5 text-[#E05A1B]" />
-                <span>Voice-First Inclusive Governance</span>
-              </div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-18 text-center">
+          <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-3.5 py-1.5 rounded-full text-xs font-bold text-[#0B3064] mb-5">
+            <Mic className="w-3.5 h-3.5 text-[#E05A1B]" />
+            <span>Voice-First Inclusive Governance · PM-AJAY GIA</span>
+          </div>
 
-              <h1 className="text-3xl sm:text-5xl font-black text-[#0B3064] font-display leading-[1.15] tracking-tight">
-                Empowering Rural SC Communities Through Voice Intelligence
-              </h1>
+          <h1 className="text-3xl sm:text-5xl font-black text-[#0B3064] font-display leading-[1.15] tracking-tight max-w-4xl mx-auto">
+            Empowering Rural SC Communities Through Voice Intelligence
+          </h1>
 
-              <p className="text-base sm:text-lg text-slate-700 font-medium">
-                Kural Sevi (குரல் செவி) bridges the digital divide for Scheduled Caste citizens by turning voice into verified livelihood opportunities under PM-AJAY.
-              </p>
+          <p className="text-base sm:text-xl text-slate-700 font-medium mt-4 max-w-3xl mx-auto">
+            Kural Sevi (குரல் செவி) bridges the digital divide for Scheduled Caste citizens by turning voice into verified livelihood opportunities under PM-AJAY.
+          </p>
 
-              <p className="text-sm text-slate-600 leading-relaxed max-w-2xl font-normal">
-                Operating directly at Gram Panchayat kiosks, Kural Sevi eliminates complex paperwork and literacy barriers. Citizens simply speak in their native tongue — whether Tamil or Hindi — to register, explore certified NSQF vocational trades, and receive direct scheme benefits.
-              </p>
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto font-normal mt-3">
+            Operating directly at Gram Panchayat kiosks, Kural Sevi eliminates complex paperwork and literacy barriers. Citizens simply speak in their native tongue — whether Tamil or Hindi — to register, explore certified NSQF vocational trades, and receive direct scheme benefits.
+          </p>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#0B3064] hover:bg-[#144282] text-white text-sm font-bold transition-all shadow-md hover:shadow-lg"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>Access Official Portal</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-                <a
-                  href="#pmajay-schemes"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-sm font-bold transition-all shadow-2xs"
-                >
-                  <span>Explore PM-AJAY Schemes</span>
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
-
-            {/* Right Hero Image */}
-            <div className="lg:col-span-5">
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/pmajay-hero.jpg"
-                  alt="Kural Sevi and PM-AJAY Community Beneficiaries"
-                  className="w-full h-auto object-cover max-h-[360px]"
-                />
-                <div className="p-4 bg-slate-900 text-white text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#FF9933] uppercase tracking-wider">
-                      Kural Sevi · குரல் செவி
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-mono">PM-AJAY GIA</span>
-                  </div>
-                  <p className="text-slate-300 text-[11px] mt-1">
-                    Voice-enabled citizen registration, real-time AI skill mapping, and digital grievance redressal.
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* Action Button: Centered & Aligned Prominently */}
+          <div className="flex justify-center mt-8">
+            <Link
+              href="/login"
+              id="hero-portal-btn"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white text-base font-bold transition-all shadow-md hover:shadow-lg cursor-pointer"
+            >
+              <Lock className="w-4 h-4" />
+              <span>Access Official Portal</span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
 
           {/* 3 Kural Sevi Pillars */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-14 text-left">
             {KURAL_SEVI_PILLARS.map((pillar, idx) => {
               const Icon = pillar.icon;
               return (
                 <div
                   key={idx}
-                  className={`p-5 rounded-2xl border ${pillar.bg} bg-white shadow-2xs hover:shadow-sm transition-shadow flex flex-col justify-between`}
+                  className={`p-6 rounded-2xl border ${pillar.bg} bg-white shadow-2xs hover:shadow-sm transition-shadow flex flex-col justify-between`}
                 >
                   <div>
                     <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center mb-3.5">
