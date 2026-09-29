@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { IndicEar } from '@/components/icons/indic';
 
 export interface KuralSeviLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -31,20 +32,35 @@ export function KuralSeviIcon({
     xl: 'w-14 h-14 rounded-2xl',
   };
 
+  const iconSizes = {
+    xs: 14,
+    sm: 18,
+    md: 20,
+    lg: 24,
+    xl: 30,
+  };
+
+  const strokeWidths = {
+    xs: 2.5,
+    sm: 2.3,
+    md: 2.3,
+    lg: 2.4,
+    xl: 2.4,
+  };
+
   return (
     <div
       className={cn(
-        'relative overflow-hidden shadow-xs flex items-center justify-center shrink-0 select-none bg-gradient-to-br from-[#0B3064] via-[#0D3B7A] to-[#144282]',
+        'relative overflow-hidden shadow-xs flex items-center justify-center shrink-0 select-none bg-gradient-to-br from-[#0B3064] via-[#0D3B7A] to-[#144282] text-white',
         sizeClasses[size],
         className
       )}
     >
-      <img
-        src="/icons/kural-sevi-logo.svg"
-        alt="Kural Sevi"
-        className="w-full h-full object-cover"
-        loading="eager"
-        decoding="async"
+      <IndicEar
+        size={iconSizes[size]}
+        strokeWidth={strokeWidths[size]}
+        color="currentColor"
+        className="text-white drop-shadow-xs shrink-0"
       />
     </div>
   );

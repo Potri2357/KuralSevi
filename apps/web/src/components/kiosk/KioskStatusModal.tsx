@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Search, X, CheckCircle2, Clock, AlertTriangle, FileText, Download, Phone, RefreshCw } from 'lucide-react';
+import { KuralSeviIcon } from '@/components/common/KuralSeviLogo';
 
 interface KioskStatusModalProps {
   isOpen: boolean;
@@ -50,13 +51,7 @@ export function KioskStatusModal({ isOpen, onClose, onOpenVerify }: KioskStatusM
         {/* Header */}
         <div className="bg-gradient-to-r from-[#0B3064] via-[#113a75] to-[#144282] text-white p-5 flex items-center justify-between shadow-[0_4px_16px_rgba(11,48,100,0.2)] border-b border-white/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs flex items-center justify-center shrink-0 border border-white/30 bg-white/10 backdrop-blur-sm">
-              <img
-                src="/icons/kural-sevi-logo.svg"
-                alt="Kural Sevi"
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <KuralSeviIcon size="md" className="border border-white/30" />
             <div>
               <h3 className="font-bold text-lg font-display tracking-tight">
                 आवेदन स्थिति जांच · Application Status

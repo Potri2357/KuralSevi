@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CheckCircle2, ShieldCheck, Download, Printer, PhoneCall, Building2, Award, Calendar, FileText, ArrowLeft, ExternalLink } from 'lucide-react';
 import { getSanctionVerification } from '@/lib/sanction-verification';
+import { KuralSeviIcon } from '@/components/common/KuralSeviLogo';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,13 +36,7 @@ export default async function VerifyPage({
         <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md flex items-center justify-center shrink-0 bg-[#0B3064] border border-white/20 group-hover:scale-105 transition-transform">
-                <img
-                  src="/icons/kural-sevi-logo.svg"
-                  alt="Kural Sevi"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <KuralSeviIcon size="lg" className="border border-white/20 group-hover:scale-105 transition-transform" />
             </Link>
             <div>
               <div className="flex items-center gap-2">

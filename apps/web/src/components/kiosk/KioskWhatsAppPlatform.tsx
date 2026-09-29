@@ -237,12 +237,8 @@ export function KioskWhatsAppPlatform({
         <div className="bg-gradient-to-r from-[#075E54] via-[#0b6b60] to-[#128C7E] text-white p-3.5 sm:p-4 px-5 flex items-center justify-between shadow-[0_4px_16px_rgba(7,94,84,0.25)] border-b border-white/20 shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/40 shadow-inner flex items-center justify-center bg-[#0B3064]">
-                <img
-                  src="/icons/kural-sevi-logo.svg"
-                  alt="Kural Sevi"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/40 shadow-inner flex items-center justify-center bg-gradient-to-br from-[#0B3064] via-[#0D3B7A] to-[#144282] text-white">
+                <IndicEar size={22} strokeWidth={2.3} color="currentColor" className="text-white drop-shadow-xs" />
               </div>
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#25D366] border-2 border-[#075E54]" />
             </div>

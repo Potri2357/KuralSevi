@@ -18,6 +18,7 @@ import {
   Award,
   Calendar,
 } from 'lucide-react';
+import { KuralSeviIcon } from '@/components/common/KuralSeviLogo';
 import type { SanctionVerificationRecord } from '@/lib/sanction-verification';
 
 interface KioskQRScannerProps {
@@ -219,13 +220,7 @@ export function KioskQRScanner({ isOpen, onClose, onVerified }: KioskQRScannerPr
         {/* Header Bar */}
         <div className="bg-[#0B3064] text-white p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs flex items-center justify-center shrink-0 border border-white/20 bg-white/10">
-              <img
-                src="/icons/kural-sevi-logo.svg"
-                alt="Kural Sevi"
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <KuralSeviIcon size="md" className="border border-white/20" />
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-lg font-display tracking-tight">
