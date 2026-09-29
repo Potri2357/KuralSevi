@@ -3,15 +3,15 @@ import { Metadata } from 'next';
 import {
   Users,
   Download,
-  PhoneCall,
   ArrowRight,
   ShieldCheck,
   Inbox,
-  FileSpreadsheet,
   Building2,
+  FileSpreadsheet,
 } from 'lucide-react';
-import { IndicEar, IndicChakra } from '@/components/icons/indic';
-import { getAllOfficerCases, getEnrichedCallRecords } from '@/lib/recommendation-service';
+import { IndicChakra } from '@/components/icons/indic';
+import { getAllOfficerCases } from '@/lib/recommendation-service';
+import { getProvisionedUsers } from '@/lib/user-store';
 
 export const metadata: Metadata = {
   title: 'System Administration & Governance — Kural Sevi',
@@ -20,46 +20,34 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const [cases, calls] = await Promise.all([
-    getAllOfficerCases(),
-    getEnrichedCallRecords(),
-  ]);
+  const cases = await getAllOfficerCases();
+  const provisionedUsers = getProvisionedUsers();
 
   const totalCases = cases.length;
   const pendingCases = cases.filter((c) => c.officer_action === 'pending').length;
   const approvedCases = cases.filter((c) => c.officer_action === 'approved').length;
-  const totalCalls = calls.length;
+  const totalStaff = provisionedUsers.length;
 
   const adminModules = [
     {
-      title: 'User Management & Role Governance',
-      desc: 'Provision and manage official accounts, assign role permissions (District Officer, Panchayat Kiosk, Admin), and monitor active staff status.',
-      badge: 'Active Directory',
+      title: 'Official User Management & Roles',
+      desc: 'Provision District Welfare Officers and Panchayat Kiosk Operators. Assign district jurisdictions, toggle active status, and maintain national welfare registry security.',
+      badge: `${totalStaff} Registered Staff`,
       badgeClass: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
       icon: Users,
       iconContainer: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
       href: '/admin/users',
-      actionLabel: 'Manage Users & Roles',
+      actionLabel: 'Manage Officials & Roles',
     },
     {
       title: 'Scheme Data Export & Analytics',
-      desc: 'Export anonymized DPDP-compliant scheme microdata, district aggregations, sanction registries, and training seat metrics in CSV and JSON formats.',
-      badge: 'Official Reporting',
+      desc: 'Download anonymized DPDP Act 2023-compliant scheme microdata, district-wise aggregations, and sanction registries in CSV and JSON formats for ministerial reviews.',
+      badge: 'CSV & JSON Available',
       badgeClass: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
       icon: Download,
       iconContainer: 'text-[#C24810] bg-[#FFF4ED] border border-[#FDD8C2]',
       href: '/admin/export',
-      actionLabel: 'Export Datasets',
-    },
-    {
-      title: 'Citizen Call Records & Audio Logs',
-      desc: 'Listen to beneficiary voice telephony recordings, inspect vernacular Tamil/Hindi transcripts, and review automated AI livelihood demographic extractions.',
-      badge: 'Live Telephony',
-      badgeClass: 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]',
-      icon: PhoneCall,
-      iconContainer: 'text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB]',
-      href: '/admin/calls',
-      actionLabel: 'Review Call Logs',
+      actionLabel: 'Open Export Datasets',
     },
   ];
 
@@ -73,10 +61,10 @@ export default async function AdminPage() {
             <span>Central Administration Portal · PM-AJAY GIA</span>
           </div>
           <h1 className="text-3xl font-bold text-[#0B3064] font-display tracking-tight">
-            System Administration & Master Governance
+            System Administration & Governance
           </h1>
           <p className="text-sm text-slate-600 font-sans mt-0.5">
-            Operational governance console for user management, scheme data exports, and citizen voice records.
+            Operational governance console for user management and scheme data export.
           </p>
         </div>
 
@@ -104,7 +92,7 @@ export default async function AdminPage() {
           { label: 'Total Ingested Dockets', value: totalCases, icon: Inbox, color: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]' },
           { label: 'Pending Officer Review', value: pendingCases, icon: ShieldCheck, color: 'text-[#C24810] bg-[#FFF4ED] border-[#FDD8C2]' },
           { label: 'Approved Sanctions', value: approvedCases, icon: Building2, color: 'text-[#0A783C] bg-[#EDF9F1] border-[#BBE8CB]' },
-          { label: 'Telephony Voice Calls', value: totalCalls, icon: PhoneCall, color: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]' },
+          { label: 'Registered Officials', value: totalStaff, icon: Users, color: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]' },
         ].map((stat) => {
           const Icon = stat.icon;
           return (
@@ -124,18 +112,18 @@ export default async function AdminPage() {
         })}
       </div>
 
-      {/* 3 Core Functional Workspaces */}
+      {/* 2 Core Functional Workspaces */}
       <div>
         <div className="mb-4">
           <h2 className="text-xl font-bold text-[#0B3064] font-display">
             Administrative Workspaces
           </h2>
           <p className="text-xs text-slate-500 font-sans">
-            Select a designated administrative module to execute official operations.
+            Core governance modules for user access management and reporting.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {adminModules.map((mod) => {
             const Icon = mod.icon;
             return (

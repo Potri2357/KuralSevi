@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Users,
   Download,
-  PhoneCall,
   LogOut,
   Menu,
   X,
@@ -22,7 +21,6 @@ const ADMIN_NAV = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
   { href: '/admin/users', label: 'User Management', icon: Users },
   { href: '/admin/export', label: 'Data Export', icon: Download },
-  { href: '/admin/calls', label: 'Call Records', icon: PhoneCall },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

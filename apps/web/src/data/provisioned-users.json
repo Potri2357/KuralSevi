@@ -1,0 +1,57 @@
+[
+  {
+    "id": "4c55d655-9d0a-42a0-b31a-ee498e2a1fe4",
+    "email": "kiosk.alanganallur@kuralsevi.gov.in",
+    "password": "AlanganallurPass123!",
+    "full_name": "Selvi M. Revathi",
+    "role": "panchayat_kiosk",
+    "district": "Madurai",
+    "panchayat": "Alanganallur Gram Panchayat",
+    "is_active": true,
+    "created_at": "2026-09-29T09:57:32.213Z"
+  },
+  {
+    "id": "a873fd6b-a10f-4d3a-81bd-50761cc02ce9",
+    "email": "officer.madurai@kuralsevi.gov.in",
+    "password": "MaduraiPass123!",
+    "full_name": "Thiru. R. Venkatesan",
+    "role": "district_officer",
+    "district": "Madurai",
+    "panchayat": null,
+    "is_active": true,
+    "created_at": "2026-09-29T09:57:27.299Z"
+  },
+  {
+    "id": "admin-default-001",
+    "email": "admin@kuralsevi.gov.in",
+    "password": "AdminPassword123!",
+    "full_name": "State Welfare Administrator",
+    "role": "admin",
+    "district": "Chennai HQ",
+    "panchayat": null,
+    "is_active": true,
+    "created_at": "2026-09-29T09:53:52.479Z"
+  },
+  {
+    "id": "officer-default-001",
+    "email": "officer@kuralsevi.gov.in",
+    "password": "OfficerPassword123!",
+    "full_name": "Dr. K. Meenakshi Sundaram",
+    "role": "district_officer",
+    "district": "Salem",
+    "panchayat": null,
+    "is_active": true,
+    "created_at": "2026-09-29T09:55:00.000Z"
+  },
+  {
+    "id": "kiosk-default-001",
+    "email": "kiosk@kuralsevi.gov.in",
+    "password": "KioskPassword123!",
+    "full_name": "Thiru. S. Arumugam",
+    "role": "panchayat_kiosk",
+    "district": "Salem",
+    "panchayat": "Melpadi Gram Panchayat",
+    "is_active": true,
+    "created_at": "2026-09-29T09:55:00.000Z"
+  }
+]

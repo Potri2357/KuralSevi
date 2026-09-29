@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseJs } from '@supabase/supabase-js';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { createNodeFetch } from '@/lib/node-fetch-adapter';
-
-type UserRole = 'admin' | 'district_officer' | 'panchayat_kiosk';
+import { findProvisionedUserByEmail, type UserRole } from '@/lib/user-store';
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -17,6 +16,12 @@ const SUPABASE_KEY =
   'sb_publishable_egP8KJhgDC6SoW4uqLzBeA_LpHeH7bF';
 
 const serverFetch = createNodeFetch() as typeof fetch;
+
+const ROLE_TITLES: Record<UserRole, string> = {
+  admin: 'Central Administrator',
+  district_officer: 'District Welfare Officer',
+  panchayat_kiosk: 'Gram Panchayat Kiosk Operator',
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,10 +46,102 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare response object to set cookies
     let response = NextResponse.json({ success: true });
 
-    // 1. Initialize Supabase SSR client with custom Node HTTPS fetch
+    // -------------------------------------------------------------
+    // 1. FAST-PATH: Check local provisioned registry first
+    // (Ensures accounts created by Admin work INSTANTLY with 100% reliability)
+    // -------------------------------------------------------------
+    const provisionedUser = findProvisionedUserByEmail(email.trim());
+    if (provisionedUser) {
+      if (provisionedUser.password && provisionedUser.password !== password) {
+        return NextResponse.json(
+          { error: 'Invalid credentials. Please verify your email and password.' },
+          { status: 401 }
+        );
+      }
+
+      if (provisionedUser.is_active === false) {
+        return NextResponse.json(
+          { error: 'Account Suspended: Your access has been deactivated. Please contact your system administrator.' },
+          { status: 403 }
+        );
+      }
+
+      // Strict role verification
+      let authorized = false;
+      if (requestedRole === 'admin') {
+        authorized = provisionedUser.role === 'admin';
+      } else if (requestedRole === 'district_officer') {
+        authorized = provisionedUser.role === 'district_officer' || provisionedUser.role === 'admin';
+      } else if (requestedRole === 'panchayat_kiosk') {
+        authorized = provisionedUser.role === 'panchayat_kiosk' || provisionedUser.role === 'admin';
+      }
+
+      if (!authorized) {
+        return NextResponse.json(
+          {
+            error: `Access Denied: Your assigned account role is "${ROLE_TITLES[provisionedUser.role]}". You do not have authorization to access the ${ROLE_TITLES[requestedRole]} portal. Please select your assigned role or contact your administrator.`,
+            actualRole: provisionedUser.role,
+            requestedRole,
+          },
+          { status: 403 }
+        );
+      }
+
+      const redirectUrl =
+        requestedRole === 'admin'
+          ? '/admin'
+          : requestedRole === 'panchayat_kiosk'
+          ? '/kiosk'
+          : '/officer';
+
+      // Stamp cookies
+      response.cookies.set('ks_role', provisionedUser.role, {
+        path: '/',
+        httpOnly: false,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+      });
+
+      response.cookies.set(
+        'ks_user',
+        JSON.stringify({
+          id: provisionedUser.id,
+          email: provisionedUser.email,
+          full_name: provisionedUser.full_name,
+          role: provisionedUser.role,
+          district: provisionedUser.district,
+          panchayat: provisionedUser.panchayat,
+        }),
+        {
+          path: '/',
+          httpOnly: false,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7,
+        }
+      );
+
+      return NextResponse.json(
+        {
+          success: true,
+          redirectUrl,
+          user: {
+            id: provisionedUser.id,
+            email: provisionedUser.email,
+            role: provisionedUser.role,
+            full_name: provisionedUser.full_name,
+            district: provisionedUser.district,
+            panchayat: provisionedUser.panchayat,
+          },
+        },
+        { status: 200, headers: response.headers }
+      );
+    }
+
+    // -------------------------------------------------------------
+    // 2. Fallback: Authenticate against Supabase Auth
+    // -------------------------------------------------------------
     const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
       global: { fetch: serverFetch },
       cookies: {
@@ -59,7 +156,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 2. Authenticate credentials via Supabase
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -72,7 +168,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Fetch user profile from public.user_profiles
+    // Fetch user profile
     const directClient = createSupabaseJs(SUPABASE_URL, SUPABASE_KEY, {
       global: { fetch: serverFetch },
       auth: { persistSession: false },
@@ -84,7 +180,6 @@ export async function POST(request: NextRequest) {
       .eq('id', authData.user.id)
       .single();
 
-    // Graceful onboarding: If user exists in Auth but user_profiles row was not yet seeded
     if (!profile) {
       const emailLower = email.toLowerCase();
       const isAdminEmail =
@@ -102,17 +197,6 @@ export async function POST(request: NextRequest) {
         authData.user.email?.split('@')[0] ||
         'Official';
 
-      const { data: newProfile } = await directClient
-        .from('user_profiles')
-        .insert({
-          id: authData.user.id,
-          full_name: displayName,
-          role: initialRole,
-          is_active: true,
-        })
-        .select()
-        .single();
-
       const fallbackProfile: {
         id: string;
         full_name: string;
@@ -120,7 +204,7 @@ export async function POST(request: NextRequest) {
         district: string | null;
         panchayat: string | null;
         is_active: boolean;
-      } = newProfile || {
+      } = {
         id: authData.user.id,
         full_name: displayName,
         role: initialRole,
@@ -131,9 +215,8 @@ export async function POST(request: NextRequest) {
       profile = fallbackProfile;
     }
 
-    const activeProfile = profile!;
+    const activeProfile = profile;
 
-    // 4. Strict Deactivation Check
     if (activeProfile.is_active === false) {
       await supabase.auth.signOut();
       return NextResponse.json(
@@ -142,29 +225,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. STRICT ROLE RESTRICTION
     const actualRole = activeProfile.role as UserRole;
     let isRoleAuthorized = false;
 
     if (requestedRole === 'admin') {
-      // Admin portal: STRICTLY admin role only
       isRoleAuthorized = actualRole === 'admin';
     } else if (requestedRole === 'district_officer') {
-      // District officer portal: district_officer or admin
       isRoleAuthorized = actualRole === 'district_officer' || actualRole === 'admin';
     } else if (requestedRole === 'panchayat_kiosk') {
-      // Panchayat kiosk portal: panchayat_kiosk or admin
       isRoleAuthorized = actualRole === 'panchayat_kiosk' || actualRole === 'admin';
     }
 
-    const ROLE_TITLES: Record<UserRole, string> = {
-      admin: 'Central Administrator',
-      district_officer: 'District Welfare Officer',
-      panchayat_kiosk: 'Gram Panchayat Kiosk Operator',
-    };
-
     if (!isRoleAuthorized) {
-      // Revoke the session immediately because of role mismatch
       await supabase.auth.signOut();
       return NextResponse.json(
         {
@@ -176,22 +248,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Calculate destination redirect URL
-    let redirectUrl = '/officer';
-    if (requestedRole === 'admin') {
-      redirectUrl = '/admin';
-    } else if (requestedRole === 'panchayat_kiosk') {
-      redirectUrl = '/kiosk';
-    } else {
-      redirectUrl = '/officer';
-    }
+    const redirectUrl =
+      requestedRole === 'admin'
+        ? '/admin'
+        : requestedRole === 'panchayat_kiosk'
+        ? '/kiosk'
+        : '/officer';
 
-    // 7. Stamp fast-access session cookies
     response.cookies.set('ks_role', actualRole, {
       path: '/',
       httpOnly: false,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     response.cookies.set(
@@ -212,7 +280,6 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Return final JSON with cookies attached
     return NextResponse.json(
       {
         success: true,

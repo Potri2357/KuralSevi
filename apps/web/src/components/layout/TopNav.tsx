@@ -225,12 +225,20 @@ export function TopNav() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0B3064]"
+                className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0B3064]"
                 aria-label="User menu"
                 id="user-menu-btn"
               >
                 <div className="w-7 h-7 rounded-full bg-[#0B3064] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-2xs">
                   {initials}
+                </div>
+                <div className="hidden md:flex flex-col text-left">
+                  <span className="text-xs font-bold text-slate-800 leading-tight">
+                    {profile?.full_name || 'District Officer'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 leading-none">
+                    {profile?.district ? `${profile.district} District` : 'District Welfare'}
+                  </span>
                 </div>
                 <ChevronDown className={cn('w-3.5 h-3.5 text-slate-400 transition-transform', userMenuOpen && 'rotate-180')} />
               </button>
