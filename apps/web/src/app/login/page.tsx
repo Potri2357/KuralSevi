@@ -242,48 +242,6 @@ function LoginForm() {
                   ▼
                 </div>
               </div>
-
-              {/* Dynamic Role Capability Card */}
-              <div className={`mt-2.5 p-3 rounded-xl ${activeRoleConfig.bgSubtle} border ${activeRoleConfig.borderSubtle} flex items-start gap-3 transition-colors`}>
-                <div className="p-2 rounded-lg bg-white/80 border border-slate-200/60 shadow-2xs shrink-0">
-                  <activeRoleConfig.icon className={`w-4 h-4 ${activeRoleConfig.textColor}`} />
-                </div>
-                <div className="text-xs">
-                  <div className={`font-bold ${activeRoleConfig.textColor} flex items-center gap-2`}>
-                    <span>{activeRoleConfig.label}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/80 border border-slate-200/60 font-mono font-semibold">
-                      {activeRoleConfig.badge}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 mt-0.5 leading-relaxed text-[11px] font-sans">
-                    {activeRoleConfig.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Quick Role Toggle Badges */}
-              <div className="grid grid-cols-3 gap-1.5 mt-2">
-                {ROLES.map((r) => {
-                  const isSelected = selectedRole === r.value;
-                  return (
-                    <button
-                      key={r.value}
-                      type="button"
-                      onClick={() => {
-                        setSelectedRole(r.value);
-                        setError('');
-                      }}
-                      className={`text-[11px] py-1.5 px-2 rounded-lg font-bold transition-all text-center border ${
-                        isSelected
-                          ? `${r.bgSubtle} ${r.borderSubtle} ${r.textColor} shadow-2xs ring-1 ring-[#0B3064]/20`
-                          : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      {r.value === 'admin' ? '🛡️ Admin' : r.value === 'district_officer' ? '🏛️ Officer' : '🌾 Kiosk'}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             {/* Email Field */}

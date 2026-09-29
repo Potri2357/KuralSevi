@@ -1,102 +1,180 @@
 import Link from 'next/link';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { BookOpen, Database, Sliders, Activity, PhoneCall } from 'lucide-react';
+import { Metadata } from 'next';
+import {
+  Users,
+  Download,
+  PhoneCall,
+  ArrowRight,
+  ShieldCheck,
+  Inbox,
+  FileSpreadsheet,
+  Building2,
+} from 'lucide-react';
+import { IndicEar, IndicChakra } from '@/components/icons/indic';
+import { getAllOfficerCases, getEnrichedCallRecords } from '@/lib/recommendation-service';
 
-export default function AdminPage() {
+export const metadata: Metadata = {
+  title: 'System Administration & Governance — Kural Sevi',
+};
+
+export const dynamic = 'force-dynamic';
+
+export default async function AdminPage() {
+  const [cases, calls] = await Promise.all([
+    getAllOfficerCases(),
+    getEnrichedCallRecords(),
+  ]);
+
+  const totalCases = cases.length;
+  const pendingCases = cases.filter((c) => c.officer_action === 'pending').length;
+  const approvedCases = cases.filter((c) => c.officer_action === 'approved').length;
+  const totalCalls = calls.length;
+
   const adminModules = [
     {
-      title: 'Call Records & Voice Transcripts',
-      desc: 'Real-time turn-by-turn telephony transcripts, extracted 7-field livelihood profiles, and live audio logs.',
-      badge: 'Live Dashboard',
-      badgeVariant: 'chakra' as const,
+      title: 'User Management & Role Governance',
+      desc: 'Provision and manage official accounts, assign role permissions (District Officer, Panchayat Kiosk, Admin), and monitor active staff status.',
+      badge: 'Active Directory',
+      badgeClass: 'bg-[#EAF1FB] text-[#0B3064] border-[#BACEEB]',
+      icon: Users,
+      iconContainer: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
+      href: '/admin/users',
+      actionLabel: 'Manage Users & Roles',
+    },
+    {
+      title: 'Scheme Data Export & Analytics',
+      desc: 'Export anonymized DPDP-compliant scheme microdata, district aggregations, sanction registries, and training seat metrics in CSV and JSON formats.',
+      badge: 'Official Reporting',
+      badgeClass: 'bg-[#FFF4ED] text-[#C24810] border-[#FDD8C2]',
+      icon: Download,
+      iconContainer: 'text-[#C24810] bg-[#FFF4ED] border border-[#FDD8C2]',
+      href: '/admin/export',
+      actionLabel: 'Export Datasets',
+    },
+    {
+      title: 'Citizen Call Records & Audio Logs',
+      desc: 'Listen to beneficiary voice telephony recordings, inspect vernacular Tamil/Hindi transcripts, and review automated AI livelihood demographic extractions.',
+      badge: 'Live Telephony',
+      badgeClass: 'bg-[#EDF9F1] text-[#0A783C] border-[#BBE8CB]',
       icon: PhoneCall,
-      iconColor: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
-      href: '/officer/calls',
-    },
-    {
-      title: 'NSQF Qualification Packs Catalog',
-      desc: '40+ QP-NOS job roles seeded with sector skill council codes, minimum education criteria, and training hours.',
-      badge: '40 Active Trades',
-      badgeVariant: 'chakra' as const,
-      icon: BookOpen,
-      iconColor: 'text-[#0B3064] bg-[#EAF1FB] border border-[#BACEEB]',
-    },
-    {
-      title: 'Ecosystem Data Ingestion',
-      desc: 'Scheduled cron connectors for e-Shram unorganized worker registry, Udyam MSME cluster data, and SIDH vacancy tracking.',
-      badge: 'Weekly Sync OK',
-      badgeVariant: 'green' as const,
-      icon: Database,
-      iconColor: 'text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB]',
-    },
-    {
-      title: 'Multi-Criteria Weight Tuning',
-      desc: 'Calibrate Analytic Hierarchy Process (AHP) criteria weights (mobility radius, income potential, skill bridge duration).',
-      badge: 'Tier 2 Config',
-      badgeVariant: 'saffron' as const,
-      icon: Sliders,
-      iconColor: 'text-[#C24810] bg-[#FFF4ED] border border-[#FDD8C2]',
-    },
-    {
-      title: 'Operational Telemetry & System Health',
-      desc: 'Real-time telemetry monitoring voice intake lines, AI recommendation services, and citizen registry connectivity.',
-      badge: 'All Systems Operational',
-      badgeVariant: 'green' as const,
-      icon: Activity,
-      iconColor: 'text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB]',
+      iconContainer: 'text-[#0A783C] bg-[#EDF9F1] border border-[#BBE8CB]',
+      href: '/admin/calls',
+      actionLabel: 'Review Call Logs',
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight">
-          System Administration & Governance
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-          NSQF national qualification catalog management, AI matching engine weights, and data ingestion pipeline controls
-        </p>
+    <div className="space-y-8 animate-in fade-in-50 duration-200">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+        <div>
+          <div className="inline-flex items-center gap-2 bg-[#EAF1FB] border border-[#BACEEB] px-3 py-1 rounded-full text-xs font-bold text-[#0B3064] mb-2 shadow-2xs">
+            <IndicChakra className="w-3.5 h-3.5 text-[#0B3064]" strokeWidth={2.5} />
+            <span>Central Administration Portal · PM-AJAY GIA</span>
+          </div>
+          <h1 className="text-3xl font-bold text-[#0B3064] font-display tracking-tight">
+            System Administration & Master Governance
+          </h1>
+          <p className="text-sm text-slate-600 font-sans mt-0.5">
+            Operational governance console for user management, scheme data exports, and citizen voice records.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/users"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3064] hover:bg-[#144282] active:bg-[#082142] text-white text-xs font-bold transition-all shadow-xs"
+          >
+            <Users className="w-4 h-4" />
+            <span>Manage Staff</span>
+          </Link>
+          <Link
+            href="/admin/export"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold transition-all shadow-2xs"
+          >
+            <Download className="w-4 h-4 text-[#0B3064]" />
+            <span>Export Data</span>
+          </Link>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {adminModules.map((mod) => {
-          const Icon = mod.icon;
-          const cardContent = (
-            <Card key={mod.title} className="bg-slate-800 border-slate-700 card-hover cursor-pointer shadow-2xs h-full">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-lg shadow-2xs ${mod.iconColor}`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <h2 className="font-bold text-sm sm:text-base text-[#0B3064] leading-tight">
-                      {mod.title}
-                    </h2>
-                  </div>
-                  <Badge variant={mod.badgeVariant}>{mod.badge}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{mod.desc}</p>
-              </CardContent>
-            </Card>
+      {/* Aggregate Metrics Bar (Matching Universal UI) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Ingested Dockets', value: totalCases, icon: Inbox, color: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]' },
+          { label: 'Pending Officer Review', value: pendingCases, icon: ShieldCheck, color: 'text-[#C24810] bg-[#FFF4ED] border-[#FDD8C2]' },
+          { label: 'Approved Sanctions', value: approvedCases, icon: Building2, color: 'text-[#0A783C] bg-[#EDF9F1] border-[#BBE8CB]' },
+          { label: 'Telephony Voice Calls', value: totalCalls, icon: PhoneCall, color: 'text-[#0B3064] bg-[#EAF1FB] border-[#BACEEB]' },
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs flex items-center justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                <p className="text-2xl font-bold text-slate-900 font-display mt-0.5">{stat.value}</p>
+              </div>
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 shadow-2xs ${stat.color}`}>
+                <Icon className="w-5 h-5" />
+              </div>
+            </div>
           );
-
-          if (mod.href) {
-            return (
-              <Link
-                key={mod.title}
-                href={mod.href}
-                className="block no-underline"
-              >
-                {cardContent}
-              </Link>
-            );
-          }
-
-          return cardContent;
         })}
+      </div>
+
+      {/* 3 Core Functional Workspaces */}
+      <div>
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-[#0B3064] font-display">
+            Administrative Workspaces
+          </h2>
+          <p className="text-xs text-slate-500 font-sans">
+            Select a designated administrative module to execute official operations.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {adminModules.map((mod) => {
+            const Icon = mod.icon;
+            return (
+              <div
+                key={mod.title}
+                className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-[#0B3064]/50 transition-all duration-200 p-6 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-2xs ${mod.iconContainer}`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border font-mono ${mod.badgeClass}`}>
+                      {mod.badge}
+                    </span>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-[#0B3064] font-display mb-2">
+                    {mod.title}
+                  </h3>
+
+                  <p className="text-xs text-slate-600 leading-relaxed font-sans font-normal">
+                    {mod.desc}
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-slate-100">
+                  <Link
+                    href={mod.href}
+                    className="inline-flex items-center justify-between w-full text-xs font-bold text-[#0B3064] hover:text-[#144282] transition-colors group"
+                  >
+                    <span>{mod.actionLabel}</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

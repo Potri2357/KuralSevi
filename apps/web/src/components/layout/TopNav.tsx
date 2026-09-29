@@ -7,8 +7,6 @@ import {
   Inbox,
   BarChart3,
   UserPlus,
-  Download,
-  Settings,
   AlertTriangle,
   CheckCircle2,
   Menu,
@@ -124,8 +122,6 @@ export function TopNav() {
     { href: '/officer/calls', label: 'Calls', icon: PhoneCall },
     { href: '/officer/planning', label: 'Planning', icon: BarChart3 },
     { href: '/officer/beneficiary/new', label: 'Intake', icon: UserPlus },
-    { href: '/officer/export', label: 'Export', icon: Download },
-    ...(profile?.role === 'admin' ? [{ href: '/admin', label: 'Admin', icon: Settings }] : []),
   ];
 
   const initials = profile?.full_name
