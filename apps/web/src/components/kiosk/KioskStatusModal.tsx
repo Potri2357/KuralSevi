@@ -1,0 +1,195 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Search, X, CheckCircle2, Clock, AlertTriangle, FileText, Download, Phone, RefreshCw } from 'lucide-react';
+
+interface KioskStatusModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenVerify?: (sanctionId: string) => void;
+}
+
+export function KioskStatusModal({ isOpen, onClose, onOpenVerify }: KioskStatusModalProps) {
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<any[] | null>(null);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setError(null);
+    setResults(null);
+
+    try {
+      const res = await fetch(`/api/kiosk/status?q=${encodeURIComponent(query.trim())}`);
+      const data = await res.json();
+
+      if (res.ok && data.found) {
+        setResults(data.cases);
+      } else {
+        setError(data.message || data.error || 'No records found matching that query.');
+      }
+    } catch {
+      setError('Network connection error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="bg-[#0B3064] text-white p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+              <Search className="w-5 h-5 text-[#FF9933]" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg font-display tracking-tight">
+                விண்ணப்ப நிலை அறிதல் · Application Status
+              </h3>
+              <p className="text-xs text-white/70">
+                Check PM-AJAY registration & approval status
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto flex-1 space-y-5">
+          <form onSubmit={handleSearch} className="space-y-3">
+            <label
+              htmlFor="kiosk-status-query"
+              className="block text-xs font-bold text-slate-700 uppercase tracking-wider"
+            >
+              Enter Beneficiary Mobile Number or Case Reference ID
+            </label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  id="kiosk-status-query"
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="e.g. 9876543210 or case-17408"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-medium text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3064]/20 focus:border-[#0B3064] focus:bg-white transition-all shadow-2xs"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading || !query.trim()}
+                className="px-5 py-3 rounded-xl bg-[#0B3064] hover:bg-[#144282] disabled:opacity-50 text-white font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+              >
+                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                <span>Check Status</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              பயனாளியின் 10 இலக்க செல்போன் எண் அல்லது விண்ணப்ப குறிப்பு எண்ணை உள்ளிடவும்.
+            </p>
+          </form>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Results List */}
+          {results && results.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
+                Matching Case Records ({results.length})
+              </h4>
+              {results.map((c, idx) => {
+                const isApproved = c.officer_action === 'approved';
+                return (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <div className="text-xs font-mono font-bold text-[#0B3064]">{c.case_id}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">District: {c.district || 'Tamil Nadu'}</div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 ${
+                          isApproved
+                            ? 'bg-[#EDF9F1] text-[#0A783C] border border-[#BBE8CB]'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                        }`}
+                      >
+                        {isApproved ? (
+                          <>
+                            <CheckCircle2 className="w-3 h-3 text-[#0A783C]" />
+                            <span>Approved & Sanctioned</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            <span>Under DWO Review</span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="text-xs">
+                      <div className="text-slate-500 font-medium">Recommended Livelihood Trade:</div>
+                      <div className="font-bold text-slate-900 mt-0.5">{c.trade_name}</div>
+                    </div>
+
+                    {isApproved && c.sanction_order_id && (
+                      <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-2">
+                        <div className="text-[11px] text-[#0A783C] font-semibold">
+                          Order No: <span className="font-mono">{c.sanction_order_id}</span>
+                        </div>
+                        {onOpenVerify && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onClose();
+                              onOpenVerify(c.sanction_order_id);
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-[#0A783C] hover:bg-[#086231] text-white text-[11px] font-bold transition-all cursor-pointer shadow-xs"
+                          >
+                            Verify Order QR
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="bg-slate-50 border-t border-slate-200 p-3.5 px-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
