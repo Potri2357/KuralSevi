@@ -544,5 +544,113 @@
     "status": "VERIFIED_ACTIVE",
     "created_at": "2026-09-29T13:09:00.300Z",
     "scan_count": 0
+  },
+  "67253B03-59A": {
+    "sanction_order_id": "ORD-AJAY-67253B03-59A",
+    "case_id": "67253B03-59A",
+    "beneficiary_name_masked": "Citizen (07XXXXXX52)",
+    "phone_masked": "07XXXXXX52",
+    "phone": "07338845352",
+    "state": "Tamil Nadu",
+    "district": "Namakkal",
+    "block_village": "Namakkal Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Food Processing Entrepreneur",
+    "qp_code": "FIC/Q0601",
+    "nsqf_level": 4,
+    "pathway_type": "Self-Employment / Enterprise Linkage",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Namakkal",
+    "course_duration": "240 Hours (approx. 8 Months)",
+    "batch_id": "BATCH-NAM-2026-Q3",
+    "commencement_date": "07 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Namakkal",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:01C400B00860C51970B9C2B74F109E73",
+    "verification_url": "http://localhost:3000/verify/67253B03-59A",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-30T05:52:59.819Z",
+    "scan_count": 0
+  },
+  "ORD-AJAY-67253B03-59A": {
+    "sanction_order_id": "ORD-AJAY-67253B03-59A",
+    "case_id": "67253B03-59A",
+    "beneficiary_name_masked": "Citizen (07XXXXXX52)",
+    "phone_masked": "07XXXXXX52",
+    "phone": "07338845352",
+    "state": "Tamil Nadu",
+    "district": "Namakkal",
+    "block_village": "Namakkal Rural Taluk",
+    "department": "Adi Dravidar and Tribal Welfare Department",
+    "trade_name": "Food Processing Entrepreneur",
+    "qp_code": "FIC/Q0601",
+    "nsqf_level": 4,
+    "pathway_type": "Self-Employment / Enterprise Linkage",
+    "training_center": "Govt. ITI / PMKK Skilling Cluster, Namakkal",
+    "course_duration": "240 Hours (approx. 8 Months)",
+    "batch_id": "BATCH-NAM-2026-Q3",
+    "commencement_date": "07 October 2026",
+    "entitlements": [
+      {
+        "sn": 1,
+        "component": "NSQF Training & Assessment Fee",
+        "basis": "100% Govt. Sponsored — Centrally Funded",
+        "amount": 12000,
+        "duration": "Full Course Duration"
+      },
+      {
+        "sn": 2,
+        "component": "DBT Monthly Training Stipend",
+        "basis": "Aadhaar-linked PFMS Credit — Biometric Verified",
+        "amount": 3000,
+        "duration": "Per Month, During Training"
+      },
+      {
+        "sn": 3,
+        "component": "Tool-Kit / Enterprise Seed Grant",
+        "basis": "Post-Certification + Enterprise Proof",
+        "amount": 35000,
+        "duration": "One-Time Disbursement"
+      }
+    ],
+    "total_entitlement": 50000,
+    "total_in_words": "Fifty Thousand",
+    "officer_name": "District Social Welfare Officer",
+    "officer_designation": "District Social Welfare Officer",
+    "officer_department": "Adi Dravidar and Tribal Welfare Department",
+    "officer_office": "District Collectorate, Namakkal",
+    "issue_date": "29 September 2026",
+    "document_hash": "SHA256:01C400B00860C51970B9C2B74F109E73",
+    "verification_url": "http://localhost:3000/verify/67253B03-59A",
+    "status": "VERIFIED_ACTIVE",
+    "created_at": "2026-09-30T05:52:59.819Z",
+    "scan_count": 0
   }
 }
