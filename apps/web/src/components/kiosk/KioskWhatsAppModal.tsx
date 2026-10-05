@@ -38,13 +38,13 @@ export function KioskWhatsAppModal({
 
   // Generate WhatsApp message preview based on selected service
   const getMessageContent = () => {
-    const cleanPhone = phone.trim();
+    const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'https://kuralsevi.tech');
     if (serviceType === 'intake') {
-      return `*नमस्ते / Greetings from Kural Sevi (PM-AJAY)*\n\nसामाजिक न्याय एवं अधिकारिता विभाग के तत्वावधान में प्रधानमंत्री अनुसचित जाति अभ्युदय योजना (PM-AJAY GIA) के तहत निःशुल्क कौशल प्रशिक्षण एवं ₹50,000 तक की अनुदान सहायता उपलब्ध है।\n\nग्राम पंचायत कियोस्क (Panchayat Kiosk) द्वारा आपका पंजीकरण दर्ज कर लिया गया है।\n\n📞 टोल-फ्री सहायता केंद्र: 1800-11-2001\nआधिकारिक पोर्टल: http://localhost:3000`;
+      return `*नमस्ते / Greetings from Kural Sevi (PM-AJAY)*\n\nसामाजिक न्याय एवं अधिकारिता विभाग के तत्वावधान में प्रधानमंत्री अनुसचित जाति अभ्युदय योजना (PM-AJAY GIA) के तहत निःशुल्क कौशल प्रशिक्षण एवं ₹50,000 तक की अनुदान सहायता उपलब्ध है।\n\nग्राम पंचायत कियोस्क (Panchayat Kiosk) द्वारा आपका पंजीकरण दर्ज कर लिया गया है।\n\n📞 टोल-फ्री सहायता केंद्र: 1800-11-2001\nआधिकारिक पोर्टल: ${origin}`;
     } else if (serviceType === 'status') {
-      return `*Kural Sevi — आवेदन स्थिति / Application Update*\n\nआपका PM-AJAY आवेदन (${caseId || 'REG-CASE'}) जिला कल्याण अधिकारी के सत्यापन हेतु प्रक्रियाधीन है।\n\nआवेदन स्थिति देखें: http://localhost:3000/kiosk\nटोल-फ्री हेल्पलाइन: 1800-11-2001`;
+      return `*Kural Sevi — आवेदन स्थिति / Application Update*\n\nआपका PM-AJAY आवेदन (${caseId || 'REG-CASE'}) जिला कल्याण अधिकारी के सत्यापन हेतु प्रक्रियाधीन है।\n\nआवेदन स्थिति देखें: ${origin}/kiosk\nटोल-फ्री हेल्पलाइन: 1800-11-2001`;
     } else {
-      return `*सत्यापित स्वीकृति आदेश / Verified PM-AJAY Sanction Order*\n\nआपका PM-AJAY कौशल प्रशिक्षण एवं आजीविका अनुदान आदेश स्वीकृत कर दिया गया है।\n\nआदेश संख्या: ORD-AJAY-${caseId || '2026'}\nसत्यापन लिंक: http://localhost:3000/verify/${caseId || 'ORD-AJAY-2026'}\n\nसामाजिक न्याय एवं अधिकारिता मंत्रालय · भारत सरकार`;
+      return `*सत्यापित स्वीकृति आदेश / Verified PM-AJAY Sanction Order*\n\nआपका PM-AJAY कौशल प्रशिक्षण एवं आजीविका अनुदान आदेश स्वीकृत कर दिया गया है।\n\nआदेश संख्या: ORD-AJAY-${caseId || '2026'}\nसत्यापन लिंक: ${origin}/verify/${caseId || 'ORD-AJAY-2026'}\n\nसामाजिक न्याय एवं अधिकारिता मंत्रालय · भारत सरकार`;
     }
   };
 
